@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <stdio.h>
 
+#include "cc3d.hpp"
 
 namespace compresso {
 
@@ -385,7 +386,8 @@ Compress(uint64_t *data, int zres, int yres, int xres, int zstep, int ystep, int
     bool *boundaries = ExtractBoundaries(data, zres, yres, xres);   
 
     // get the connected components
-    uint64_t *components = ConnectedComponents(boundaries, zres, yres, xres);
+    // uint64_t *components = ConnectedComponents(boundaries, zres, yres, xres);
+    uint64_t *components = cc3d::connected_components2d(boundaries, xres, yres, zres);
 
     std::vector<uint64_t> *ids = IDMapping(components, data, zres, yres, xres);
 
@@ -593,7 +595,8 @@ Decompress(uint64_t *compressed_data)
 
     bool *boundaries = DecodeBoundaries(boundary_data, values, zres, yres, xres, zstep, ystep, xstep);
 
-    uint64_t *components = ConnectedComponents(boundaries, zres, yres, xres);
+    // uint64_t *components = ConnectedComponents(boundaries, zres, yres, xres);
+    uint64_t *components = cc3d::connected_components2d(boundaries, xres, yres, zres);
 
     uint64_t *decompressed_data = IDReverseMapping(components, ids, zres, yres, xres);
 
