@@ -310,13 +310,27 @@ std::vector<T> encode_indeterminate_locations(
 template <typename T>
 std::vector<T> unique(const std::vector<T> &data) {
 	std::vector<T> values;
+
+	if (data.size() == 0) {
+		return values;
+	}
+
   std::set<T> hash_map;
   const size_t n_vals = data.size();
-  for (size_t iv = 0; iv < n_vals; iv++) {
+
+  T last = data[0];
+  hash_map.insert(data[0]);
+
+  for (size_t iv = 1; iv < n_vals; iv++) {
+  	if (data[iv] == last) {
+  		continue;
+  	}
+
   	bool inserted = hash_map.insert(data[iv]).second;
     if (inserted) {
       values.push_back(data[iv]);
     }
+    last = data[iv];
   }
   sort(values.begin(), values.end());
   return values;
