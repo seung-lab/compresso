@@ -41,7 +41,7 @@ cdef extern from "compresso.hxx" namespace "pycompresso":
     size_t sx, size_t sy, size_t sz, 
     size_t xstep, size_t ystep, size_t zstep
   )
-  # uint64_t *Decompress(uint64_t *compressed_data)
+  void* cpp_decompress(unsigned char* buf, void* output)
 
 # def compress(data):
 #     """

@@ -462,6 +462,47 @@ std::vector<T> run_length_encode_windows(const std::vector<T> &windows) {
 	return rle_windows;
 }
 
+    # get the compressed blocks
+    block_data = np.zeros(nblocks, dtype=np.uint64)
+
+    cdef size_t index = 0
+    cdef size_t nzeros = 0
+    for block in compressed_blocks:
+        # greater values correspond to zero blocks
+        if block % 2:
+            nzeros = (block  - 1) // 2
+            block_data[index:index+nzeros] = 0
+            index += nzeros
+        else:
+            block_data[index] = block // 2
+            index += 1
+
+
+
+template <typename WINDOW>
+std::vector<WINDOW> run_length_decode_windows(
+	const std::vector<WINDOW> &rle_windows, const size_t nblocks
+) {
+	std::vector<WINDOW> windows(nblocks);
+
+	WINDOW block = 0;
+	size_t nzeros = 0;
+	size_t index = 0;
+	const size_t window_size = rle_windows.size();
+	for (size_t i = 0; i < window_size; i++) {
+		block = rle_windows[i];
+		if ((block & 1) == 0) {
+			windows[index] = block >> 1;
+			index++;
+		}
+		else {
+			index += (block >> 1);
+		}
+	}
+
+	return rle_windows;
+}
+
 bool is_little_endian() {
 	int n = 1;
 	return (*(char *) & n == 1);
@@ -721,7 +762,6 @@ void decode_indeterminate_locations(
   }
 }
 
-
 template <typename LABEL, typename WINDOW>
 LABEL* decompress(unsigned char* buffer, LABEL* output = NULL) {
 	const CompressoHeader header(buffer);
@@ -742,7 +782,7 @@ LABEL* decompress(unsigned char* buffer, LABEL* output = NULL) {
 	std::vector<LABEL> ids(header.id_size);
 	std::vector<WINDOW> window_values(header.value_size);
 	std::vector<LABEL> locations(header.location_size);
-	WINDOW *windows = new WINDOW[nblocks]();
+	std::vector<WINDOW> windows(nblocks);
 
 	size_t iv = CompressoHeader::header_size;
 	for (size_t ix = 0; ix < header.id_size; ix++, iv += sizeof(LABEL)) {
@@ -758,12 +798,14 @@ LABEL* decompress(unsigned char* buffer, LABEL* output = NULL) {
 		windows[ix] = ctoi<WINDOW>(buffer, iv);
 	}
 
+	windows = run_length_decode_windows<WINDOW>(windows);
+
 	bool* boundaries = decode_boundaries<WINDOW>(
 		windows, window_values, 
 		sx, sy, sz, 
 		xstep, ystep, zstep
 	);
-	delete[] windows;
+	windows = std::vector<WINDOW>();
 	window_values = std::vector<WINDOW>();
 
 	uint32_t* components = cc3d::connected_components2d<uint32_t>(boundaries, sx, sy, sz);
@@ -854,6 +896,10 @@ std::vector<unsigned char> cpp_compress(
 ) {
 
 	return compresso::compress<T>(labels, sx, sy, sz, xstep, ystep, zstep);
+}
+
+void* cpp_decompress(unsigned char* buffer, void* output) {
+	return compresso::decompress<void,void>(buffer, output);
 }
 
 };
