@@ -43,62 +43,20 @@ cdef extern from "compresso.hxx" namespace "pycompresso":
   )
   void* cpp_decompress(unsigned char* buf, void* output)
 
-# def compress(data):
-#     """
-#     Compress a three dimensional numpy array containing image segmentation
-#     using the Compresso algorithm.
-  
-#     Returns: compressed bytes b'...'
-#     """
-#     sx, sy, sz = data.shape
-#     steps = (8, 8, 1)
+def compress(cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1)) -> bytes:
+  """
+  compress(ndarray[UINT, ndim=3] data, steps=(4,4,1))
 
-#     header_size = 9
+  Compress a 3d numpy array into a compresso byte stream.
 
-#     nzblocks = int(ceil(float(sz) / zstep))
-#     nyblocks = int(ceil(float(sy) / ystep))
-#     nxblocks = int(ceil(float(sx) / xstep))
-#     nblocks = nzblocks * nyblocks * nxblocks
+  data: 3d ndarray of segmentation labels
+  steps: 
+    Grid size for classifying the boundary structure.
+    Smaller sizes (up to a point) are more likely to compress because 
+    they repeat more frequently. (4,4,1) and (8,8,1) are typical.
 
-#     cdef np.ndarray[uint64_t, ndim=3] cpp_data = np.asfortranarray(data, dtype=np.uint64)
-#     cdef uint64_t *cpp_compressed_data = Compress(
-#         &(cpp_data[0,0,0]), sx, sy, sz, xstep, ystep, zstep
-#     )
-#     length = header_size + cpp_compressed_data[3] + cpp_compressed_data[4] + cpp_compressed_data[5] + nblocks
-#     cdef uint64_t[:] tmp_compressed_data = <uint64_t[:length]> cpp_compressed_data
-#     compressed_data = np.asarray(tmp_compressed_data)
-
-#     # compress all the zeros in the window values
-
-#     nblocks = int(ceil(float(sz) / zstep)) * int(ceil(float(sy) / ystep)) * int(ceil(float(sx) / xstep))
-  
-#     intro_data = compressed_data[:-nblocks]
-#     block_data = compressed_data[-nblocks:]
-  
-#     if (np.max(block_data) < 2**32):
-#         block_data = block_data.astype(np.uint32)
-
-#     condensed_blocks = list()
-#     inzero = False
-#     prev_zero = 0
-#     for ie, block in enumerate(block_data):
-#         if block == 0:
-#             # start counting zeros
-#             if not inzero:
-#                 inzero = True
-#                 prev_zero = ie
-#         else:
-#             if inzero:
-#                 # add information for the previous zero segment
-#                 condensed_blocks.append((ie - prev_zero) * 2 + 1)
-#                 inzero = False
-#             condensed_blocks.append(block * 2)
-
-#     condensed_blocks = np.array(condensed_blocks).astype(np.uint32)
-
-#     return intro_data.tobytes() + condensed_blocks.tobytes()
-
-def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
+  Return: ndarray
+  """
   data = np.asfortranarray(data)
   sx = data.shape[0]
   sy = data.shape[1]
@@ -142,7 +100,7 @@ def read_header(buf : bytes) -> dict:
   check_compatibility(buf)
   toint = lambda n: int.from_bytes(n, byteorder="little", signed=False)
 
-  return {
+  data = {
     "magic": buf[:4],
     "format_version": buf[4],
     "data_width": buf[5],
@@ -156,59 +114,39 @@ def read_header(buf : bytes) -> dict:
     "value_size": toint(buf[23:27]),
     "location_size": toint(buf[27:35]),
   }
+  data["decompressed_bytes"] = data["sx"] * data["sy"] * data["sz"] * data["data_width"]
 
-# def decompress(buf : bytes):
-#   check_compatibility(buf)
+def decompress(bytes data):
+  """
+  Decompress a compresso encoded byte stream into a three dimensional 
+  numpy array containing image segmentation.
 
-# def decompress(data):
-#     """
-#     Decompress a compresso encoded byte stream into a three dimensional 
-#     numpy array containing image segmentation.
+  Returns: compressed bytes b'...'
+  """
+  check_compatibility(data)
+  header = read_header(data)
+  shape = (header["sx"], header["sy"], header["sz"])
 
-#     Returns: compressed bytes b'...'
-#     """
-#     from math import ceil 
+  dtypes = {
+    1: np.uint8,
+    2: np.uint16,
+    4: np.uint32,
+    8: np.uint64,
+  }
+  dtype = dtypes[header["data_width"]]
+  cdef cnp.ndarray[uint64_t, ndim=3] labels = np.zeros(shape, dtype=dtype, order="F")
 
-#     # read the first nine bytes corresponding to the header
-#     header = np.frombuffer(data[0:72], dtype=np.uint64)
+  cdef unsigned char* buf = data
+  cpp_decompress(buf, <void*>&labels[0,0,0])
 
-#     cdef size_t sz = header[0]
-#     cdef size_t sy = header[1]
-#     cdef size_t sx = header[2]
-#     cdef size_t voxels = sx * sy * sz
-  
-#     ids_size = int(header[3])
-#     values_size = int(header[4])
-#     locations_size = int(header[5])
-#     zstep = header[6]
-#     ystep = header[7]
-#     xstep = header[8]
+  return labels
 
-#     # get the intro data
-#     intro_size = 9 + ids_size + values_size + locations_size
-#     intro_data = np.frombuffer(data[0:intro_size*8], dtype=np.uint64)
 
-#     # get the compressed blocks
-#     nblocks = int(ceil(float(sz) / zstep)) * int(ceil(float(sy) / ystep)) * int(ceil(float(sx) / xstep))
-#     compressed_blocks = np.frombuffer(data[intro_size*8:], dtype=np.uint32)
-#     block_data = np.zeros(nblocks, dtype=np.uint64)
 
-#     cdef size_t index = 0
-#     cdef size_t nzeros = 0
-#     for block in compressed_blocks:
-#         # greater values correspond to zero blocks
-#         if block % 2:
-#             nzeros = (block  - 1) // 2
-#             block_data[index:index+nzeros] = 0
-#             index += nzeros
-#         else:
-#             block_data[index] = block // 2
-#             index += 1
 
-#     data = np.concatenate((intro_data, block_data))
 
-#     cdef np.ndarray[uint64_t, ndim=1] cpp_data = np.asfortranarray(data, dtype=np.uint64)
-#     cdef uint64_t[:] cpp_decompressed_data = <uint64_t[:voxels]> Decompress(&(cpp_data[0]))
-#     decompressed_data = np.reshape(np.asarray(cpp_decompressed_data), (sx, sy, sz))
 
-#     return decompressed_data
+
+
+
+
