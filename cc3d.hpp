@@ -193,9 +193,9 @@ OUT* relabel(
   return out_labels;
 }
 
-template <typename T, typename OUT = uint32_t>
+template <typename OUT = uint32_t>
 OUT* connected_components2d_4(
-    T* in_labels, 
+    bool* in_labels, 
     const int64_t sx, const int64_t sy, const int64_t sz,
     size_t max_labels, OUT *out_labels = NULL, 
     size_t &N = _dummy_N
@@ -213,9 +213,6 @@ OUT* connected_components2d_4(
 
   if (out_labels == NULL) {
     out_labels = new OUT[voxels]();
-  }
-  if (!out_labels) { 
-    throw std::runtime_error("Failed to allocate out_labels memory for connected components.");
   }
     
   /*
@@ -236,24 +233,24 @@ OUT* connected_components2d_4(
   // Raster Scan 1: Set temporary labels and 
   // record equivalences in a disjoint set.
 
-  T cur = 0;
+  bool cur = 0;
   for (int64_t z = 0; z < sz; z++) {
     for (int64_t y = 0; y < sy; y++) {
       for (int64_t x = 0; x < sx; x++) {
         loc = x + sx * y + sxy * z;
         cur = in_labels[loc];
 
-        if (cur == 0) {
+        if (cur) {
           continue;
         }
 
-        if (x > 0 && cur == in_labels[loc + B]) {
+        if (x > 0 && !in_labels[loc + B]) {
           out_labels[loc + A] = out_labels[loc + B];
-          if (y > 0 && cur != in_labels[loc + D] && cur == in_labels[loc + C]) {
+          if (y > 0 && in_labels[loc + D] && !in_labels[loc + C]) {
             equivalences.unify(out_labels[loc + A], out_labels[loc + C]);
           }
         }
-        else if (y > 0 && cur == in_labels[loc + C]) {
+        else if (y > 0 && !in_labels[loc + C]) {
           out_labels[loc + A] = out_labels[loc + C];
         }
         else {
@@ -283,7 +280,7 @@ OUT* connected_components2d(
 
   for (int64_t z = 0; z < sz; z++) {
     size_t tmp_N = 0;
-    connected_components2d_4<bool, OUT>(
+    connected_components2d_4<OUT>(
       (in_labels + sxy * z), sx, sy, 1, 
       max_labels, (out_labels + sxy * z), tmp_N
     );

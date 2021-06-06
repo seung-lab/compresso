@@ -119,8 +119,6 @@ public:
 	}
 };
 
-
-// false = boundary, true = not boundary
 template <typename T>
 bool* extract_boundaries(
 	T *data, 
@@ -134,15 +132,15 @@ bool* extract_boundaries(
 		for (size_t y = 0; y < sy; y++) {
 			for (size_t x = 0; x < sx; x++) {
 				size_t loc = x + sx * y + sxy * z;
-				boundaries[loc] = true;
+				boundaries[loc] = false;
 
 				// check the east neighbor
 				if (x < sx - 1 && data[loc] != data[loc + 1]) { 
-					boundaries[loc] = false;
+					boundaries[loc] = true;
 				}
 				// check the south neighbor
 				else if (y < sy - 1 && data[loc] != data[loc + sx]) {
-					boundaries[loc] = false;
+					boundaries[loc] = true;
 				}
 			}
 		}
@@ -448,7 +446,7 @@ std::vector<unsigned char> compress(
 	}
 
 	// const size_t sxy = sx * sy;
-	const size_t voxels = sx * sy * sz;
+	// const size_t voxels = sx * sy * sz;
 
 	const size_t nx = (sz + (zstep / 2)) / zstep;
 	const size_t ny = (sy + (ystep / 2)) / ystep;
@@ -460,16 +458,8 @@ std::vector<unsigned char> compress(
 	size_t num_components = 0;
 	uint32_t *components = cc3d::connected_components2d<uint32_t>(boundaries, sx, sy, sz, num_components);
 	
-	// Very similar to fastremap.component_map
 	std::vector<T> ids = component_map<T>(components, labels, sx, sy, sz, num_components);
 	delete[] components;
-
-  // Had to use inverted boundaries for cc3d
-  // now switch to a sensible version for rest of
-  // code. can optimize cc3d later.
-	for (size_t i = 0; i < voxels; i++) { 
-		boundaries[i] = !boundaries[i];
-	}
 
 	// for 4,4,1 we could use uint16_t
 	std::vector<uint64_t> windows = encode_boundaries<uint64_t>(boundaries, sx, sy, sz, xstep, ystep, zstep);
