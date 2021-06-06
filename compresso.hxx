@@ -93,7 +93,7 @@ public:
 		id_size(_id_size), value_size(_value_size), location_size(_location_size)
 	{}
 
-	size_t tochars(std::vector<unsigned char> &buf, size_t idx = 0) {
+	size_t tochars(std::vector<unsigned char> &buf, size_t idx = 0) const {
 		if ((idx + CompressoHeader::header_size) >= buf.size()) {
 			throw std::runtime_error("Unable to write past end of buffer.");
 		}
@@ -384,6 +384,31 @@ bool is_little_endian() {
 	return (*(char *) & n == 1);
 }
 
+template <typename T>
+void write_compressed_stream(
+	std::vector<unsigned char> &compressed_data,
+	const CompressoHeader &header, 
+	const std::vector<T> &ids, 
+	const std::vector<uint64_t> &window_values, 
+	const std::vector<T> &locations,
+	const std::vector<uint64_t> &windows,
+	const size_t nblocks
+) {
+	size_t idx = header.tochars(compressed_data, 0);
+	for (size_t i = 0 ; i < ids.size(); i++) {
+    idx += itoc(ids[i], compressed_data, idx);
+	}
+	for (size_t i = 0 ; i < window_values.size(); i++) {
+    idx += itoc(window_values[i], compressed_data, idx);
+	}
+	for (size_t i = 0 ; i < locations.size(); i++) {
+    idx += itoc(locations[i], compressed_data, idx);
+	}
+	for (size_t i = 0 ; i < nblocks; i++) {
+    idx += itoc(windows[i], compressed_data, idx);
+	}
+}
+
 /* compress
  *
  * Convert 3D integer array data into a compresso encoded byte stream.
@@ -458,19 +483,12 @@ std::vector<unsigned char> compress(
 		/*value_size=*/window_values.size(), 
 		/*location_size=*/locations.size()
 	);
-	size_t idx = header.tochars(compressed_data, 0);
-	for (size_t i = 0 ; i < ids.size(); i++) {
-    idx += itoc(ids[i], compressed_data, idx);
-	}
-	for (size_t i = 0 ; i < window_values.size(); i++) {
-    idx += itoc(window_values[i], compressed_data, idx);
-	}
-	for (size_t i = 0 ; i < locations.size(); i++) {
-    idx += itoc(locations[i], compressed_data, idx);
-	}
-	for (size_t i = 0 ; i < nblocks; i++) {
-    idx += itoc(windows[i], compressed_data, idx);
-	}
+
+	write_compressed_stream<T>(
+		compressed_data, header, ids, 
+		window_values, locations, windows,
+		nblocks
+	);
 
 	return compressed_data;
 }
