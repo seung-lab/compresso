@@ -1,14 +1,16 @@
 #ifndef __COMPRESSO_HXX__
 #define __COMPRESSO_HXX__
 
-#include <unordered_map>
-#include <set>
-#include <limits>
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
+#include <limits>
+#include <set>
+#include <string>
+#include <unordered_map>
 #include <vector>
-#include <algorithm>
-#include <stdio.h>
+
 #include "cc3d.hpp"
 
 namespace compresso {
@@ -45,6 +47,47 @@ inline size_t itoc(uint64_t x, std::vector<unsigned char> &buf, size_t idx) {
 	buf[idx + 7] = (x >> 56) & 0xFF;
 	return 8;
 }
+
+template <typename T>
+T ctoi(unsigned char* buf, size_t idx = 0);
+
+template <>
+uint64_t ctoi(unsigned char* buf, size_t idx) {
+	uint64_t x = 0;
+	x += static_cast<uint64_t>(buf[idx + 0]) << 0;
+	x += static_cast<uint64_t>(buf[idx + 1]) << 8;
+	x += static_cast<uint64_t>(buf[idx + 2]) << 16;
+	x += static_cast<uint64_t>(buf[idx + 3]) << 24;
+	x += static_cast<uint64_t>(buf[idx + 4]) << 32;
+	x += static_cast<uint64_t>(buf[idx + 5]) << 40;
+	x += static_cast<uint64_t>(buf[idx + 6]) << 48;
+	x += static_cast<uint64_t>(buf[idx + 7]) << 56;
+	return x;
+}
+
+template <>
+uint32_t ctoi(unsigned char* buf, size_t idx) {
+	uint32_t x = 0;
+	x += static_cast<uint32_t>(buf[idx + 0]) << 0;
+	x += static_cast<uint32_t>(buf[idx + 1]) << 8;
+	x += static_cast<uint32_t>(buf[idx + 2]) << 16;
+	x += static_cast<uint32_t>(buf[idx + 3]) << 24;
+	return x;
+}
+
+template <>
+uint16_t ctoi(unsigned char* buf, size_t idx) {
+	uint16_t x = 0;
+	x += static_cast<uint16_t>(buf[idx + 0]) << 0;
+	x += static_cast<uint16_t>(buf[idx + 1]) << 8;
+	return x;
+}
+
+template <>
+uint8_t ctoi(unsigned char* buf, size_t idx) {
+	return static_cast<uint8_t>(buf[idx]);
+}
+
 
 /* Header: 
  *   'cpso'            : magic number (4 bytes)
@@ -93,6 +136,26 @@ public:
 		id_size(_id_size), value_size(_value_size), location_size(_location_size)
 	{}
 
+	CompressoHeader(unsigned char* buf) {
+		bool valid_magic = (buf[0] == 'c' && buf[1] == 'p' && buf[2] == 's' && buf[3] == 'o');
+		uint8_t format_version = buf[4];
+
+		if (!valid_magic || format_version != 0) {
+			throw std::runtime_error("compresso: Data stream is not valid. Unable to decompress.");
+		}
+
+		data_width = ctoi<uint8_t>(buf, 5);
+		sx = ctoi<uint16_t>(buf, 6); 
+		sy = ctoi<uint16_t>(buf, 8); 
+		sz = ctoi<uint16_t>(buf, 10);
+		xstep = ctoi<uint8_t>(buf, 12); 
+		ystep = ctoi<uint8_t>(buf, 13);
+		zstep = ctoi<uint8_t>(buf, 14);
+		id_size = ctoi<uint64_t>(buf, 15);
+		value_size = ctoi<uint32_t>(buf, 23);
+		location_size = ctoi<uint64_t>(buf, 27);
+	}
+
 	size_t tochars(std::vector<unsigned char> &buf, size_t idx = 0) const {
 		if ((idx + CompressoHeader::header_size) >= buf.size()) {
 			throw std::runtime_error("Unable to write past end of buffer.");
@@ -116,6 +179,10 @@ public:
 		i += itoc(location_size, buf, i);
 
 		return i - idx;
+	}
+
+	static CompressoHeader fromchars(unsigned char* buf) {
+		return CompressoHeader(buf);
 	}
 };
 
@@ -151,158 +218,158 @@ bool* extract_boundaries(
 
 template <typename T>
 std::vector<T> component_map(
-    uint32_t *components, T *labels, 
-    const size_t sx, const size_t sy, const size_t sz,
-    const size_t num_components = 100
+		uint32_t *components, T *labels, 
+		const size_t sx, const size_t sy, const size_t sz,
+		const size_t num_components = 100
 ) {
-    const size_t sxy = sx * sy;
-    const size_t voxels = sxy * sz;
+		const size_t sxy = sx * sy;
+		const size_t voxels = sxy * sz;
 
-    std::vector<T> ids;
-    ids.reserve(num_components);
+		std::vector<T> ids;
+		ids.reserve(num_components);
 
-    if (voxels == 0) {
-    	return ids;
-    }
+		if (voxels == 0) {
+			return ids;
+		}
 
-    size_t loc = 0;
-    for (size_t z = 0; z < sz; z++) {
-      std::set<T> hash_map;
-      loc = z * sxy;
-      T last_label = components[loc];
-      hash_map.insert(components[loc]);
-      ids.push_back(labels[loc] + 1);
+		size_t loc = 0;
+		for (size_t z = 0; z < sz; z++) {
+			std::set<T> hash_map;
+			loc = z * sxy;
+			T last_label = components[loc];
+			hash_map.insert(components[loc]);
+			ids.push_back(labels[loc]);
 
-      for (size_t y = 0; y < sy; y++) {
-        for (size_t x = 0; x < sx; x++) {
-          loc = x + sx * y + sxy * z;
+			for (size_t y = 0; y < sy; y++) {
+				for (size_t x = 0; x < sx; x++) {
+					loc = x + sx * y + sxy * z;
 
-          if (last_label == components[loc]) {
-          	continue;
-          }
+					if (last_label == components[loc]) {
+						continue;
+					}
 
-          bool inserted = hash_map.insert(components[loc]).second;
-          if (inserted) {
-            ids.push_back(labels[loc] + 1);
-          }
+					bool inserted = hash_map.insert(components[loc]).second;
+					if (inserted) {
+						ids.push_back(labels[loc]);
+					}
 
-          last_label = components[loc];
-        }
-      }
-    }
+					last_label = components[loc];
+				}
+			}
+		}
 
-    return ids;
+		return ids;
 }
 
 template <typename T>
 std::vector<T> encode_boundaries(
-    bool *boundaries, 
-    const size_t sx, const size_t sy, const size_t sz, 
-    const size_t xstep, const size_t ystep, const size_t zstep
+		bool *boundaries, 
+		const size_t sx, const size_t sy, const size_t sz, 
+		const size_t xstep, const size_t ystep, const size_t zstep
 ) {
 
-  const size_t sxy = sx * sy;
+	const size_t sxy = sx * sy;
 
-  const size_t nz = (sz + (zstep / 2)) / zstep;
-  const size_t ny = (sy + (ystep / 2)) / ystep;
-  const size_t nx = (sx + (xstep / 2)) / xstep;
-  const size_t nblocks = nz * ny * nx;
+	const size_t nz = (sz + (zstep / 2)) / zstep;
+	const size_t ny = (sy + (ystep / 2)) / ystep;
+	const size_t nx = (sx + (xstep / 2)) / xstep;
+	const size_t nblocks = nz * ny * nx;
 
-  std::vector<T> boundary_data(nblocks);
-  
-  size_t xblock, yblock, zblock;
-  size_t xoffset, yoffset, zoffset;
+	std::vector<T> boundary_data(nblocks);
+	
+	size_t xblock, yblock, zblock;
+	size_t xoffset, yoffset, zoffset;
 
-  // all these divisions can be replaced by plus/minus
-  for (size_t z = 0; z < sz; z++) {
-    zblock = z / zstep;
-    zoffset = z % zstep;
-    for (size_t y = 0; y < sy; y++) {
-      yblock = y / ystep;
-      yoffset = y % ystep;
-      for (size_t x = 0; x < sx; x++) {
-        size_t loc = x + sx * y + sxy * z;
+	// all these divisions can be replaced by plus/minus
+	for (size_t z = 0; z < sz; z++) {
+		zblock = z / zstep;
+		zoffset = z % zstep;
+		for (size_t y = 0; y < sy; y++) {
+			yblock = y / ystep;
+			yoffset = y % ystep;
+			for (size_t x = 0; x < sx; x++) {
+				size_t loc = x + sx * y + sxy * z;
 
-        if (!boundaries[loc]) { 
-          continue; 
-        }
+				if (!boundaries[loc]) { 
+					continue; 
+				}
 
-        xblock = x / xstep;
-        xoffset = x % xstep;
+				xblock = x / xstep;
+				xoffset = x % xstep;
 
-        size_t block = xblock + nx * yblock + (ny * nx) * zblock;
-        size_t offset = xoffset + xstep * yoffset + (ystep * xstep) * zoffset;
+				size_t block = xblock + nx * yblock + (ny * nx) * zblock;
+				size_t offset = xoffset + xstep * yoffset + (ystep * xstep) * zoffset;
 
-        boundary_data[block] += (1LU << offset);
-      }
-    }
-  }
+				boundary_data[block] += (1LU << offset);
+			}
+		}
+	}
 
-  return boundary_data;    
+	return boundary_data;    
 }
 
 template <typename T>
 std::vector<T> encode_indeterminate_locations(
-    bool *boundaries, T *labels, 
-    const size_t sx, const size_t sy, const size_t sz
+		bool *boundaries, T *labels, 
+		const size_t sx, const size_t sy, const size_t sz
 ) {
-  const size_t sxy = sx * sy;
-  std::vector<T> locations;
-  locations.reserve(sx * sy * sz / 10);
+	const size_t sxy = sx * sy;
+	std::vector<T> locations;
+	locations.reserve(sx * sy * sz / 10);
 
-  int64_t iv = 0;
-  for (size_t z = 0; z < sz; z++) {
-    for (size_t y = 0; y < sy; y++) {
-      for (size_t x = 0; x < sx; x++, iv++) {
-        size_t loc = x + sx * y + sxy * z;
+	int64_t iv = 0;
+	for (size_t z = 0; z < sz; z++) {
+		for (size_t y = 0; y < sy; y++) {
+			for (size_t x = 0; x < sx; x++, iv++) {
+				size_t loc = x + sx * y + sxy * z;
 
-        if (!boundaries[loc]) { 
-          continue; 
-        }
-        else if (y > 0 && !boundaries[loc - sx]) {
-          continue; // boundaries[iv] = 0;
-        }
-        else if (x > 0 && !boundaries[loc - 1]) {
-          continue; // boundaries[iv] = 0;
-        }
-        
-        size_t north = loc - 1; // IndicesToIndex(ix - 1, iy, iz);
-        size_t south = loc + 1; // IndicesToIndex(ix + 1, iy, iz);
-        size_t east = loc - sx;// IndicesToIndex(ix, iy - 1, iz);
-        size_t west = loc + sx; // IndicesToIndex(ix, iy + 1, iz);
-        size_t up = loc + sxy; // IndicesToIndex(ix, iy, iz + 1);
-        size_t down = loc - sxy; // IndicesToIndex(ix, iy, iz - 1);
+				if (!boundaries[loc]) { 
+					continue; 
+				}
+				else if (y > 0 && !boundaries[loc - sx]) {
+					continue; // boundaries[iv] = 0;
+				}
+				else if (x > 0 && !boundaries[loc - 1]) {
+					continue; // boundaries[iv] = 0;
+				}
+				
+				size_t north = loc - 1; // IndicesToIndex(ix - 1, iy, iz);
+				size_t south = loc + 1; // IndicesToIndex(ix + 1, iy, iz);
+				size_t east = loc - sx;// IndicesToIndex(ix, iy - 1, iz);
+				size_t west = loc + sx; // IndicesToIndex(ix, iy + 1, iz);
+				size_t up = loc + sxy; // IndicesToIndex(ix, iy, iz + 1);
+				size_t down = loc - sxy; // IndicesToIndex(ix, iy, iz - 1);
 
-        // see if any of the immediate neighbors are candidates
-        if (x > 0 && !boundaries[north] && (labels[north] == labels[iv])) {
-          locations.push_back(0);
-        }
-        else if (x < sx - 1 && !boundaries[south] && (labels[south] == labels[iv])) {
-          locations.push_back(1);
-        }
-        else if (y > 0 && !boundaries[east] && (labels[east] == labels[iv])) {
-          locations.push_back(2);
-        }
-        else if (y < sy - 1 && !boundaries[west] && (labels[west] == labels[iv])) {
-          locations.push_back(3);
-        }
-        else if (z > 0 && !boundaries[down] && (labels[down] == labels[iv])) {
-          locations.push_back(4);
-        }
-        else if (z < sz - 1 && !boundaries[up] && (labels[up] == labels[iv])) {
-          locations.push_back(5);
-        }
-        else if (labels[loc] <= std::numeric_limits<T>::max() - 6) {
-        	locations.push_back(labels[loc] + 6);
-        }
-        else {
-        	throw std::runtime_error("compresso: Cannot encode labels within 6 units of integer overflow.");
-        }
-      }
-    }
-  }
+				// see if any of the immediate neighbors are candidates
+				if (x > 0 && !boundaries[north] && (labels[north] == labels[iv])) {
+					locations.push_back(0);
+				}
+				else if (x < sx - 1 && !boundaries[south] && (labels[south] == labels[iv])) {
+					locations.push_back(1);
+				}
+				else if (y > 0 && !boundaries[east] && (labels[east] == labels[iv])) {
+					locations.push_back(2);
+				}
+				else if (y < sy - 1 && !boundaries[west] && (labels[west] == labels[iv])) {
+					locations.push_back(3);
+				}
+				else if (z > 0 && !boundaries[down] && (labels[down] == labels[iv])) {
+					locations.push_back(4);
+				}
+				else if (z < sz - 1 && !boundaries[up] && (labels[up] == labels[iv])) {
+					locations.push_back(5);
+				}
+				else if (labels[loc] <= std::numeric_limits<T>::max() - 6) {
+					locations.push_back(labels[loc] + 6);
+				}
+				else {
+					throw std::runtime_error("compresso: Cannot encode labels within 6 units of integer overflow.");
+				}
+			}
+		}
+	}
 
-  return locations;
+	return locations;
 }
 
 template <typename T>
@@ -313,54 +380,54 @@ std::vector<T> unique(const std::vector<T> &data) {
 		return values;
 	}
 
-  std::set<T> hash_map;
-  const size_t n_vals = data.size();
+	std::set<T> hash_map;
+	const size_t n_vals = data.size();
 
-  T last = data[0];
-  hash_map.insert(data[0]);
+	T last = data[0];
+	hash_map.insert(data[0]);
 
-  for (size_t iv = 1; iv < n_vals; iv++) {
-  	if (data[iv] == last) {
-  		continue;
-  	}
+	for (size_t iv = 1; iv < n_vals; iv++) {
+		if (data[iv] == last) {
+			continue;
+		}
 
-  	bool inserted = hash_map.insert(data[iv]).second;
-    if (inserted) {
-      values.push_back(data[iv]);
-    }
-    last = data[iv];
-  }
-  sort(values.begin(), values.end());
-  return values;
+		bool inserted = hash_map.insert(data[iv]).second;
+		if (inserted) {
+			values.push_back(data[iv]);
+		}
+		last = data[iv];
+	}
+	sort(values.begin(), values.end());
+	return values;
 }
 
 template <typename T>
 void renumber_boundary_data(const std::vector<T>& window_values, std::vector<T> &windows) {
-  if (windows.size() == 0) {
-  	return;
-  }
+	if (windows.size() == 0) {
+		return;
+	}
 
-  std::unordered_map<T, T> mapping;
-  const size_t n_vals = window_values.size();
-  for (size_t iv = 0; iv < n_vals; iv++) {
-    mapping[window_values[iv]] = iv;
-  }
+	std::unordered_map<T, T> mapping;
+	const size_t n_vals = window_values.size();
+	for (size_t iv = 0; iv < n_vals; iv++) {
+		mapping[window_values[iv]] = iv;
+	}
 
-  const size_t n_data = windows.size();
-  T last = windows[0];
-  windows[0] = mapping[windows[0]];
-  T last_remap = windows[0];
+	const size_t n_data = windows.size();
+	T last = windows[0];
+	windows[0] = mapping[windows[0]];
+	T last_remap = windows[0];
 
-  for (size_t iv = 1; iv < n_data; iv++) {
-  	if (windows[iv] == last) {
-  		windows[iv] = last_remap;
-  		continue;
-  	}
+	for (size_t iv = 1; iv < n_data; iv++) {
+		if (windows[iv] == last) {
+			windows[iv] = last_remap;
+			continue;
+		}
 
-  	last_remap = mapping[windows[iv]];
-  	last = windows[iv];
-    windows[iv] = last_remap;
-  }
+		last_remap = mapping[windows[iv]];
+		last = windows[iv];
+		windows[iv] = last_remap;
+	}
 }
 
 template <typename T>
@@ -412,16 +479,16 @@ void write_compressed_stream(
 ) {
 	size_t idx = header.tochars(compressed_data, 0);
 	for (size_t i = 0 ; i < ids.size(); i++) {
-    idx += itoc(ids[i], compressed_data, idx);
+		idx += itoc(ids[i], compressed_data, idx);
 	}
 	for (size_t i = 0 ; i < window_values.size(); i++) {
-    idx += itoc(window_values[i], compressed_data, idx);
+		idx += itoc(window_values[i], compressed_data, idx);
 	}
 	for (size_t i = 0 ; i < locations.size(); i++) {
-    idx += itoc(locations[i], compressed_data, idx);
+		idx += itoc(locations[i], compressed_data, idx);
 	}
 	for (size_t i = 0 ; i < nblocks; i++) {
-    idx += itoc(windows[i], compressed_data, idx);
+		idx += itoc(windows[i], compressed_data, idx);
 	}
 }
 
@@ -526,6 +593,252 @@ std::vector<unsigned char> compress(
 			xstep, ystep, zstep, 
 			boundaries, ids
 		);
+	}
+}
+
+/* DECOMPRESS STARTS HERE */
+
+template <typename LABEL, typename WINDOW>
+bool* decode_boundaries(
+		WINDOW *windows, const std::vector<WINDOW> &window_values, 
+		const size_t sx, const size_t sy, const size_t sz,
+		const size_t xstep, const size_t ystep, const size_t zstep
+) {
+
+	const size_t sxy = sx * sy;
+	const size_t voxels = sx * sy * sz;
+
+	const size_t nx = (sy + (ystep / 2)) / ystep;
+	const size_t ny = (sx + (xstep / 2)) / xstep;
+
+	bool* boundaries = new bool[voxels]();
+
+	size_t xblock, yblock, zblock;
+	size_t xoffset, yoffset, zoffset;
+
+	for (size_t z = 0; z < sz; z++) {
+		zblock = z / zstep;
+		zoffset = z % zstep;
+		for (size_t y = 0; y < sy; y++) {
+			yblock = y / ystep;
+			yoffset = y % ystep;
+			for (size_t x = 0; x < sx; x++) {
+				size_t iv = x + sx * y + sxy * z;
+				xblock = x / xstep;
+				xoffset = x % xstep;
+
+				size_t block = xblock + nx * yblock + (ny * nx) * zblock;
+				size_t offset = xoffset + xstep * yoffset + (ystep * xstep) * zoffset;
+
+				WINDOW value = window_values[windows[block]];
+				if ((value >> offset) & 0b1) { 
+					boundaries[iv] = true;
+				}
+			}
+		}
+	}
+
+	return boundaries;
+}
+
+template <typename LABEL>
+LABEL* decode_nonboundary_labels(
+    uint32_t *components, const std::vector<LABEL> &ids, 
+    const size_t sx, const size_t sy, const size_t sz
+) {
+  const size_t sxy = sx * sy;
+  const size_t voxels = sxy * sz;
+
+  LABEL *decompressed_data = new LABEL[voxels]();
+  
+  for (size_t z = 0; z < sz; z++) {
+    for (size_t y = 0; y < sy; y++) {
+      for (size_t x = 0; x < sx; x++) {
+        size_t iv = x + sx * y + sxy * z;
+        decompressed_data[iv] = ids[components[iv]];
+      }
+    }
+  }
+
+  return decompressed_data;
+}
+
+template <typename LABEL>
+void decode_indeterminate_locations(
+    bool *boundaries, LABEL *labels, 
+    const std::vector<LABEL> &locations, 
+    const size_t sx, const size_t sy, const size_t sz
+) {
+  const size_t sxy = sx * sy;
+
+  size_t iv = 0;
+  size_t index = 0;
+
+  // go through all coordinates
+  for (size_t z = 0; z < sz; z++) {
+    for (size_t y = 0; y < sy; y++) {
+      for (size_t x = 0; x < sx; x++, iv++) {
+        size_t loc = x + sx * y + sxy * z;
+        size_t north = loc - 1;
+        size_t west = loc - sx;
+
+        if (!boundaries[iv]) {
+          continue;
+        }
+        else if (x > 0 && !boundaries[north]) {
+          labels[iv] = labels[north];
+        }
+        else if (y > 0 && !boundaries[west]) {
+          labels[iv] = labels[west];
+        }
+        else {
+          size_t offset = locations[index];
+          if (offset == 0) {
+            labels[iv] = labels[loc - 1];
+          }
+          else if (offset == 1) {
+            labels[iv] = labels[loc + 1];
+          }
+          else if (offset == 2) {
+            labels[iv] = labels[loc - sx];
+          }
+          else if (offset == 3) {
+            labels[iv] = labels[loc + sx];
+          }
+          else if (offset == 4) {
+            labels[iv] = labels[loc - sxy];
+          }
+          else if (offset == 5) {
+            labels[iv] = labels[loc + sxy];
+          }
+          else {
+            labels[iv] = offset - 6;                        
+          }
+          index += 1;
+        }
+      }
+    }
+  }
+}
+
+
+template <typename LABEL, typename WINDOW>
+LABEL* decompress(unsigned char* buffer, LABEL* output = NULL) {
+	const CompressoHeader header(buffer);
+
+	const size_t sx = header.sx;
+	const size_t sy = header.sy;
+	const size_t sz = header.sz;
+	const size_t xstep = header.xstep;
+	const size_t ystep = header.ystep;
+	const size_t zstep = header.zstep;
+
+	const size_t nz = (sz + (zstep / 2)) / zstep;
+	const size_t ny = (sy + (ystep / 2)) / ystep;
+	const size_t nx = (sx + (xstep / 2)) / xstep;
+	const size_t nblocks = nz * ny * nx;
+
+	// allocate memory for all arrays
+	std::vector<LABEL> ids(header.id_size);
+	std::vector<WINDOW> window_values(header.value_size);
+	std::vector<LABEL> locations(header.location_size);
+	WINDOW *windows = new WINDOW[nblocks]();
+
+	size_t iv = CompressoHeader::header_size;
+	for (size_t ix = 0; ix < header.id_size; ix++, iv += sizeof(LABEL)) {
+		ids[ix] = ctoi<LABEL>(buffer, iv);
+	}
+	for (size_t ix = 0; ix < header.value_size; ix++, iv += sizeof(WINDOW)) {
+		window_values[ix] = ctoi<WINDOW>(buffer, iv);
+	}
+	for (size_t ix = 0; ix < header.location_size; ix++, iv += sizeof(LABEL)) {
+		locations[ix] = ctoi<LABEL>(buffer, iv);
+	}
+	for (size_t ix = 0; ix < nblocks; ix++, iv += sizeof(WINDOW)) {
+		windows[ix] = ctoi<WINDOW>(buffer, iv);
+	}
+
+	bool* boundaries = decode_boundaries<WINDOW>(
+		windows, window_values, 
+		sx, sy, sz, 
+		xstep, ystep, zstep
+	);
+	delete[] windows;
+	window_values = std::vector<WINDOW>();
+
+	uint32_t* components = cc3d::connected_components2d<uint32_t>(boundaries, sx, sy, sz);
+	LABEL* labels = decode_nonboundary_labels(components, ids, sx, sy, sz);
+	delete[] components;
+	ids = std::vector<LABEL>();
+
+	decode_indeterminate_locations<LABEL>(
+		boundaries, labels, locations, 
+		sx, sy, sz
+	);
+
+	return labels;
+}
+
+template <>
+void* decompress<void,void>(unsigned char* buffer, void* output) {
+	CompressoHeader header(buffer);
+
+	bool window16 = (
+		static_cast<int>(header.xstep) * static_cast<int>(header.ystep) * static_cast<int>(header.zstep) <= 16
+	);
+
+	if (header.data_width == 1) {
+		if (window16) {
+			return reinterpret_cast<void*>(
+				decompress<uint8_t,uint16_t>(buffer, reinterpret_cast<uint8_t*>(output))
+			);
+		}
+		else {
+			return reinterpret_cast<void*>(
+				decompress<uint8_t, uint64_t>(buffer, reinterpret_cast<uint8_t*>(output))
+			);			
+		}
+	}
+	else if (header.data_width == 2) {
+		if (window16) {
+			return reinterpret_cast<void*>(
+				decompress<uint16_t,uint16_t>(buffer, reinterpret_cast<uint16_t*>(output))
+			);
+		}
+		else {
+			return reinterpret_cast<void*>(
+				decompress<uint16_t, uint64_t>(buffer, reinterpret_cast<uint16_t*>(output))
+			);			
+		}
+	}
+	else if (header.data_width == 4) {
+		if (window16) {
+			return reinterpret_cast<void*>(
+				decompress<uint32_t,uint16_t>(buffer, reinterpret_cast<uint32_t*>(output))
+			);		
+		}
+		else {
+			return reinterpret_cast<void*>(
+				decompress<uint32_t, uint64_t>(buffer, reinterpret_cast<uint32_t*>(output))
+			);			
+		}
+	}
+	else if (header.data_width == 8) {
+		if (window16) {
+			return reinterpret_cast<void*>(
+				decompress<uint64_t,uint16_t>(buffer, reinterpret_cast<uint64_t*>(output))
+			);		
+		}
+		else {
+			return reinterpret_cast<void*>(
+				decompress<uint64_t, uint64_t>(buffer, reinterpret_cast<uint64_t*>(output))
+			);			
+		}
+	}
+	else {
+		std::string err = "compresso: Invalid data width: ";
+		err += std::to_string(header.data_width);
+		throw std::runtime_error(err);
 	}
 }
 
