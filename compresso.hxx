@@ -433,7 +433,7 @@ std::vector<unsigned char> compress(
 		throw std::runtime_error("Unable to encode blocks larger than 64 voxels.");
 	}
 
-	const size_t sxy = sx * sy;
+	// const size_t sxy = sx * sy;
 	const size_t voxels = sx * sy * sz;
 
 	const size_t nx = (sz + (zstep / 2)) / zstep;

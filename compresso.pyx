@@ -98,7 +98,7 @@ cdef extern from "compresso.hxx" namespace "pycompresso":
 
 #     return intro_data.tobytes() + condensed_blocks.tobytes()
 
-def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
+def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
   data = np.asfortranarray(data)
   sx = data.shape[0]
   sy = data.shape[1]

@@ -1278,7 +1278,7 @@ struct __pyx_defaults3 {
 /* "compresso.pyx":101
  * #     return intro_data.tobytes() + condensed_blocks.tobytes()
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):             # <<<<<<<<<<<<<<
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:             # <<<<<<<<<<<<<<
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]
  */
@@ -2544,6 +2544,7 @@ static const char __pyx_k_ASCII[] = "ASCII";
 static const char __pyx_k_arr16[] = "arr16";
 static const char __pyx_k_arr32[] = "arr32";
 static const char __pyx_k_arr64[] = "arr64";
+static const char __pyx_k_bytes[] = "bytes";
 static const char __pyx_k_class[] = "__class__";
 static const char __pyx_k_dtype[] = "dtype";
 static const char __pyx_k_error[] = "error";
@@ -2571,6 +2572,7 @@ static const char __pyx_k_module[] = "__module__";
 static const char __pyx_k_name_2[] = "__name__";
 static const char __pyx_k_pickle[] = "pickle";
 static const char __pyx_k_reduce[] = "__reduce__";
+static const char __pyx_k_return[] = "return";
 static const char __pyx_k_signed[] = "signed";
 static const char __pyx_k_struct[] = "struct";
 static const char __pyx_k_uint16[] = "uint16";
@@ -2710,6 +2712,7 @@ static PyObject *__pyx_n_s_asfortranarray;
 static PyObject *__pyx_n_s_base;
 static PyObject *__pyx_n_s_buf;
 static PyObject *__pyx_n_s_byteorder;
+static PyObject *__pyx_n_u_bytes;
 static PyObject *__pyx_n_s_c;
 static PyObject *__pyx_n_u_c;
 static PyObject *__pyx_n_s_check_compatibility;
@@ -2787,6 +2790,7 @@ static PyObject *__pyx_n_s_read_header_locals_lambda;
 static PyObject *__pyx_n_s_reduce;
 static PyObject *__pyx_n_s_reduce_cython;
 static PyObject *__pyx_n_s_reduce_ex;
+static PyObject *__pyx_n_s_return;
 static PyObject *__pyx_n_s_setstate;
 static PyObject *__pyx_n_s_setstate_cython;
 static PyObject *__pyx_n_s_shape;
@@ -2932,7 +2936,7 @@ static PyObject *__pyx_codeobj__39;
 /* "compresso.pyx":101
  * #     return intro_data.tobytes() + condensed_blocks.tobytes()
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):             # <<<<<<<<<<<<<<
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:             # <<<<<<<<<<<<<<
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]
  */
@@ -3752,7 +3756,7 @@ static PyObject *__pyx_pf_9compresso_6compress(CYTHON_UNUSED PyObject *__pyx_sel
 
   /* "compresso.pyx":102
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
  *   data = np.asfortranarray(data)             # <<<<<<<<<<<<<<
  *   sx = data.shape[0]
  *   sy = data.shape[1]
@@ -3801,7 +3805,7 @@ static PyObject *__pyx_pf_9compresso_6compress(CYTHON_UNUSED PyObject *__pyx_sel
   __pyx_t_1 = 0;
 
   /* "compresso.pyx":103
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]             # <<<<<<<<<<<<<<
  *   sy = data.shape[1]
@@ -4282,14 +4286,14 @@ static PyObject *__pyx_pf_9compresso_6compress(CYTHON_UNUSED PyObject *__pyx_sel
   __pyx_t_9 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyBytes_Type)), __pyx_t_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 131, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_r = __pyx_t_9;
+  __pyx_r = ((PyObject*)__pyx_t_9);
   __pyx_t_9 = 0;
   goto __pyx_L0;
 
   /* "compresso.pyx":101
  * #     return intro_data.tobytes() + condensed_blocks.tobytes()
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):             # <<<<<<<<<<<<<<
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:             # <<<<<<<<<<<<<<
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]
  */
@@ -4500,7 +4504,7 @@ static PyObject *__pyx_pf_9compresso_8compress(CYTHON_UNUSED PyObject *__pyx_sel
 
   /* "compresso.pyx":102
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
  *   data = np.asfortranarray(data)             # <<<<<<<<<<<<<<
  *   sx = data.shape[0]
  *   sy = data.shape[1]
@@ -4549,7 +4553,7 @@ static PyObject *__pyx_pf_9compresso_8compress(CYTHON_UNUSED PyObject *__pyx_sel
   __pyx_t_1 = 0;
 
   /* "compresso.pyx":103
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]             # <<<<<<<<<<<<<<
  *   sy = data.shape[1]
@@ -5030,14 +5034,14 @@ static PyObject *__pyx_pf_9compresso_8compress(CYTHON_UNUSED PyObject *__pyx_sel
   __pyx_t_9 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyBytes_Type)), __pyx_t_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 131, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_r = __pyx_t_9;
+  __pyx_r = ((PyObject*)__pyx_t_9);
   __pyx_t_9 = 0;
   goto __pyx_L0;
 
   /* "compresso.pyx":101
  * #     return intro_data.tobytes() + condensed_blocks.tobytes()
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):             # <<<<<<<<<<<<<<
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:             # <<<<<<<<<<<<<<
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]
  */
@@ -5248,7 +5252,7 @@ static PyObject *__pyx_pf_9compresso_10compress(CYTHON_UNUSED PyObject *__pyx_se
 
   /* "compresso.pyx":102
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
  *   data = np.asfortranarray(data)             # <<<<<<<<<<<<<<
  *   sx = data.shape[0]
  *   sy = data.shape[1]
@@ -5297,7 +5301,7 @@ static PyObject *__pyx_pf_9compresso_10compress(CYTHON_UNUSED PyObject *__pyx_se
   __pyx_t_1 = 0;
 
   /* "compresso.pyx":103
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]             # <<<<<<<<<<<<<<
  *   sy = data.shape[1]
@@ -5778,14 +5782,14 @@ static PyObject *__pyx_pf_9compresso_10compress(CYTHON_UNUSED PyObject *__pyx_se
   __pyx_t_9 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyBytes_Type)), __pyx_t_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 131, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_r = __pyx_t_9;
+  __pyx_r = ((PyObject*)__pyx_t_9);
   __pyx_t_9 = 0;
   goto __pyx_L0;
 
   /* "compresso.pyx":101
  * #     return intro_data.tobytes() + condensed_blocks.tobytes()
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):             # <<<<<<<<<<<<<<
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:             # <<<<<<<<<<<<<<
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]
  */
@@ -5996,7 +6000,7 @@ static PyObject *__pyx_pf_9compresso_12compress(CYTHON_UNUSED PyObject *__pyx_se
 
   /* "compresso.pyx":102
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
  *   data = np.asfortranarray(data)             # <<<<<<<<<<<<<<
  *   sx = data.shape[0]
  *   sy = data.shape[1]
@@ -6045,7 +6049,7 @@ static PyObject *__pyx_pf_9compresso_12compress(CYTHON_UNUSED PyObject *__pyx_se
   __pyx_t_1 = 0;
 
   /* "compresso.pyx":103
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]             # <<<<<<<<<<<<<<
  *   sy = data.shape[1]
@@ -6526,14 +6530,14 @@ static PyObject *__pyx_pf_9compresso_12compress(CYTHON_UNUSED PyObject *__pyx_se
   __pyx_t_9 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyBytes_Type)), __pyx_t_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 131, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_r = __pyx_t_9;
+  __pyx_r = ((PyObject*)__pyx_t_9);
   __pyx_t_9 = 0;
   goto __pyx_L0;
 
   /* "compresso.pyx":101
  * #     return intro_data.tobytes() + condensed_blocks.tobytes()
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):             # <<<<<<<<<<<<<<
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:             # <<<<<<<<<<<<<<
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]
  */
@@ -21844,6 +21848,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_base, __pyx_k_base, sizeof(__pyx_k_base), 0, 0, 1, 1},
   {&__pyx_n_s_buf, __pyx_k_buf, sizeof(__pyx_k_buf), 0, 0, 1, 1},
   {&__pyx_n_s_byteorder, __pyx_k_byteorder, sizeof(__pyx_k_byteorder), 0, 0, 1, 1},
+  {&__pyx_n_u_bytes, __pyx_k_bytes, sizeof(__pyx_k_bytes), 0, 1, 0, 1},
   {&__pyx_n_s_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 0, 1, 1},
   {&__pyx_n_u_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 1, 0, 1},
   {&__pyx_n_s_check_compatibility, __pyx_k_check_compatibility, sizeof(__pyx_k_check_compatibility), 0, 0, 1, 1},
@@ -21921,6 +21926,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_reduce, __pyx_k_reduce, sizeof(__pyx_k_reduce), 0, 0, 1, 1},
   {&__pyx_n_s_reduce_cython, __pyx_k_reduce_cython, sizeof(__pyx_k_reduce_cython), 0, 0, 1, 1},
   {&__pyx_n_s_reduce_ex, __pyx_k_reduce_ex, sizeof(__pyx_k_reduce_ex), 0, 0, 1, 1},
+  {&__pyx_n_s_return, __pyx_k_return, sizeof(__pyx_k_return), 0, 0, 1, 1},
   {&__pyx_n_s_setstate, __pyx_k_setstate, sizeof(__pyx_k_setstate), 0, 0, 1, 1},
   {&__pyx_n_s_setstate_cython, __pyx_k_setstate_cython, sizeof(__pyx_k_setstate_cython), 0, 0, 1, 1},
   {&__pyx_n_s_shape, __pyx_k_shape, sizeof(__pyx_k_shape), 0, 0, 1, 1},
@@ -21987,7 +21993,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "compresso.pyx":101
  * #     return intro_data.tobytes() + condensed_blocks.tobytes()
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):             # <<<<<<<<<<<<<<
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:             # <<<<<<<<<<<<<<
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]
  */
@@ -22215,7 +22221,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "compresso.pyx":101
  * #     return intro_data.tobytes() + condensed_blocks.tobytes()
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):             # <<<<<<<<<<<<<<
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:             # <<<<<<<<<<<<<<
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]
  */
@@ -22587,7 +22593,8 @@ static CYTHON_SMALL_CODE int __pyx_pymod_exec_compresso(PyObject *__pyx_pyinit_m
   PyObject *__pyx_t_3 = NULL;
   PyObject *__pyx_t_4 = NULL;
   __pyx_ctuple_long__and_long__and_long __pyx_t_5;
-  static PyThread_type_lock __pyx_t_6[8];
+  PyObject *__pyx_t_6 = NULL;
+  static PyThread_type_lock __pyx_t_7[8];
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -22746,7 +22753,7 @@ if (!__Pyx_RefNanny) {
   /* "compresso.pyx":101
  * #     return intro_data.tobytes() + condensed_blocks.tobytes()
  * 
- * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):             # <<<<<<<<<<<<<<
+ * def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)) -> bytes:             # <<<<<<<<<<<<<<
  *   data = np.asfortranarray(data)
  *   sx = data.shape[0]
  */
@@ -22767,52 +22774,72 @@ if (!__Pyx_RefNanny) {
   __pyx_t_1 = 0;
   __pyx_t_1 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_9compresso_7compress, 0, __pyx_n_s_compress, NULL, __pyx_n_s_compresso, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_3, sizeof(__pyx_defaults8), 1)) __PYX_ERR(0, 101, __pyx_L1_error)
-  __pyx_t_4 = __pyx_convert__to_py___pyx_ctuple_long__and_long__and_long(__pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_return, __pyx_n_u_bytes) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
+  __pyx_t_4 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_9compresso_7compress, 0, __pyx_n_s_compress, NULL, __pyx_n_s_compresso, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_CyFunction_Defaults(__pyx_defaults8, __pyx_t_3)->__pyx_arg_steps = __pyx_t_4;
-  __Pyx_GIVEREF(__pyx_t_4);
-  __pyx_t_4 = 0;
-  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_3, __pyx_t_2);
-  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_9compresso_32__defaults__);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_uint8_t, __pyx_t_3) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
+  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_4, sizeof(__pyx_defaults8), 1)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __pyx_t_6 = __pyx_convert__to_py___pyx_ctuple_long__and_long__and_long(__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_CyFunction_Defaults(__pyx_defaults8, __pyx_t_4)->__pyx_arg_steps = __pyx_t_6;
+  __Pyx_GIVEREF(__pyx_t_6);
+  __pyx_t_6 = 0;
+  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_t_2);
+  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_4, __pyx_pf_9compresso_32__defaults__);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_4, __pyx_t_3);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_uint8_t, __pyx_t_4) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_return, __pyx_n_u_bytes) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
   __pyx_t_3 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_9compresso_9compress, 0, __pyx_n_s_compress, NULL, __pyx_n_s_compresso, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   if (!__Pyx_CyFunction_InitDefaults(__pyx_t_3, sizeof(__pyx_defaults9), 1)) __PYX_ERR(0, 101, __pyx_L1_error)
-  __pyx_t_4 = __pyx_convert__to_py___pyx_ctuple_long__and_long__and_long(__pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_CyFunction_Defaults(__pyx_defaults9, __pyx_t_3)->__pyx_arg_steps = __pyx_t_4;
-  __Pyx_GIVEREF(__pyx_t_4);
-  __pyx_t_4 = 0;
+  __pyx_t_6 = __pyx_convert__to_py___pyx_ctuple_long__and_long__and_long(__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_CyFunction_Defaults(__pyx_defaults9, __pyx_t_3)->__pyx_arg_steps = __pyx_t_6;
+  __Pyx_GIVEREF(__pyx_t_6);
+  __pyx_t_6 = 0;
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_3, __pyx_t_2);
   __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_9compresso_34__defaults__);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_3, __pyx_t_4);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_uint16_t, __pyx_t_3) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __pyx_FusedFunction_New(&__pyx_fuse_2__pyx_mdef_9compresso_11compress, 0, __pyx_n_s_compress, NULL, __pyx_n_s_compresso, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_3, sizeof(__pyx_defaults10), 1)) __PYX_ERR(0, 101, __pyx_L1_error)
-  __pyx_t_4 = __pyx_convert__to_py___pyx_ctuple_long__and_long__and_long(__pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_return, __pyx_n_u_bytes) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
+  __pyx_t_4 = __pyx_FusedFunction_New(&__pyx_fuse_2__pyx_mdef_9compresso_11compress, 0, __pyx_n_s_compress, NULL, __pyx_n_s_compresso, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_CyFunction_Defaults(__pyx_defaults10, __pyx_t_3)->__pyx_arg_steps = __pyx_t_4;
-  __Pyx_GIVEREF(__pyx_t_4);
-  __pyx_t_4 = 0;
-  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_3, __pyx_t_2);
-  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_9compresso_36__defaults__);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_uint32_t, __pyx_t_3) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
+  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_4, sizeof(__pyx_defaults10), 1)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __pyx_t_6 = __pyx_convert__to_py___pyx_ctuple_long__and_long__and_long(__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_CyFunction_Defaults(__pyx_defaults10, __pyx_t_4)->__pyx_arg_steps = __pyx_t_6;
+  __Pyx_GIVEREF(__pyx_t_6);
+  __pyx_t_6 = 0;
+  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_t_2);
+  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_4, __pyx_pf_9compresso_36__defaults__);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_4, __pyx_t_3);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_uint32_t, __pyx_t_4) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_return, __pyx_n_u_bytes) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
   __pyx_t_3 = __pyx_FusedFunction_New(&__pyx_fuse_3__pyx_mdef_9compresso_13compress, 0, __pyx_n_s_compress, NULL, __pyx_n_s_compresso, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   if (!__Pyx_CyFunction_InitDefaults(__pyx_t_3, sizeof(__pyx_defaults11), 1)) __PYX_ERR(0, 101, __pyx_L1_error)
-  __pyx_t_4 = __pyx_convert__to_py___pyx_ctuple_long__and_long__and_long(__pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_CyFunction_Defaults(__pyx_defaults11, __pyx_t_3)->__pyx_arg_steps = __pyx_t_4;
-  __Pyx_GIVEREF(__pyx_t_4);
-  __pyx_t_4 = 0;
+  __pyx_t_6 = __pyx_convert__to_py___pyx_ctuple_long__and_long__and_long(__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_CyFunction_Defaults(__pyx_defaults11, __pyx_t_3)->__pyx_arg_steps = __pyx_t_6;
+  __Pyx_GIVEREF(__pyx_t_6);
+  __pyx_t_6 = 0;
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_3, __pyx_t_2);
   __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_9compresso_38__defaults__);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_3, __pyx_t_4);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_uint64_t, __pyx_t_3) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_t_3 = __pyx_FusedFunction_New(&__pyx_mdef_9compresso_1compress, 0, __pyx_n_s_compress, NULL, __pyx_n_s_compresso, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 101, __pyx_L1_error)
@@ -22958,15 +22985,15 @@ if (!__Pyx_RefNanny) {
  *     PyThread_allocate_lock(),
  *     PyThread_allocate_lock(),
  */
-  __pyx_t_6[0] = PyThread_allocate_lock();
-  __pyx_t_6[1] = PyThread_allocate_lock();
-  __pyx_t_6[2] = PyThread_allocate_lock();
-  __pyx_t_6[3] = PyThread_allocate_lock();
-  __pyx_t_6[4] = PyThread_allocate_lock();
-  __pyx_t_6[5] = PyThread_allocate_lock();
-  __pyx_t_6[6] = PyThread_allocate_lock();
-  __pyx_t_6[7] = PyThread_allocate_lock();
-  memcpy(&(__pyx_memoryview_thread_locks[0]), __pyx_t_6, sizeof(__pyx_memoryview_thread_locks[0]) * (8));
+  __pyx_t_7[0] = PyThread_allocate_lock();
+  __pyx_t_7[1] = PyThread_allocate_lock();
+  __pyx_t_7[2] = PyThread_allocate_lock();
+  __pyx_t_7[3] = PyThread_allocate_lock();
+  __pyx_t_7[4] = PyThread_allocate_lock();
+  __pyx_t_7[5] = PyThread_allocate_lock();
+  __pyx_t_7[6] = PyThread_allocate_lock();
+  __pyx_t_7[7] = PyThread_allocate_lock();
+  memcpy(&(__pyx_memoryview_thread_locks[0]), __pyx_t_7, sizeof(__pyx_memoryview_thread_locks[0]) * (8));
 
   /* "View.MemoryView":549
  *         info.obj = self
@@ -23020,6 +23047,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_6);
   if (__pyx_m) {
     if (__pyx_d) {
       __Pyx_AddTraceback("init compresso", __pyx_clineno, __pyx_lineno, __pyx_filename);
