@@ -31,6 +31,10 @@ ctypedef fused UINT:
   uint32_t
   uint64_t
 
+class DecodeError(Exception):
+  """Unable to decode the stream."""
+  pass
+
 cdef extern from "compresso.hxx" namespace "pycompresso":
   vector[unsigned char] cpp_compress[T](
     T *data, 
@@ -126,11 +130,18 @@ def compress(cnp.ndarray[UINT, ndim=3] data, steps=(8,8,1)):
 
   return bytes(buf)
 
+def check_compatibility(buf : bytes):
+  format_version = buf[4]
+  if format_version != 0:
+    raise DecodeError(f"Unable to decode format version {format_version}. Only version 0 is supported.")
+
 def read_header(buf : bytes) -> dict:
   """
-  Decodes the header 
+  Decodes the header into a python dict.
   """
+  check_compatibility(buf)
   toint = lambda n: int.from_bytes(n, byteorder="little", signed=False)
+
   return {
     "magic": buf[:4],
     "format_version": buf[4],
@@ -145,6 +156,9 @@ def read_header(buf : bytes) -> dict:
     "value_size": toint(buf[23:27]),
     "location_size": toint(buf[27:35]),
   }
+
+# def decompress(buf : bytes):
+#   check_compatibility(buf)
 
 # def decompress(data):
 #     """

@@ -129,10 +129,6 @@ bool* extract_boundaries(
 	const size_t sxy = sx * sy;
 	const size_t voxels = sxy * sz;
 	bool *boundaries = new bool[voxels]();
-	if (!boundaries) { 
-		fprintf(stderr, "Failed to allocate memory for boundaries.\n"); 
-		exit(-1); 
-	}
 
 	for (size_t z = 0; z < sz; z++) {
 		for (size_t y = 0; y < sy; y++) {
@@ -207,47 +203,44 @@ std::vector<T> encode_boundaries(
     const size_t xstep, const size_t ystep, const size_t zstep
 ) {
 
-    const size_t sxy = sx * sy;
+  const size_t sxy = sx * sy;
 
-    const size_t nz = (sz + (zstep / 2)) / zstep;
-    const size_t ny = (sy + (ystep / 2)) / ystep;
-    const size_t nx = (sx + (xstep / 2)) / xstep;
-    const size_t nblocks = nz * ny * nx;
+  const size_t nz = (sz + (zstep / 2)) / zstep;
+  const size_t ny = (sy + (ystep / 2)) / ystep;
+  const size_t nx = (sx + (xstep / 2)) / xstep;
+  const size_t nblocks = nz * ny * nx;
 
-    std::vector<T> boundary_data(nblocks);
-    
-    size_t xblock, yblock, zblock;
-    size_t xoffset, yoffset, zoffset;
+  std::vector<T> boundary_data(nblocks);
+  
+  size_t xblock, yblock, zblock;
+  size_t xoffset, yoffset, zoffset;
 
-    // all these divisions can be replaced by plus/minus
-    for (size_t z = 0; z < sz; z++) {
-      zblock = z / zstep;
-      zoffset = z % zstep;
-      for (size_t y = 0; y < sy; y++) {
-        yblock = y / ystep;
-        yoffset = y % ystep;
-        for (size_t x = 0; x < sx; x++) {
-          size_t loc = x + sx * y + sxy * z;
+  // all these divisions can be replaced by plus/minus
+  for (size_t z = 0; z < sz; z++) {
+    zblock = z / zstep;
+    zoffset = z % zstep;
+    for (size_t y = 0; y < sy; y++) {
+      yblock = y / ystep;
+      yoffset = y % ystep;
+      for (size_t x = 0; x < sx; x++) {
+        size_t loc = x + sx * y + sxy * z;
 
-          // boundaries == false is the actual boundaries
-          // b/c we used cc3d which treats black as bg instead 
-          // of white
-          if (boundaries[loc]) { 
-            continue; 
-          }
-
-          xblock = x / xstep;
-          xoffset = x % xstep;
-
-          size_t block = xblock + nx * yblock + (ny * nx) * zblock;
-          size_t offset = xoffset + xstep * yoffset + (ystep * xstep) * zoffset;
-
-          boundary_data[block] += (1LU << offset);
+        if (!boundaries[loc]) { 
+          continue; 
         }
+
+        xblock = x / xstep;
+        xoffset = x % xstep;
+
+        size_t block = xblock + nx * yblock + (ny * nx) * zblock;
+        size_t offset = xoffset + xstep * yoffset + (ystep * xstep) * zoffset;
+
+        boundary_data[block] += (1LU << offset);
       }
     }
+  }
 
-    return boundary_data;    
+  return boundary_data;    
 }
 
 template <typename T>
@@ -256,7 +249,8 @@ std::vector<T> encode_indeterminate_locations(
     const size_t sx, const size_t sy, const size_t sz
 ) {
   const size_t sxy = sx * sy;
-  std::vector<T> locations(sx * sy * sz);
+  std::vector<T> locations;
+  locations.reserve(sx * sy * sz / 10);
 
   int64_t iv = 0;
   for (size_t z = 0; z < sz; z++) {
@@ -300,13 +294,11 @@ std::vector<T> encode_indeterminate_locations(
         else if (z < sz - 1 && !boundaries[up] && (labels[up] == labels[iv])) {
           locations.push_back(5);
         }
+        else if (labels[loc] <= std::numeric_limits<T>::max() - 6) {
+        	locations.push_back(labels[loc] + 6);
+        }
         else {
-        	if (labels[loc] <= std::numeric_limits<T>::max() - 6) {
-          	locations.push_back(labels[loc] + 6);
-          }
-          else {
-          	throw std::runtime_error("compresso: Cannot encode labels within 6 units of integer overflow.");
-          }
+        	throw std::runtime_error("compresso: Cannot encode labels within 6 units of integer overflow.");
         }
       }
     }
@@ -432,6 +424,13 @@ std::vector<unsigned char> compress(
 	// Very similar to fastremap.component_map
 	std::vector<T> ids = component_map<T>(components, labels, sx, sy, sz, num_components);
 	delete[] components;
+
+  // Had to use inverted boundaries for cc3d
+  // now switch to a sensible version for rest of
+  // code. can optimize cc3d later.
+	for (size_t i = 0; i < voxels; i++) { 
+		boundaries[i] = !boundaries[i];
+	}
 
 	// for 4,4,1 we could use uint16_t
 	std::vector<uint64_t> windows = encode_boundaries<uint64_t>(boundaries, sx, sy, sz, xstep, ystep, zstep);
