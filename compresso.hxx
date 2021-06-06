@@ -62,7 +62,7 @@ public:
 
 	static constexpr char magic[]{ "cpso" }; 
 	static constexpr uint8_t format_version{0};
-	uint8_t data_width;
+	uint8_t data_width; // label width in bits
 	uint16_t sx;
 	uint16_t sy;
 	uint16_t sz;
@@ -71,7 +71,7 @@ public:
 	uint8_t zstep; // 4 bits each to x and y (we only use 4 and 8 anyway)
 	uint64_t id_size; // label per connected component 
 	uint32_t value_size; // boundary encodings (less than size / 16 or size / 64)
-	uint64_t location_size; // remapped labels
+	uint64_t location_size; // instructions to remap boundaries
 
 	CompressoHeader() :
 		data_width(8), 
@@ -335,31 +335,31 @@ std::vector<T> unique(const std::vector<T> &data) {
 }
 
 template <typename T>
-void renumber_boundary_data(const std::vector<T>& values, std::vector<T> &boundary_data) {
-  if (boundary_data.size() == 0) {
+void renumber_boundary_data(const std::vector<T>& window_values, std::vector<T> &windows) {
+  if (windows.size() == 0) {
   	return;
   }
 
   std::unordered_map<T, T> mapping;
-  const size_t n_vals = values.size();
+  const size_t n_vals = window_values.size();
   for (size_t iv = 0; iv < n_vals; iv++) {
-    mapping[values[iv]] = iv;
+    mapping[window_values[iv]] = iv;
   }
 
-  const size_t n_data = boundary_data.size();
-  T last = boundary_data[0];
-  boundary_data[0] = mapping[boundary_data[0]];
-  T last_remap = boundary_data[0];
+  const size_t n_data = windows.size();
+  T last = windows[0];
+  windows[0] = mapping[windows[0]];
+  T last_remap = windows[0];
 
   for (size_t iv = 1; iv < n_data; iv++) {
-  	if (boundary_data[iv] == last) {
-  		boundary_data[iv] = last_remap;
+  	if (windows[iv] == last) {
+  		windows[iv] = last_remap;
   		continue;
   	}
 
-  	last_remap = mapping[boundary_data[iv]];
-  	last = boundary_data[iv];
-    boundary_data[iv] = last_remap;
+  	last_remap = mapping[windows[iv]];
+  	last = windows[iv];
+    windows[iv] = last_remap;
   }
 }
 
@@ -368,24 +368,28 @@ std::vector<T> run_length_encode_windows(const std::vector<T> &windows) {
 	std::vector<T> rle_windows;
 	rle_windows.reserve(windows.size() / 4);
 
-	bool zero_run = false;
+	size_t zero_run = 0;
 	size_t prev_zero = 0;
+
+	size_t max_run = std::numeric_limits<T>::max() / 2;
 
 	const size_t window_size = windows.size();
 	for (size_t i = 0; i < window_size; i++) {
 		if (windows[i] == 0) {
 			if (!zero_run) {
-				zero_run = true;
+				zero_run++;
 				prev_zero = i;
 			}
-		}
-		else {
-			if (zero_run) {
-				rle_windows.push_back((i - prev_zero) * 2 + 1);
-				zero_run = false;
+			if (zero_run < max_run) {
+				continue;
 			}
-			rle_windows.push_back(windows[i] * 2);
 		}
+		
+		if (zero_run) {
+			rle_windows.push_back((i - prev_zero) * 2 + 1);
+			zero_run = 0;
+		}
+		rle_windows.push_back(windows[i] * 2);
 	}
 
 	return rle_windows;
@@ -396,14 +400,14 @@ bool is_little_endian() {
 	return (*(char *) & n == 1);
 }
 
-template <typename T>
+template <typename LABEL, typename WINDOW>
 void write_compressed_stream(
 	std::vector<unsigned char> &compressed_data,
 	const CompressoHeader &header, 
-	const std::vector<T> &ids, 
-	const std::vector<uint64_t> &window_values, 
-	const std::vector<T> &locations,
-	const std::vector<uint64_t> &windows,
+	const std::vector<LABEL> &ids, 
+	const std::vector<WINDOW> &window_values, 
+	const std::vector<LABEL> &locations,
+	const std::vector<WINDOW> &windows,
 	const size_t nblocks
 ) {
 	size_t idx = header.tochars(compressed_data, 0);
@@ -421,6 +425,54 @@ void write_compressed_stream(
 	}
 }
 
+template <typename LABEL, typename WINDOW>
+std::vector<unsigned char> compress_helper(
+	LABEL* labels, 
+	const size_t sx, const size_t sy, const size_t sz,
+	const size_t xstep, const size_t ystep, const size_t zstep,
+	bool* boundaries, const std::vector<LABEL>& ids
+) {
+	const size_t nx = (sz + (zstep / 2)) / zstep;
+	const size_t ny = (sy + (ystep / 2)) / ystep;
+	const size_t nz = (sx + (xstep / 2)) / xstep;
+
+	const size_t nblocks = nx * ny * nz;
+
+	std::vector<WINDOW> windows = encode_boundaries<WINDOW>(boundaries, sx, sy, sz, xstep, ystep, zstep);
+	std::vector<LABEL> locations = encode_indeterminate_locations<LABEL>(boundaries, labels, sx, sy, sz);
+	delete[] boundaries;
+
+	std::vector<WINDOW> window_values = unique<WINDOW>(windows);
+	renumber_boundary_data(window_values, windows);
+	windows = run_length_encode_windows<WINDOW>(windows);
+
+	size_t num_out_bytes = (
+		CompressoHeader::header_size 
+		+ (ids.size() * sizeof(LABEL))
+		+ (window_values.size() * sizeof(WINDOW))
+		+ (locations.size() * sizeof(LABEL))
+		+ (nblocks * sizeof(WINDOW))
+	);
+	std::vector<unsigned char> compressed_data(num_out_bytes);
+
+	CompressoHeader header(
+		/*data_width=*/sizeof(LABEL), 
+		/*sx=*/sx, /*sy=*/sy, /*sz=*/sz,
+		/*xstep=*/xstep, /*ystep=*/ystep, /*zstep=*/zstep,
+		/*id_size=*/ids.size(), 
+		/*value_size=*/window_values.size(), 
+		/*location_size=*/locations.size()
+	);
+
+	write_compressed_stream<LABEL, WINDOW>(
+		compressed_data, header, ids, 
+		window_values, locations, windows,
+		nblocks
+	);
+
+	return compressed_data;
+}
+
 /* compress
  *
  * Convert 3D integer array data into a compresso encoded byte stream.
@@ -436,7 +488,7 @@ void write_compressed_stream(
  */
 template <typename T>
 std::vector<unsigned char> compress(
-	T *labels, 
+	T* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t xstep = 8, const size_t ystep = 8, const size_t zstep = 1
 ) {
@@ -448,12 +500,6 @@ std::vector<unsigned char> compress(
 	// const size_t sxy = sx * sy;
 	// const size_t voxels = sx * sy * sz;
 
-	const size_t nx = (sz + (zstep / 2)) / zstep;
-	const size_t ny = (sy + (ystep / 2)) / ystep;
-	const size_t nz = (sx + (xstep / 2)) / xstep;
-
-	const size_t nblocks = nx * ny * nz;
-
 	bool *boundaries =  extract_boundaries<T>(labels, sx, sy, sz);
 	size_t num_components = 0;
 	uint32_t *components = cc3d::connected_components2d<uint32_t>(boundaries, sx, sy, sz, num_components);
@@ -461,40 +507,26 @@ std::vector<unsigned char> compress(
 	std::vector<T> ids = component_map<T>(components, labels, sx, sy, sz, num_components);
 	delete[] components;
 
-	// for 4,4,1 we could use uint16_t
-	std::vector<uint64_t> windows = encode_boundaries<uint64_t>(boundaries, sx, sy, sz, xstep, ystep, zstep);
-	std::vector<T> locations = encode_indeterminate_locations<T>(boundaries, labels, sx, sy, sz);
-	delete[] boundaries;
-
-	std::vector<uint64_t> window_values = unique<uint64_t>(windows);
-	renumber_boundary_data(window_values, windows);
-	windows = run_length_encode_windows<uint64_t>(windows);
-
-	size_t num_out_bytes = (
-		CompressoHeader::header_size 
-		+ (ids.size() * sizeof(T))
-		+ (window_values.size() * sizeof(uint64_t))
-		+ (locations.size() * sizeof(T))
-		+ (nblocks * sizeof(uint64_t))
-	);
-	std::vector<unsigned char> compressed_data(num_out_bytes);
-
-	CompressoHeader header(
-		/*data_width=*/sizeof(T), 
-		/*sx=*/sx, /*sy=*/sy, /*sz=*/sz,
-		/*xstep=*/xstep, /*ystep=*/ystep, /*zstep=*/zstep,
-		/*id_size=*/ids.size(), 
-		/*value_size=*/window_values.size(), 
-		/*location_size=*/locations.size()
-	);
-
-	write_compressed_stream<T>(
-		compressed_data, header, ids, 
-		window_values, locations, windows,
-		nblocks
-	);
-
-	return compressed_data;
+	// can use a more efficient window size
+	// if the grid size is small enough. 
+	// specifically, we're really talking about
+	// 4x4x1 step size
+	if (xstep * ystep * zstep <= 16) {
+		return compress_helper<T, uint16_t>(
+			labels, 
+			sx, sy, sz, 
+			xstep, ystep, zstep, 
+			boundaries, ids
+		);
+	}
+	else { // for 8x8x1 step size
+		return compress_helper<T, uint64_t>(
+			labels, 
+			sx, sy, sz, 
+			xstep, ystep, zstep, 
+			boundaries, ids
+		);
+	}
 }
 
 };
@@ -503,7 +535,7 @@ namespace pycompresso {
 
 template <typename T>
 std::vector<unsigned char> cpp_compress(
-	T *labels, 
+	T* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t xstep = 8, const size_t ystep = 8, const size_t zstep = 1
 ) {
