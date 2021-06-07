@@ -41,7 +41,7 @@ cdef extern from "compresso.hxx" namespace "pycompresso":
     size_t sx, size_t sy, size_t sz, 
     size_t xstep, size_t ystep, size_t zstep
   )
-  void* cpp_decompress(unsigned char* buf, void* output)
+  void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output)
 
 def compress(cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1)) -> bytes:
   """
@@ -115,6 +115,7 @@ def read_header(buf : bytes) -> dict:
     "location_size": toint(buf[27:35]),
   }
   data["decompressed_bytes"] = data["sx"] * data["sy"] * data["sz"] * data["data_width"]
+  return data
 
 def decompress(bytes data):
   """
@@ -134,10 +135,29 @@ def decompress(bytes data):
     8: np.uint64,
   }
   dtype = dtypes[header["data_width"]]
-  cdef cnp.ndarray[uint64_t, ndim=3] labels = np.zeros(shape, dtype=dtype, order="F")
+  labels = np.zeros(shape, dtype=dtype, order="F")
+
+  cdef cnp.ndarray[uint8_t, ndim=3] labels8
+  cdef cnp.ndarray[uint16_t, ndim=3] labels16
+  cdef cnp.ndarray[uint32_t, ndim=3] labels32
+  cdef cnp.ndarray[uint64_t, ndim=3] labels64
+
+  cdef void* outptr
+  if dtype == np.uint8:
+    labels8 = labels
+    outptr = <void*>&labels8[0,0,0]
+  elif dtype == np.uint16:
+    labels16 = labels
+    outptr = <void*>&labels16[0,0,0]
+  elif dtype == np.uint32:
+    labels32 = labels
+    outptr = <void*>&labels32[0,0,0]
+  else:
+    labels64 = labels
+    outptr = <void*>&labels64[0,0,0]
 
   cdef unsigned char* buf = data
-  cpp_decompress(buf, <void*>&labels[0,0,0])
+  cpp_decompress(buf, len(data), outptr)
 
   return labels
 
