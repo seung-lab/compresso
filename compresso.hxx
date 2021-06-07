@@ -186,9 +186,9 @@ public:
 	}
 };
 
-template <typename T>
+template <typename LABEL>
 bool* extract_boundaries(
-	T *data, 
+	LABEL *data, 
 	const size_t sx, const size_t sy, const size_t sz
 ) {
 	const size_t sxy = sx * sy;
@@ -199,13 +199,10 @@ bool* extract_boundaries(
 		for (size_t y = 0; y < sy; y++) {
 			for (size_t x = 0; x < sx; x++) {
 				size_t loc = x + sx * y + sxy * z;
-				boundaries[loc] = false;
 
-				// check the east neighbor
 				if (x < sx - 1 && data[loc] != data[loc + 1]) { 
 					boundaries[loc] = true;
 				}
-				// check the south neighbor
 				else if (y < sy - 1 && data[loc] != data[loc + sx]) {
 					boundaries[loc] = true;
 				}
@@ -341,12 +338,6 @@ std::vector<T> encode_indeterminate_locations(
 					err += std::to_string(labels[loc]);
 					throw std::runtime_error(err);
 				}
-
-				// loc: 117247 6 441
-
-				if (x == 511 && y == 228 && z == 0) {
-					printf("loc: %d %d %d\n", loc, locations[locations.size() - 1], locations.size() - 1);
-				}
 			}
 		}
 	}
@@ -465,11 +456,9 @@ std::vector<WINDOW> run_length_decode_windows(
 	WINDOW block = 0;
 	size_t index = 0;
 	const size_t window_size = rle_windows.size();
-	printf("nblocks: %llu, window: %llu\n", nblocks, window_size);
 
 	for (size_t i = 0; i < window_size; i++) {
 		block = rle_windows[i];
-		// printf("idx: %llu i: %llu\n", index, i);
 		if (block & 1) {
 			index += (block >> 1);
 		}
@@ -570,7 +559,7 @@ template <typename T>
 std::vector<unsigned char> compress(
 	T* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
-	const size_t xstep = 8, const size_t ystep = 8, const size_t zstep = 1
+	const size_t xstep = 4, const size_t ystep = 4, const size_t zstep = 1
 ) {
 
 	if (xstep * ystep * zstep > 64) {
@@ -578,9 +567,9 @@ std::vector<unsigned char> compress(
 	}
 
 	// const size_t sxy = sx * sy;
-	// const size_t voxels = sx * sy * sz;
+	const size_t voxels = sx * sy * sz;
 
-	bool *boundaries =  extract_boundaries<T>(labels, sx, sy, sz);
+	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz);
 	size_t num_components = 0;
 	uint32_t *components = cc3d::connected_components2d<uint32_t>(boundaries, sx, sy, sz, num_components);
 	
@@ -659,31 +648,24 @@ bool* decode_boundaries(
 }
 
 template <typename LABEL>
-LABEL* decode_nonboundary_labels(
+void decode_nonboundary_labels(
 		uint32_t *components, const std::vector<LABEL> &ids, 
-		const size_t sx, const size_t sy, const size_t sz
+		const size_t sx, const size_t sy, const size_t sz,
+		LABEL* output
 ) {
 	const size_t sxy = sx * sy;
 	const size_t voxels = sxy * sz;
 
-	for (LABEL id : ids) {
-		printf("%d, ", id);
-	}
-	printf("\n");
-
-
-	LABEL *decompressed_data = new LABEL[voxels]();
-	
 	for (size_t z = 0; z < sz; z++) {
 		for (size_t y = 0; y < sy; y++) {
 			for (size_t x = 0; x < sx; x++) {
 				size_t iv = x + sx * y + sxy * z;
-				decompressed_data[iv] = ids[components[iv] - 1];
+				if (components[iv] > 0) {
+					output[iv] = ids[components[iv] - 1];
+				}
 			}
 		}
 	}
-
-	return decompressed_data;
 }
 
 template <typename LABEL>
@@ -703,8 +685,6 @@ void decode_indeterminate_locations(
 			for (size_t x = 0; x < sx; x++) {
 				loc = x + sx * y + sxy * z;
 
-				// printf("boundary: %d\n", boundaries[loc]);
-
 				if (!boundaries[loc]) {
 					continue;
 				}
@@ -718,7 +698,6 @@ void decode_indeterminate_locations(
 				}
 				
 				size_t offset = locations[index];
-				printf("offset: %llu, x: %d, y: %d, z: %d loc: %d index: %d\n", offset, x, y, z, loc, index);
 
 				if (offset == 0) {
 					if (x == 0) {
@@ -767,13 +746,13 @@ void decode_indeterminate_locations(
 
 template <typename LABEL, typename WINDOW>
 LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL) {
-	printf("1\n");
 
 	const CompressoHeader header(buffer);
 
 	const size_t sx = header.sx;
 	const size_t sy = header.sy;
 	const size_t sz = header.sz;
+	const size_t voxels = sx * sy * sz;
 	const size_t xstep = header.xstep;
 	const size_t ystep = header.ystep;
 	const size_t zstep = header.zstep;
@@ -782,8 +761,6 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	const size_t ny = (sy + (ystep / 2)) / ystep;
 	const size_t nx = (sx + (xstep / 2)) / xstep;
 	const size_t nblocks = nz * ny * nx;
-
-	printf("2\n");
 
 	size_t window_bytes = (
 		num_bytes 
@@ -801,32 +778,20 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	std::vector<WINDOW> windows(num_condensed_windows);
 
 	size_t iv = CompressoHeader::header_size;
-	printf("iv: %llu\n", iv);
 	for (size_t ix = 0; ix < ids.size(); ix++, iv += sizeof(LABEL)) {
 		ids[ix] = ctoi<LABEL>(buffer, iv);
 	}
-	printf("iv: %llu\n", iv);
 	for (size_t ix = 0; ix < window_values.size(); ix++, iv += sizeof(WINDOW)) {
 		window_values[ix] = ctoi<WINDOW>(buffer, iv);
 	}
-	printf("iv: %llu\n", iv);
 	for (size_t ix = 0; ix < locations.size(); ix++, iv += sizeof(LABEL)) {
 		locations[ix] = ctoi<LABEL>(buffer, iv);
 	}
-	printf("iv: %llu\n", iv);
-
-	printf("2a: %llu\n", num_condensed_windows);
-
 	for (size_t ix = 0; ix < num_condensed_windows; ix++, iv += sizeof(WINDOW)) {
 		windows[ix] = ctoi<WINDOW>(buffer, iv);
 	}
-	printf("iv: %llu\n", iv);
-
-	printf("3\n");
 
 	windows = run_length_decode_windows<WINDOW>(windows, nblocks);
-
-	printf("4\n");
 
 	bool* boundaries = decode_boundaries<WINDOW>(
 		windows, window_values, 
@@ -836,23 +801,22 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	windows = std::vector<WINDOW>();
 	window_values = std::vector<WINDOW>();
 
-	printf("5\n");
-
 	uint32_t* components = cc3d::connected_components2d<uint32_t>(boundaries, sx, sy, sz);
-	printf("6\n");
-	LABEL* labels = decode_nonboundary_labels(components, ids, sx, sy, sz);
+
+	if (output == NULL) {
+		output = new LABEL[voxels]();
+	}
+
+	decode_nonboundary_labels(components, ids, sx, sy, sz, output);
 	delete[] components;
 	ids = std::vector<LABEL>();
 
-	printf("7\n");
 	decode_indeterminate_locations<LABEL>(
-		boundaries, labels, locations, 
+		boundaries, output, locations, 
 		sx, sy, sz
 	);
 
-	printf("8\n");
-
-	return labels;
+	return output;
 }
 
 template <>
