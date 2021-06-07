@@ -159,7 +159,7 @@ OUT* relabel(
     size_t &N = _dummy_N, OUT start_label = 0
   ) {
 
-  if (num_labels <= 1) {
+  if (num_labels == 0) {
     N = num_labels;
     return out_labels;
   }
@@ -171,8 +171,8 @@ OUT* relabel(
   for (int64_t i = 1; i <= num_labels; i++) {
     label = equivalences.root(i);
     if (renumber[label] == 0) {
-      renumber[label] = start_label + next_label;
-      renumber[i] = start_label + next_label;
+      renumber[label] = next_label;
+      renumber[i] = next_label;
       next_label++;
     }
     else {
@@ -184,7 +184,7 @@ OUT* relabel(
   N = next_label - 1;
   if (N < static_cast<size_t>(num_labels)) {
     for (int64_t loc = 0; loc < voxels; loc++) {
-      out_labels[loc] = renumber[out_labels[loc]];
+      out_labels[loc] = start_label + renumber[out_labels[loc]];
     }
   }
 
@@ -245,18 +245,18 @@ OUT* connected_components2d_4(
         }
 
         if (x > 0 && !in_labels[loc + B]) {
-          out_labels[loc + A] = out_labels[loc + B];
+          out_labels[loc] = out_labels[loc + B];
           if (y > 0 && in_labels[loc + D] && !in_labels[loc + C]) {
-            equivalences.unify(out_labels[loc + A], out_labels[loc + C]);
+            equivalences.unify(out_labels[loc], out_labels[loc + C]);
           }
         }
         else if (y > 0 && !in_labels[loc + C]) {
-          out_labels[loc + A] = out_labels[loc + C];
+          out_labels[loc] = out_labels[loc + C];
         }
         else {
           next_label++;
-          out_labels[loc + A] = start_label + next_label;
-          equivalences.add(out_labels[loc + A]);
+          out_labels[loc] = next_label;
+          equivalences.add(out_labels[loc]);
         }
       }
     }
