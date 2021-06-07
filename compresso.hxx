@@ -310,7 +310,7 @@ std::vector<T> encode_boundaries(
 
 template <typename T>
 std::vector<T> encode_indeterminate_locations(
-		bool *boundaries, T *labels, 
+		bool* boundaries, T* labels, 
 		const size_t sx, const size_t sy, const size_t sz
 ) {
 	const size_t sxy = sx * sy;
@@ -362,7 +362,15 @@ std::vector<T> encode_indeterminate_locations(
 					locations.push_back(labels[loc] + 6);
 				}
 				else {
-					throw std::runtime_error("compresso: Cannot encode labels within 6 units of integer overflow.");
+					std::string err = "compresso: Cannot encode labels within 6 units of integer overflow. Got: ";
+					err += std::to_string(labels[loc]);
+					throw std::runtime_error(err);
+				}
+
+				// loc: 117247 6 441
+
+				if (x == 511 && y == 228 && z == 0) {
+					printf("loc: %d %d %d\n", loc, locations[locations.size() - 1], locations.size() - 1);
 				}
 			}
 		}
@@ -380,12 +388,11 @@ std::vector<T> unique(const std::vector<T> &data) {
 	}
 
 	std::set<T> hash_map;
-	const size_t n_vals = data.size();
-
 	T last = data[0];
 	hash_map.insert(data[0]);
+	values.push_back(data[0]);
 
-	for (size_t iv = 1; iv < n_vals; iv++) {
+	for (size_t iv = 1; iv < data.size(); iv++) {
 		if (data[iv] == last) {
 			continue;
 		}
@@ -471,6 +478,12 @@ std::vector<T> run_length_encode_windows(const std::vector<T> &windows) {
 			zero_run = 0;
 		}
 		rle_windows.push_back(windows[i] << 1);
+	}
+
+	printf("wowzie\n");
+	if (zero_run) {
+		printf("here\n");
+		rle_windows.push_back(((window_size - prev_zero) << 1) | 1);
 	}
 
 	return rle_windows;
@@ -646,6 +659,10 @@ bool* decode_boundaries(
 
 	bool* boundaries = new bool[voxels]();
 
+	if (window_values.size() == 0) {
+		return boundaries;
+	}
+
 	size_t xblock, yblock, zblock;
 	size_t xoffset, yoffset, zoffset;
 
@@ -660,7 +677,7 @@ bool* decode_boundaries(
 				xblock = x / xstep;
 				xoffset = x % xstep;
 
-				size_t block = xblock + nx * yblock + (ny * nx) * zblock;
+				size_t block = xblock + nx * (yblock + ny * zblock);
 				size_t offset = xoffset + xstep * (yoffset + (ystep * zoffset));
 
 				WINDOW value = window_values[windows[block]];
@@ -676,99 +693,103 @@ bool* decode_boundaries(
 
 template <typename LABEL>
 LABEL* decode_nonboundary_labels(
-    uint32_t *components, const std::vector<LABEL> &ids, 
-    const size_t sx, const size_t sy, const size_t sz
+		uint32_t *components, const std::vector<LABEL> &ids, 
+		const size_t sx, const size_t sy, const size_t sz
 ) {
-  const size_t sxy = sx * sy;
-  const size_t voxels = sxy * sz;
+	const size_t sxy = sx * sy;
+	const size_t voxels = sxy * sz;
 
-  LABEL *decompressed_data = new LABEL[voxels]();
-  
-  for (size_t z = 0; z < sz; z++) {
-    for (size_t y = 0; y < sy; y++) {
-      for (size_t x = 0; x < sx; x++) {
-        size_t iv = x + sx * y + sxy * z;
-        decompressed_data[iv] = ids[components[iv]];
-      }
-    }
-  }
+	LABEL *decompressed_data = new LABEL[voxels]();
+	
+	for (size_t z = 0; z < sz; z++) {
+		for (size_t y = 0; y < sy; y++) {
+			for (size_t x = 0; x < sx; x++) {
+				size_t iv = x + sx * y + sxy * z;
+				decompressed_data[iv] = ids[components[iv]];
+			}
+		}
+	}
 
-  return decompressed_data;
+	return decompressed_data;
 }
 
 template <typename LABEL>
 void decode_indeterminate_locations(
-    bool *boundaries, LABEL *labels, 
-    const std::vector<LABEL> &locations, 
-    const size_t sx, const size_t sy, const size_t sz
+		bool *boundaries, LABEL *labels, 
+		const std::vector<LABEL> &locations, 
+		const size_t sx, const size_t sy, const size_t sz
 ) {
-  const size_t sxy = sx * sy;
+	const size_t sxy = sx * sy;
 
-  size_t loc = 0;
-  size_t index = 0;
+	size_t loc = 0;
+	size_t index = 0;
 
-  // go through all coordinates
-  for (size_t z = 0; z < sz; z++) {
-    for (size_t y = 0; y < sy; y++) {
-      for (size_t x = 0; x < sx; x++) {
-      	loc = x + sx * y + sxy * z;
+	// go through all coordinates
+	for (size_t z = 0; z < sz; z++) {
+		for (size_t y = 0; y < sy; y++) {
+			for (size_t x = 0; x < sx; x++) {
+				loc = x + sx * y + sxy * z;
 
-        if (!boundaries[loc]) {
-          continue;
-        }
-        else if (x > 0 && !boundaries[loc - 1]) {
-          labels[loc] = labels[loc - 1];
-        }
-        else if (y > 0 && !boundaries[loc - sx]) {
-          labels[loc] = labels[loc - sx];
-        }
-        else {
-          size_t offset = locations[index];
-          printf("offset: %llu, x: %d, y: %d, z: %d\n", offset, x, y, z);
-          if (offset == 0) {
-          	if (x == 0) {
-          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
-          	}
-            labels[loc] = labels[loc - 1];
-          }
-          else if (offset == 1) {
-          	if (x >= sx - 1) {
-          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
-          	}
-            labels[loc] = labels[loc + 1];
-          }
-          else if (offset == 2) {
-          	if (y == 0) {
-          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
-          	}
-            labels[loc] = labels[loc - sx];
-          }
-          else if (offset == 3) {
-          	if (y >= sy - 1) {
-          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
-          	}
-            labels[loc] = labels[loc + sx];
-          }
-          else if (offset == 4) {
-          	if (z == 0) {
-          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
-          	}
-            labels[loc] = labels[loc - sxy];
-          }
-          else if (offset == 5) {
-          	if (z >= sz - 1) {
-          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
-          	}
-            labels[loc] = labels[loc + sxy];
-          }
-          else {
-            labels[loc] = offset - 6;                        
-          }
-          index += 1;
-        }
-      }
-    }
-  }
+				// printf("boundary: %d\n", boundaries[loc]);
+
+				if (!boundaries[loc]) {
+					continue;
+				}
+				else if (x > 0 && !boundaries[loc - 1]) {
+					labels[loc] = labels[loc - 1];
+					continue;
+				}
+				else if (y > 0 && !boundaries[loc - sx]) {
+					labels[loc] = labels[loc - sx];
+					continue;
+				}
+				
+				size_t offset = locations[index];
+				printf("offset: %llu, x: %d, y: %d, z: %d loc: %d index: %d\n", offset, x, y, z, loc, index);
+
+				if (offset == 0) {
+					if (x == 0) {
+						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+					}
+					labels[loc] = labels[loc - 1];
+				}
+				else if (offset == 1) {
+					if (x >= sx - 1) {
+						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+					}
+					labels[loc] = labels[loc + 1];
+				}
+				else if (offset == 2) {
+					if (y == 0) {
+						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+					}
+					labels[loc] = labels[loc - sx];
+				}
+				else if (offset == 3) {
+					if (y >= sy - 1) {
+						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+					}
+					labels[loc] = labels[loc + sx];
+				}
+				else if (offset == 4) {
+					if (z == 0) {
+						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+					}
+					labels[loc] = labels[loc - sxy];
+				}
+				else if (offset == 5) {
+					if (z >= sz - 1) {
+						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+					}
+					labels[loc] = labels[loc + sxy];
+				}
+				else {
+					labels[loc] = offset - 6;                        
+				}
+				index++;
+			}
+		}
+	}
 }
 
 template <typename LABEL, typename WINDOW>
@@ -807,21 +828,26 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	std::vector<WINDOW> windows(num_condensed_windows);
 
 	size_t iv = CompressoHeader::header_size;
-	for (size_t ix = 0; ix < header.id_size; ix++, iv += sizeof(LABEL)) {
+	printf("iv: %llu\n", iv);
+	for (size_t ix = 0; ix < ids.size(); ix++, iv += sizeof(LABEL)) {
 		ids[ix] = ctoi<LABEL>(buffer, iv);
 	}
-	for (size_t ix = 0; ix < header.value_size; ix++, iv += sizeof(WINDOW)) {
+	printf("iv: %llu\n", iv);
+	for (size_t ix = 0; ix < window_values.size(); ix++, iv += sizeof(WINDOW)) {
 		window_values[ix] = ctoi<WINDOW>(buffer, iv);
 	}
-	for (size_t ix = 0; ix < header.location_size; ix++, iv += sizeof(LABEL)) {
+	printf("iv: %llu\n", iv);
+	for (size_t ix = 0; ix < locations.size(); ix++, iv += sizeof(LABEL)) {
 		locations[ix] = ctoi<LABEL>(buffer, iv);
 	}
+	printf("iv: %llu\n", iv);
 
 	printf("2a: %llu\n", num_condensed_windows);
 
 	for (size_t ix = 0; ix < num_condensed_windows; ix++, iv += sizeof(WINDOW)) {
 		windows[ix] = ctoi<WINDOW>(buffer, iv);
 	}
+	printf("iv: %llu\n", iv);
 
 	printf("3\n");
 
