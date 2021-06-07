@@ -156,7 +156,7 @@ template <typename OUT = uint32_t>
 OUT* relabel(
     OUT* out_labels, const int64_t voxels,
     const int64_t num_labels, DisjointSet<uint32_t> &equivalences,
-    size_t &N = _dummy_N
+    size_t &N = _dummy_N, OUT start_label = 0
   ) {
 
   if (num_labels <= 1) {
@@ -171,8 +171,8 @@ OUT* relabel(
   for (int64_t i = 1; i <= num_labels; i++) {
     label = equivalences.root(i);
     if (renumber[label] == 0) {
-      renumber[label] = next_label;
-      renumber[i] = next_label;
+      renumber[label] = start_label + next_label;
+      renumber[i] = start_label + next_label;
       next_label++;
     }
     else {
@@ -262,7 +262,7 @@ OUT* connected_components2d_4(
     }
   }
 
-  return relabel<OUT>(out_labels, voxels, next_label, equivalences, N);
+  return relabel<OUT>(out_labels, voxels, next_label, equivalences, N, start_label);
 }
 
 template <typename OUT = uint64_t>

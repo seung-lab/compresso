@@ -220,41 +220,16 @@ template <typename T>
 std::vector<T> component_map(
 		uint32_t *components, T *labels, 
 		const size_t sx, const size_t sy, const size_t sz,
-		const size_t num_components = 100
+		const size_t num_components
 ) {
 		const size_t sxy = sx * sy;
 		const size_t voxels = sxy * sz;
 
-		std::vector<T> ids;
-		ids.reserve(num_components);
+		std::vector<T> ids(num_components);
 
-		if (voxels == 0) {
-			return ids;
-		}
-
-		size_t loc = 0;
-		for (size_t z = 0; z < sz; z++) {
-			std::set<T> hash_map;
-			loc = z * sxy;
-			T last_label = components[loc];
-			hash_map.insert(components[loc]);
-			ids.push_back(labels[loc]);
-
-			for (size_t y = 0; y < sy; y++) {
-				for (size_t x = 0; x < sx; x++) {
-					loc = x + sx * y + sxy * z;
-
-					if (last_label == components[loc]) {
-						continue;
-					}
-
-					bool inserted = hash_map.insert(components[loc]).second;
-					if (inserted) {
-						ids.push_back(labels[loc]);
-					}
-
-					last_label = components[loc];
-				}
+		for (size_t i = 0; i < voxels; i++) {
+			if (components[i] > 0) {
+				ids[components[i] - 1] = labels[i];
 			}
 		}
 
@@ -459,8 +434,7 @@ std::vector<T> run_length_encode_windows(const std::vector<T> &windows) {
 	size_t zero_run = 0;
 	size_t max_run = std::numeric_limits<T>::max() / 2;
 
-	const size_t window_size = windows.size();
-	for (size_t i = 0; i < window_size; i++) {
+	for (size_t i = 0; i < windows.size(); i++) {
 		if (windows[i] == 0) {
 			zero_run++;
 			if (zero_run < max_run) {
@@ -692,13 +666,19 @@ LABEL* decode_nonboundary_labels(
 	const size_t sxy = sx * sy;
 	const size_t voxels = sxy * sz;
 
+	for (LABEL id : ids) {
+		printf("%d, ", id);
+	}
+	printf("\n");
+
+
 	LABEL *decompressed_data = new LABEL[voxels]();
 	
 	for (size_t z = 0; z < sz; z++) {
 		for (size_t y = 0; y < sy; y++) {
 			for (size_t x = 0; x < sx; x++) {
 				size_t iv = x + sx * y + sxy * z;
-				decompressed_data[iv] = ids[components[iv]];
+				decompressed_data[iv] = ids[components[iv] - 1];
 			}
 		}
 	}
@@ -882,8 +862,6 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 	bool window16 = (
 		static_cast<int>(header.xstep) * static_cast<int>(header.ystep) * static_cast<int>(header.zstep) <= 16
 	);
-
-	printf("wow.\n");
 
 	if (header.data_width == 1) {
 		if (window16) {
