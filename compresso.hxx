@@ -429,6 +429,21 @@ void renumber_boundary_data(const std::vector<T>& window_values, std::vector<T> 
 	}
 }
 
+template <>
+void renumber_boundary_data(const std::vector<uint16_t>& window_values, std::vector<uint16_t> &windows) {
+	if (windows.size() == 0) {
+		return;
+	}
+
+	std::vector<uint16_t> mapping(pow(2,16));
+	for (size_t iv = 0; iv < window_values.size(); iv++) {
+		mapping[window_values[iv]] = iv;
+	}
+	for (size_t iv = 0; iv < windows.size(); iv++) {
+		windows[iv] = mapping[windows[iv]];
+	}
+}
+
 template <typename T>
 std::vector<T> run_length_encode_windows(const std::vector<T> &windows) {
 	std::vector<T> rle_windows;
