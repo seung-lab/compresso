@@ -1,3 +1,23 @@
+/* This is an implementation of the Compresso
+ * segmentation compression codec. This 
+ * is a heavily modified form of the code 
+ * originally written by Brian Matejek. 
+ *
+ * The stream written by this library is not
+ * compatible with the original version. It
+ * includes some byte width optimizations 
+ * and additional header fields in the output
+ * and various functions have been somewhat
+ * tuned for speed. 
+ *
+ * You can find the Compresso paper here:
+ * https://vcg.seas.harvard.edu/publications/compresso-efficient-compression-of-segmentation-data-for-connectomics
+ *
+ * William Silversmith 
+ * Princeton University
+ * June 7, 2021
+ */
+
 #ifndef __COMPRESSO_HXX__
 #define __COMPRESSO_HXX__
 
