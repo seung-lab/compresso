@@ -198,7 +198,7 @@ OUT* connected_components2d_4(
     bool* in_labels, 
     const int64_t sx, const int64_t sy, const int64_t sz,
     size_t max_labels, OUT *out_labels = NULL, 
-    size_t &N = _dummy_N
+    size_t &N = _dummy_N, OUT start_label = 0
   ) {
 
   const int64_t sxy = sx * sy;
@@ -255,7 +255,7 @@ OUT* connected_components2d_4(
         }
         else {
           next_label++;
-          out_labels[loc + A] = next_label;
+          out_labels[loc + A] = start_label + next_label;
           equivalences.add(out_labels[loc + A]);
         }
       }
@@ -275,14 +275,16 @@ OUT* connected_components2d(
   const int64_t sxy = sx * sy;
   const int64_t voxels = sxy * sz;
 
-  const size_t max_labels = static_cast<size_t>((sxy + 2) / 2 * (sz + 2));
+  const size_t max_labels = static_cast<size_t>((sxy + 2) / 2);
   OUT* out_labels = new OUT[voxels]();
 
+  N = 0;  
   for (int64_t z = 0; z < sz; z++) {
     size_t tmp_N = 0;
     connected_components2d_4<OUT>(
       (in_labels + sxy * z), sx, sy, 1, 
-      max_labels, (out_labels + sxy * z), tmp_N
+      max_labels, (out_labels + sxy * z), 
+      tmp_N, N
     );
     N += tmp_N;
   }
