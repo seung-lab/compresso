@@ -317,46 +317,45 @@ std::vector<T> encode_indeterminate_locations(
 	std::vector<T> locations;
 	locations.reserve(sx * sy * sz / 10);
 
-	int64_t iv = 0;
 	for (size_t z = 0; z < sz; z++) {
 		for (size_t y = 0; y < sy; y++) {
-			for (size_t x = 0; x < sx; x++, iv++) {
+			for (size_t x = 0; x < sx; x++) {
 				size_t loc = x + sx * y + sxy * z;
-
+				
 				if (!boundaries[loc]) { 
 					continue; 
 				}
-				else if (y > 0 && !boundaries[loc - sx]) {
-					continue; // boundaries[iv] = 0;
-				}
 				else if (x > 0 && !boundaries[loc - 1]) {
-					continue; // boundaries[iv] = 0;
+					continue; 
+				}
+				else if (y > 0 && !boundaries[loc - sx]) {
+					continue;
 				}
 				
-				size_t north = loc - 1; // IndicesToIndex(ix - 1, iy, iz);
-				size_t south = loc + 1; // IndicesToIndex(ix + 1, iy, iz);
-				size_t east = loc - sx;// IndicesToIndex(ix, iy - 1, iz);
-				size_t west = loc + sx; // IndicesToIndex(ix, iy + 1, iz);
-				size_t up = loc + sxy; // IndicesToIndex(ix, iy, iz + 1);
-				size_t down = loc - sxy; // IndicesToIndex(ix, iy, iz - 1);
+				size_t left = loc - 1;
+				size_t right = loc + 1;
+				size_t up = loc - sx;
+				size_t down = loc + sx;
+				size_t heaven = loc - sxy;
+				size_t hell = loc + sxy;
 
 				// see if any of the immediate neighbors are candidates
-				if (x > 0 && !boundaries[north] && (labels[north] == labels[iv])) {
+				if (x > 0 && !boundaries[left] && (labels[left] == labels[loc])) {
 					locations.push_back(0);
 				}
-				else if (x < sx - 1 && !boundaries[south] && (labels[south] == labels[iv])) {
+				else if (x < sx - 1 && !boundaries[right] && (labels[right] == labels[loc])) {
 					locations.push_back(1);
 				}
-				else if (y > 0 && !boundaries[east] && (labels[east] == labels[iv])) {
+				else if (y > 0 && !boundaries[up] && (labels[up] == labels[loc])) {
 					locations.push_back(2);
 				}
-				else if (y < sy - 1 && !boundaries[west] && (labels[west] == labels[iv])) {
+				else if (y < sy - 1 && !boundaries[down] && (labels[down] == labels[loc])) {
 					locations.push_back(3);
 				}
-				else if (z > 0 && !boundaries[down] && (labels[down] == labels[iv])) {
+				else if (z > 0 && !boundaries[heaven] && (labels[heaven] == labels[loc])) {
 					locations.push_back(4);
 				}
-				else if (z < sz - 1 && !boundaries[up] && (labels[up] == labels[iv])) {
+				else if (z < sz - 1 && !boundaries[hell] && (labels[hell] == labels[loc])) {
 					locations.push_back(5);
 				}
 				else if (labels[loc] <= std::numeric_limits<T>::max() - 6) {
@@ -453,10 +452,10 @@ std::vector<T> run_length_encode_windows(const std::vector<T> &windows) {
 		}
 		
 		if (zero_run) {
-			rle_windows.push_back((i - prev_zero) * 2 + 1);
+			rle_windows.push_back(((i - prev_zero) << 1) | 1);
 			zero_run = 0;
 		}
-		rle_windows.push_back(windows[i] * 2);
+		rle_windows.push_back(windows[i] << 1);
 	}
 
 	return rle_windows;
@@ -471,18 +470,21 @@ std::vector<WINDOW> run_length_decode_windows(
 	WINDOW block = 0;
 	size_t index = 0;
 	const size_t window_size = rle_windows.size();
+	printf("nblocks: %llu, window: %llu\n", nblocks, window_size);
+
 	for (size_t i = 0; i < window_size; i++) {
 		block = rle_windows[i];
-		if ((block & 1) == 0) {
+		// printf("idx: %llu i: %llu\n", index, i);
+		if (block & 1) {
+			index += (block >> 1);
+		}
+		else {
 			windows[index] = block >> 1;
 			index++;
 		}
-		else {
-			index += (block >> 1);
-		}
 	}
 
-	return rle_windows;
+	return windows;
 }
 
 template <typename LABEL, typename WINDOW>
@@ -492,8 +494,7 @@ void write_compressed_stream(
 	const std::vector<LABEL> &ids, 
 	const std::vector<WINDOW> &window_values, 
 	const std::vector<LABEL> &locations,
-	const std::vector<WINDOW> &windows,
-	const size_t nblocks
+	const std::vector<WINDOW> &windows
 ) {
 	size_t idx = header.tochars(compressed_data, 0);
 	for (size_t i = 0 ; i < ids.size(); i++) {
@@ -505,7 +506,7 @@ void write_compressed_stream(
 	for (size_t i = 0 ; i < locations.size(); i++) {
 		idx += itoc(locations[i], compressed_data, idx);
 	}
-	for (size_t i = 0 ; i < nblocks; i++) {
+	for (size_t i = 0 ; i < windows.size(); i++) {
 		idx += itoc(windows[i], compressed_data, idx);
 	}
 }
@@ -536,7 +537,7 @@ std::vector<unsigned char> compress_helper(
 		+ (ids.size() * sizeof(LABEL))
 		+ (window_values.size() * sizeof(WINDOW))
 		+ (locations.size() * sizeof(LABEL))
-		+ (nblocks * sizeof(WINDOW))
+		+ (windows.size() * sizeof(WINDOW))
 	);
 	std::vector<unsigned char> compressed_data(num_out_bytes);
 
@@ -551,8 +552,7 @@ std::vector<unsigned char> compress_helper(
 
 	write_compressed_stream<LABEL, WINDOW>(
 		compressed_data, header, ids, 
-		window_values, locations, windows,
-		nblocks
+		window_values, locations, windows
 	);
 
 	return compressed_data;
@@ -646,7 +646,7 @@ bool* decode_boundaries(
 				xoffset = x % xstep;
 
 				size_t block = xblock + nx * yblock + (ny * nx) * zblock;
-				size_t offset = xoffset + xstep * yoffset + (ystep * xstep) * zoffset;
+				size_t offset = xoffset + xstep * (yoffset + (ystep * zoffset));
 
 				WINDOW value = window_values[windows[block]];
 				if ((value >> offset) & 0b1) { 
@@ -689,48 +689,65 @@ void decode_indeterminate_locations(
 ) {
   const size_t sxy = sx * sy;
 
-  size_t iv = 0;
+  size_t loc = 0;
   size_t index = 0;
 
   // go through all coordinates
   for (size_t z = 0; z < sz; z++) {
     for (size_t y = 0; y < sy; y++) {
-      for (size_t x = 0; x < sx; x++, iv++) {
-        size_t loc = x + sx * y + sxy * z;
-        size_t north = loc - 1;
-        size_t west = loc - sx;
+      for (size_t x = 0; x < sx; x++) {
+      	loc = x + sx * y + sxy * z;
 
-        if (!boundaries[iv]) {
+        if (!boundaries[loc]) {
           continue;
         }
-        else if (x > 0 && !boundaries[north]) {
-          labels[iv] = labels[north];
+        else if (x > 0 && !boundaries[loc - 1]) {
+          labels[loc] = labels[loc - 1];
         }
-        else if (y > 0 && !boundaries[west]) {
-          labels[iv] = labels[west];
+        else if (y > 0 && !boundaries[loc - sx]) {
+          labels[loc] = labels[loc - sx];
         }
         else {
           size_t offset = locations[index];
+          printf("offset: %llu, x: %d, y: %d, z: %d\n", offset, x, y, z);
           if (offset == 0) {
-            labels[iv] = labels[loc - 1];
+          	if (x == 0) {
+          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+          	}
+            labels[loc] = labels[loc - 1];
           }
           else if (offset == 1) {
-            labels[iv] = labels[loc + 1];
+          	if (x >= sx - 1) {
+          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+          	}
+            labels[loc] = labels[loc + 1];
           }
           else if (offset == 2) {
-            labels[iv] = labels[loc - sx];
+          	if (y == 0) {
+          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+          	}
+            labels[loc] = labels[loc - sx];
           }
           else if (offset == 3) {
-            labels[iv] = labels[loc + sx];
+          	if (y >= sy - 1) {
+          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+          	}
+            labels[loc] = labels[loc + sx];
           }
           else if (offset == 4) {
-            labels[iv] = labels[loc - sxy];
+          	if (z == 0) {
+          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+          	}
+            labels[loc] = labels[loc - sxy];
           }
           else if (offset == 5) {
-            labels[iv] = labels[loc + sxy];
+          	if (z >= sz - 1) {
+          		throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+          	}
+            labels[loc] = labels[loc + sxy];
           }
           else {
-            labels[iv] = offset - 6;                        
+            labels[loc] = offset - 6;                        
           }
           index += 1;
         }
@@ -740,7 +757,9 @@ void decode_indeterminate_locations(
 }
 
 template <typename LABEL, typename WINDOW>
-LABEL* decompress(unsigned char* buffer, LABEL* output = NULL) {
+LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL) {
+	printf("1\n");
+
 	const CompressoHeader header(buffer);
 
 	const size_t sx = header.sx;
@@ -755,11 +774,22 @@ LABEL* decompress(unsigned char* buffer, LABEL* output = NULL) {
 	const size_t nx = (sx + (xstep / 2)) / xstep;
 	const size_t nblocks = nz * ny * nx;
 
+	printf("2\n");
+
+	size_t window_bytes = (
+		num_bytes 
+			- CompressoHeader::header_size
+			- (header.id_size * sizeof(LABEL))  
+			- (header.value_size * sizeof(WINDOW))
+			- (header.location_size * sizeof(LABEL))
+	);
+	size_t num_condensed_windows = window_bytes / sizeof(WINDOW);
+
 	// allocate memory for all arrays
 	std::vector<LABEL> ids(header.id_size);
 	std::vector<WINDOW> window_values(header.value_size);
 	std::vector<LABEL> locations(header.location_size);
-	std::vector<WINDOW> windows(nblocks);
+	std::vector<WINDOW> windows(num_condensed_windows);
 
 	size_t iv = CompressoHeader::header_size;
 	for (size_t ix = 0; ix < header.id_size; ix++, iv += sizeof(LABEL)) {
@@ -771,11 +801,18 @@ LABEL* decompress(unsigned char* buffer, LABEL* output = NULL) {
 	for (size_t ix = 0; ix < header.location_size; ix++, iv += sizeof(LABEL)) {
 		locations[ix] = ctoi<LABEL>(buffer, iv);
 	}
-	for (size_t ix = 0; ix < nblocks; ix++, iv += sizeof(WINDOW)) {
+
+	printf("2a: %llu\n", num_condensed_windows);
+
+	for (size_t ix = 0; ix < num_condensed_windows; ix++, iv += sizeof(WINDOW)) {
 		windows[ix] = ctoi<WINDOW>(buffer, iv);
 	}
 
+	printf("3\n");
+
 	windows = run_length_decode_windows<WINDOW>(windows, nblocks);
+
+	printf("4\n");
 
 	bool* boundaries = decode_boundaries<WINDOW>(
 		windows, window_values, 
@@ -785,72 +822,96 @@ LABEL* decompress(unsigned char* buffer, LABEL* output = NULL) {
 	windows = std::vector<WINDOW>();
 	window_values = std::vector<WINDOW>();
 
+	printf("5\n");
+
 	uint32_t* components = cc3d::connected_components2d<uint32_t>(boundaries, sx, sy, sz);
+	printf("6\n");
 	LABEL* labels = decode_nonboundary_labels(components, ids, sx, sy, sz);
 	delete[] components;
 	ids = std::vector<LABEL>();
 
+	printf("7\n");
 	decode_indeterminate_locations<LABEL>(
 		boundaries, labels, locations, 
 		sx, sy, sz
 	);
 
+	printf("8\n");
+
 	return labels;
 }
 
 template <>
-void* decompress<void,void>(unsigned char* buffer, void* output) {
+void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* output) {
 	CompressoHeader header(buffer);
 
 	bool window16 = (
 		static_cast<int>(header.xstep) * static_cast<int>(header.ystep) * static_cast<int>(header.zstep) <= 16
 	);
 
+	printf("wow.\n");
+
 	if (header.data_width == 1) {
 		if (window16) {
 			return reinterpret_cast<void*>(
-				decompress<uint8_t,uint16_t>(buffer, reinterpret_cast<uint8_t*>(output))
+				decompress<uint8_t,uint16_t>(
+					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
+				)
 			);
 		}
 		else {
 			return reinterpret_cast<void*>(
-				decompress<uint8_t, uint64_t>(buffer, reinterpret_cast<uint8_t*>(output))
+				decompress<uint8_t, uint64_t>(
+					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
+				)
 			);			
 		}
 	}
 	else if (header.data_width == 2) {
 		if (window16) {
 			return reinterpret_cast<void*>(
-				decompress<uint16_t,uint16_t>(buffer, reinterpret_cast<uint16_t*>(output))
+				decompress<uint16_t,uint16_t>(
+					buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
+				)
 			);
 		}
 		else {
 			return reinterpret_cast<void*>(
-				decompress<uint16_t, uint64_t>(buffer, reinterpret_cast<uint16_t*>(output))
+				decompress<uint16_t, uint64_t>(
+					buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
+				)
 			);			
 		}
 	}
 	else if (header.data_width == 4) {
 		if (window16) {
 			return reinterpret_cast<void*>(
-				decompress<uint32_t,uint16_t>(buffer, reinterpret_cast<uint32_t*>(output))
+				decompress<uint32_t,uint16_t>(
+					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
+				)
 			);		
 		}
 		else {
 			return reinterpret_cast<void*>(
-				decompress<uint32_t, uint64_t>(buffer, reinterpret_cast<uint32_t*>(output))
+				decompress<uint32_t, uint64_t>(
+					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
+				)
 			);			
 		}
 	}
 	else if (header.data_width == 8) {
 		if (window16) {
 			return reinterpret_cast<void*>(
-				decompress<uint64_t,uint16_t>(buffer, reinterpret_cast<uint64_t*>(output))
+				decompress<uint64_t,uint16_t>(
+					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
+				)
 			);		
 		}
 		else {
 			return reinterpret_cast<void*>(
-				decompress<uint64_t, uint64_t>(buffer, reinterpret_cast<uint64_t*>(output))
+				decompress<uint64_t, uint64_t>(
+					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
+				)
 			);			
 		}
 	}
@@ -875,8 +936,8 @@ std::vector<unsigned char> cpp_compress(
 	return compresso::compress<T>(labels, sx, sy, sz, xstep, ystep, zstep);
 }
 
-void* cpp_decompress(unsigned char* buffer, void* output) {
-	return compresso::decompress<void,void>(buffer, output);
+void* cpp_decompress(unsigned char* buffer, size_t num_bytes, void* output) {
+	return compresso::decompress<void,void>(buffer, num_bytes, output);
 }
 
 };
