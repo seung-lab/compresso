@@ -457,33 +457,26 @@ std::vector<T> run_length_encode_windows(const std::vector<T> &windows) {
 	rle_windows.reserve(windows.size() / 4);
 
 	size_t zero_run = 0;
-	size_t prev_zero = 0;
-
 	size_t max_run = std::numeric_limits<T>::max() / 2;
 
 	const size_t window_size = windows.size();
 	for (size_t i = 0; i < window_size; i++) {
 		if (windows[i] == 0) {
-			if (!zero_run) {
-				zero_run++;
-				prev_zero = i;
-			}
+			zero_run++;
 			if (zero_run < max_run) {
 				continue;
 			}
 		}
 		
 		if (zero_run) {
-			rle_windows.push_back(((i - prev_zero) << 1) | 1);
+			rle_windows.push_back((zero_run << 1) | 1);
 			zero_run = 0;
 		}
 		rle_windows.push_back(windows[i] << 1);
 	}
 
-	printf("wowzie\n");
 	if (zero_run) {
-		printf("here\n");
-		rle_windows.push_back(((window_size - prev_zero) << 1) | 1);
+		rle_windows.push_back((zero_run << 1) | 1);
 	}
 
 	return rle_windows;
