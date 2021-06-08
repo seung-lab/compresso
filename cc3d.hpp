@@ -222,7 +222,7 @@ OUT* connected_components2d_4(
     B A 
   */
 
-  const int64_t A = 0;
+  // const int64_t A = 0;
   const int64_t B = -1;
   const int64_t C = -sx;
   const int64_t D = -1-sx;

@@ -42,6 +42,7 @@ cdef extern from "compresso.hxx" namespace "pycompresso":
     size_t xstep, size_t ystep, size_t zstep
   )
   void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output)
+  size_t COMPRESSO_HEADER_SIZE
 
 def compress(cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1)) -> bytes:
   """
@@ -93,14 +94,30 @@ def check_compatibility(buf : bytes):
   if format_version != 0:
     raise DecodeError(f"Unable to decode format version {format_version}. Only version 0 is supported.")
 
-def read_header(buf : bytes) -> dict:
+def label_dtype(info : dict):
+  """Given a header dict, return the dtype for the labels."""
+  dtypes = {
+    1: np.uint8,
+    2: np.uint16,
+    4: np.uint32,
+    8: np.uint64,
+  }
+  return dtypes[info["data_width"]]  
+
+def window_dtype(info : dict):
+  """Given a header dict, return the dtype for the boundary windows."""
+  if info["xstep"] * info["ystep"] * info["zstep"] <= 16:
+    return np.uint16
+  return np.uint64
+
+def header(buf : bytes) -> dict:
   """
   Decodes the header into a python dict.
   """
   check_compatibility(buf)
   toint = lambda n: int.from_bytes(n, byteorder="little", signed=False)
 
-  data = {
+  return {
     "magic": buf[:4],
     "format_version": buf[4],
     "data_width": buf[5],
@@ -114,8 +131,39 @@ def read_header(buf : bytes) -> dict:
     "value_size": toint(buf[23:27]),
     "location_size": toint(buf[27:35]),
   }
-  data["decompressed_bytes"] = data["sx"] * data["sy"] * data["sz"] * data["data_width"]
-  return data
+
+def nbytes(buf : bytes):
+  """Compute the number of bytes the decompressed array will consume."""
+  info = header(buf)
+  return info["sx"] * info["sy"] * info["sz"] * info["data_width"]
+
+def labels(bytes buf):
+  """
+  Returns a sorted list of the unique labels
+  in this stream without decompressing to
+  a full 3D array. Faster and lower memory.
+
+  This data can be retrieved from the ids
+  field and the locations field.
+  """
+  info = header(buf)
+
+  offset = COMPRESSO_HEADER_SIZE
+  id_bytes = info["id_size"] * info["data_width"]
+  ldtype = label_dtype(info)
+  wdtype = window_dtype(info)
+
+  ids = np.frombuffer(buf[offset:offset+id_bytes], dtype=ldtype)
+
+  value_bytes = info["value_size"] * np.dtype(wdtype).itemsize
+  
+  offset += id_bytes + value_bytes
+  location_bytes = info["location_size"] * info["data_width"]
+  locations = np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
+  locations = locations[locations >= 6] - 6
+
+  labels = np.concatenate((ids, locations))
+  return np.unique(labels[labels > 0])
 
 def decompress(bytes data):
   """
@@ -124,17 +172,10 @@ def decompress(bytes data):
 
   Returns: compressed bytes b'...'
   """
-  check_compatibility(data)
-  header = read_header(data)
-  shape = (header["sx"], header["sy"], header["sz"])
-
-  dtypes = {
-    1: np.uint8,
-    2: np.uint16,
-    4: np.uint32,
-    8: np.uint64,
-  }
-  dtype = dtypes[header["data_width"]]
+  info = header(data)
+  shape = (info["sx"], info["sy"], info["sz"])
+  
+  dtype = label_dtype(info)
   labels = np.zeros(shape, dtype=dtype, order="F")
 
   cdef cnp.ndarray[uint8_t, ndim=3] labels8

@@ -13,6 +13,9 @@
  * You can find the Compresso paper here:
  * https://vcg.seas.harvard.edu/publications/compresso-efficient-compression-of-segmentation-data-for-connectomics
  *
+ * You can find the original code here:
+ * https://github.com/VCG/compresso/blob/8378346c9a189a48bf9054c5296ceeb7139634c5/experiments/compression/compresso/cpp-compresso.cpp
+ *
  * William Silversmith 
  * Princeton University
  * June 7, 2021
@@ -146,7 +149,7 @@ public:
 	CompressoHeader(
 		const uint8_t _data_width,
 		const uint16_t _sx, const uint16_t _sy, const uint16_t _sz,
-		const uint8_t _xstep = 8, const uint8_t _ystep = 8, const uint8_t _zstep = 1,
+		const uint8_t _xstep = 4, const uint8_t _ystep = 4, const uint8_t _zstep = 1,
 		const uint64_t _id_size = 0, const uint32_t _value_size = 0, 
 		const uint64_t _location_size = 0
 	) : 
@@ -400,17 +403,15 @@ void renumber_boundary_data(const std::vector<T>& window_values, std::vector<T> 
 	}
 
 	std::unordered_map<T, T> mapping;
-	const size_t n_vals = window_values.size();
-	for (size_t iv = 0; iv < n_vals; iv++) {
+	for (size_t iv = 0; iv < window_values.size(); iv++) {
 		mapping[window_values[iv]] = iv;
 	}
 
-	const size_t n_data = windows.size();
 	T last = windows[0];
 	windows[0] = mapping[windows[0]];
 	T last_remap = windows[0];
 
-	for (size_t iv = 1; iv < n_data; iv++) {
+	for (size_t iv = 1; iv < windows.size(); iv++) {
 		if (windows[iv] == last) {
 			windows[iv] = last_remap;
 			continue;
@@ -598,7 +599,7 @@ std::vector<unsigned char> compress(
 
 	// can use a more efficient window size
 	// if the grid size is small enough. 
-	// specifically, we're really talking about
+	// specifically, we're talking about
 	// 4x4x1 step size
 	if (xstep * ystep * zstep <= 16) {
 		return compress_helper<T, uint16_t>(
@@ -921,6 +922,8 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 };
 
 namespace pycompresso {
+
+static constexpr size_t COMPRESSO_HEADER_SIZE{compresso::CompressoHeader::header_size};
 
 template <typename T>
 std::vector<unsigned char> cpp_compress(
