@@ -56,7 +56,7 @@ def compress(cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1)) -> bytes:
     Smaller sizes (up to a point) are more likely to compress because 
     they repeat more frequently. (4,4,1) and (8,8,1) are typical.
 
-  Return: ndarray
+  Return: compressed bytes b'...'
   """
   data = np.asfortranarray(data)
   sx = data.shape[0]
@@ -170,11 +170,11 @@ def decompress(bytes data):
   Decompress a compresso encoded byte stream into a three dimensional 
   numpy array containing image segmentation.
 
-  Returns: compressed bytes b'...'
+  Returns: 3d ndarray
   """
   info = header(data)
   shape = (info["sx"], info["sy"], info["sz"])
-  
+
   dtype = label_dtype(info)
   labels = np.zeros(shape, dtype=dtype, order="F")
 
