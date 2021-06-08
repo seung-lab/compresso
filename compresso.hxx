@@ -932,7 +932,7 @@ template <typename T>
 std::vector<unsigned char> cpp_compress(
 	T* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
-	const size_t xstep = 8, const size_t ystep = 8, const size_t zstep = 1
+	const size_t xstep = 4, const size_t ystep = 4, const size_t zstep = 1
 ) {
 
 	return compresso::compress<T>(labels, sx, sy, sz, xstep, ystep, zstep);

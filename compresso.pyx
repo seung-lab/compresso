@@ -160,9 +160,22 @@ def labels(bytes buf):
   offset += id_bytes + value_bytes
   location_bytes = info["location_size"] * info["data_width"]
   locations = np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
-  locations = locations[locations >= 7] - 7
-
-  labels = np.concatenate((ids, locations))
+  
+  decoded_locations = np.zeros((locations.size,), dtype=ldtype)
+  cdef size_t i = 0
+  cdef size_t j = 0
+  cdef size_t sz = locations.size
+  while i < sz:
+    if locations[i] == 6:
+      decoded_locations[j] = locations[i+1]
+      i += 1
+      j += 1
+    elif locations[i] > 6:
+      decoded_locations[j] = locations[i] - 7
+      j += 1
+    i += 1
+  
+  labels = np.concatenate((ids, decoded_locations))
   return np.unique(labels[labels > 0])
 
 def decompress(bytes data):
