@@ -2961,7 +2961,7 @@ static PyObject *__pyx_int_0;
 static PyObject *__pyx_int_1;
 static PyObject *__pyx_int_2;
 static PyObject *__pyx_int_4;
-static PyObject *__pyx_int_6;
+static PyObject *__pyx_int_7;
 static PyObject *__pyx_int_8;
 static PyObject *__pyx_int_16;
 static PyObject *__pyx_int_184977713;
@@ -7899,7 +7899,7 @@ static PyObject *__pyx_pf_9compresso_12labels(CYTHON_UNUSED PyObject *__pyx_self
  *   offset += id_bytes + value_bytes
  *   location_bytes = info["location_size"] * info["data_width"]             # <<<<<<<<<<<<<<
  *   locations = np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
- *   locations = locations[locations >= 6] - 6
+ *   locations = locations[locations >= 7] - 7
  */
   __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_v_info, __pyx_n_u_location_size); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -7916,7 +7916,7 @@ static PyObject *__pyx_pf_9compresso_12labels(CYTHON_UNUSED PyObject *__pyx_self
  *   offset += id_bytes + value_bytes
  *   location_bytes = info["location_size"] * info["data_width"]
  *   locations = np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)             # <<<<<<<<<<<<<<
- *   locations = locations[locations >= 6] - 6
+ *   locations = locations[locations >= 7] - 7
  * 
  */
   __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_np); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 162, __pyx_L1_error)
@@ -7969,22 +7969,22 @@ static PyObject *__pyx_pf_9compresso_12labels(CYTHON_UNUSED PyObject *__pyx_self
   /* "compresso.pyx":163
  *   location_bytes = info["location_size"] * info["data_width"]
  *   locations = np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
- *   locations = locations[locations >= 6] - 6             # <<<<<<<<<<<<<<
+ *   locations = locations[locations >= 7] - 7             # <<<<<<<<<<<<<<
  * 
  *   labels = np.concatenate((ids, locations))
  */
-  __pyx_t_1 = PyObject_RichCompare(__pyx_v_locations, __pyx_int_6, Py_GE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_1 = PyObject_RichCompare(__pyx_v_locations, __pyx_int_7, Py_GE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
   __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_v_locations, __pyx_t_1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 163, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_SubtractObjC(__pyx_t_8, __pyx_int_6, 6, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_SubtractObjC(__pyx_t_8, __pyx_int_7, 7, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   __Pyx_DECREF_SET(__pyx_v_locations, __pyx_t_1);
   __pyx_t_1 = 0;
 
   /* "compresso.pyx":165
- *   locations = locations[locations >= 6] - 6
+ *   locations = locations[locations >= 7] - 7
  * 
  *   labels = np.concatenate((ids, locations))             # <<<<<<<<<<<<<<
  *   return np.unique(labels[labels > 0])
@@ -23997,7 +23997,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitGlobals(void) {
   __pyx_int_1 = PyInt_FromLong(1); if (unlikely(!__pyx_int_1)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_int_2 = PyInt_FromLong(2); if (unlikely(!__pyx_int_2)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_int_4 = PyInt_FromLong(4); if (unlikely(!__pyx_int_4)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __pyx_int_6 = PyInt_FromLong(6); if (unlikely(!__pyx_int_6)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_int_7 = PyInt_FromLong(7); if (unlikely(!__pyx_int_7)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_int_8 = PyInt_FromLong(8); if (unlikely(!__pyx_int_8)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_int_16 = PyInt_FromLong(16); if (unlikely(!__pyx_int_16)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_int_184977713 = PyInt_FromLong(184977713L); if (unlikely(!__pyx_int_184977713)) __PYX_ERR(0, 1, __pyx_L1_error)

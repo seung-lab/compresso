@@ -160,7 +160,7 @@ def labels(bytes buf):
   offset += id_bytes + value_bytes
   location_bytes = info["location_size"] * info["data_width"]
   locations = np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
-  locations = locations[locations >= 6] - 6
+  locations = locations[locations >= 7] - 7
 
   labels = np.concatenate((ids, locations))
   return np.unique(labels[labels > 0])

@@ -353,13 +353,12 @@ std::vector<T> encode_indeterminate_locations(
 				else if (z < sz - 1 && !boundaries[hell] && (labels[hell] == labels[loc])) {
 					locations.push_back(5);
 				}
-				else if (labels[loc] <= std::numeric_limits<T>::max() - 6) {
-					locations.push_back(labels[loc] + 6);
+				else if (labels[loc] > std::numeric_limits<T>::max() - 7) {
+					locations.push_back(6);
+					locations.push_back(labels[loc]);
 				}
 				else {
-					std::string err = "compresso: Cannot encode labels within 6 units of integer overflow. Got: ";
-					err += std::to_string(labels[loc]);
-					throw std::runtime_error(err);
+					locations.push_back(labels[loc] + 7);
 				}
 			}
 		}
@@ -756,8 +755,12 @@ void decode_indeterminate_locations(
 					}
 					labels[loc] = labels[loc + sxy];
 				}
+				else if (offset == 6) {
+					labels[loc] = locations[index + 1];
+					index++;
+				}
 				else {
-					labels[loc] = offset - 6;                        
+					labels[loc] = offset - 7;
 				}
 				index++;
 			}
