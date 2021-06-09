@@ -64,6 +64,9 @@ def compress(data, steps=(4,4,1)) -> bytes:
 
   Return: compressed bytes b'...'
   """
+  if steps not in ((4,4,1), (8,8,1)):
+    raise ValueError(f"{steps} steps are not currently supported. 4x4x1 and 8x8x1 are.")
+
   while data.ndim > 3:
     if data.shape[-1] == 1:
       data = data[..., 0]
@@ -135,9 +138,13 @@ def label_dtype(info : dict):
 
 def window_dtype(info : dict):
   """Given a header dict, return the dtype for the boundary windows."""
-  if info["xstep"] * info["ystep"] * info["zstep"] <= 16:
+  window_size = info["xstep"] * info["ystep"] * info["zstep"]
+  if window_size <= 16:
     return np.uint16
-  return np.uint64
+  elif window_size <= 32:
+    return np.uint32
+  else:
+    return np.uint64
 
 def header(buf : bytes) -> dict:
   """
