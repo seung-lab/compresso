@@ -831,6 +831,8 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 		sx, sy, sz
 	);
 
+	delete[] boundaries;
+
 	return output;
 }
 
