@@ -242,18 +242,18 @@ std::vector<T> component_map(
 		const size_t sx, const size_t sy, const size_t sz,
 		const size_t num_components
 ) {
-		const size_t sxy = sx * sy;
-		const size_t voxels = sxy * sz;
+	const size_t sxy = sx * sy;
+	const size_t voxels = sxy * sz;
 
-		std::vector<T> ids(num_components);
+	std::vector<T> ids(num_components);
 
-		for (size_t i = 0; i < voxels; i++) {
-			if (components[i] > 0) {
-				ids[components[i] - 1] = labels[i];
-			}
+	for (size_t i = 0; i < voxels; i++) {
+		if (components[i] > 0) {
+			ids[components[i] - 1] = labels[i];
 		}
+	}
 
-		return ids;
+	return ids;
 }
 
 template <typename T>
