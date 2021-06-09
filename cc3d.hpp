@@ -166,7 +166,7 @@ OUT* relabel(
 
   OUT label;
   OUT* renumber = new OUT[num_labels + 1]();
-  OUT next_label = 1;
+  OUT next_label = start_label;
 
   for (int64_t i = 1; i <= num_labels; i++) {
     label = equivalences.root(i);
@@ -184,7 +184,7 @@ OUT* relabel(
   N = next_label - 1;
   if (N < static_cast<size_t>(num_labels)) {
     for (int64_t loc = 0; loc < voxels; loc++) {
-      out_labels[loc] = start_label + renumber[out_labels[loc]];
+      out_labels[loc] = renumber[out_labels[loc]];
     }
   }
 
@@ -284,7 +284,7 @@ OUT* connected_components2d(
     connected_components2d_4<OUT>(
       (in_labels + sxy * z), sx, sy, 1, 
       max_labels, (out_labels + sxy * z), 
-      tmp_N, N
+      tmp_N, N + 1
     );
     N += tmp_N;
   }
