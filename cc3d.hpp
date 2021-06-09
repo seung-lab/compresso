@@ -3,7 +3,7 @@
 
  * Author: William Silversmith
  * Affiliation: Seung Lab, Princeton University
- * Date: August 2018 - June 2019
+ * Date: August 2018 - June 2019, 2021
  *
  * ----
  * LICENSE
