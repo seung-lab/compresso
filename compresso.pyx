@@ -138,6 +138,7 @@ def nbytes(buf : bytes):
   return info["sx"] * info["sy"] * info["sz"] * info["data_width"]
 
 def raw_ids(bytes buf):
+  """Return the ids buffer from the compressed stream."""
   info = header(buf)
 
   offset = COMPRESSO_HEADER_SIZE
@@ -146,6 +147,7 @@ def raw_ids(bytes buf):
   return np.frombuffer(buf[offset:offset+id_bytes], dtype=ldtype)
 
 def raw_values(bytes buf):
+  """Return the window values buffer from the compressed stream."""
   info = header(buf)
   
   id_bytes = info["id_size"] * info["data_width"]
@@ -158,6 +160,7 @@ def raw_values(bytes buf):
   return np.frombuffer(buf[offset:offset+value_bytes], dtype=wdtype)
 
 def raw_locations(bytes buf):
+  """Return the indeterminate locations buffer from the compressed stream."""
   info = header(buf)
 
   offset = COMPRESSO_HEADER_SIZE
@@ -172,6 +175,7 @@ def raw_locations(bytes buf):
   return np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
 
 def raw_windows(bytes buf):
+  """Return the window boundary data buffer from the compressed stream."""
   info = header(buf)
 
   ldtype = label_dtype(info)
