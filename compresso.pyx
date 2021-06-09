@@ -137,6 +137,54 @@ def nbytes(buf : bytes):
   info = header(buf)
   return info["sx"] * info["sy"] * info["sz"] * info["data_width"]
 
+def raw_ids(bytes buf):
+  info = header(buf)
+
+  offset = COMPRESSO_HEADER_SIZE
+  id_bytes = info["id_size"] * info["data_width"]
+  ldtype = label_dtype(info)
+  return np.frombuffer(buf[offset:offset+id_bytes], dtype=ldtype)
+
+def raw_values(bytes buf):
+  info = header(buf)
+  
+  id_bytes = info["id_size"] * info["data_width"]
+  ldtype = label_dtype(info)
+  wdtype = window_dtype(info)
+
+  offset = COMPRESSO_HEADER_SIZE + id_bytes
+  value_bytes = info["value_size"] * np.dtype(wdtype).itemsize
+  
+  return np.frombuffer(buf[offset:offset+value_bytes], dtype=wdtype)
+
+def raw_locations(bytes buf):
+  info = header(buf)
+
+  offset = COMPRESSO_HEADER_SIZE
+  id_bytes = info["id_size"] * info["data_width"]
+  ldtype = label_dtype(info)
+  wdtype = window_dtype(info)
+
+  value_bytes = info["value_size"] * np.dtype(wdtype).itemsize
+  
+  offset += id_bytes + value_bytes
+  location_bytes = info["location_size"] * info["data_width"]
+  return np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
+
+def raw_windows(bytes buf):
+  info = header(buf)
+
+  ldtype = label_dtype(info)
+  wdtype = window_dtype(info)
+
+  id_bytes = info["id_size"] * info["data_width"]
+  value_bytes = info["value_size"] * np.dtype(wdtype).itemsize
+  location_bytes = info["location_size"] * info["data_width"]
+
+  offset = COMPRESSO_HEADER_SIZE + id_bytes + value_bytes + location_bytes
+
+  return np.frombuffer(buf[offset:], dtype=wdtype)
+
 def labels(bytes buf):
   """
   Returns a sorted list of the unique labels
