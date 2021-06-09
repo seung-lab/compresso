@@ -715,37 +715,37 @@ void decode_indeterminate_locations(
 
 				if (offset == 0) {
 					if (x == 0) {
-						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 0)");
 					}
 					labels[loc] = labels[loc - 1];
 				}
 				else if (offset == 1) {
 					if (x >= sx - 1) {
-						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 1)");
 					}
 					labels[loc] = labels[loc + 1];
 				}
 				else if (offset == 2) {
 					if (y == 0) {
-						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 2)");
 					}
 					labels[loc] = labels[loc - sx];
 				}
 				else if (offset == 3) {
 					if (y >= sy - 1) {
-						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 3)");
 					}
 					labels[loc] = labels[loc + sx];
 				}
 				else if (offset == 4) {
 					if (z == 0) {
-						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 4)");
 					}
 					labels[loc] = labels[loc - sxy];
 				}
 				else if (offset == 5) {
 					if (z >= sz - 1) {
-						throw std::runtime_error("compresso: unable to decode indeterminate locations.");
+						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 5)");
 					}
 					labels[loc] = labels[loc + sxy];
 				}
