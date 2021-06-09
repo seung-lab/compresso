@@ -627,7 +627,15 @@ std::vector<unsigned char> compress(
 	// if the grid size is small enough. 
 	// specifically, we're talking about
 	// 4x4x1 step size
-	if (xstep * ystep * zstep <= 16) {
+	if (xstep * ystep * zstep <= 8) {
+		return compress_helper<T, uint8_t>(
+			labels, 
+			sx, sy, sz, 
+			xstep, ystep, zstep, 
+			boundaries, ids
+		);
+	}
+	else if (xstep * ystep * zstep <= 16) {
 		return compress_helper<T, uint16_t>(
 			labels, 
 			sx, sy, sz, 
