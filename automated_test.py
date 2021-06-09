@@ -29,12 +29,6 @@ def test_uniform_field(dtype):
   assert len(compressed2) < labels.nbytes
   assert np.all(labels == reconstituted)
 
-
-  loc1 = compresso.raw_locations(compressed)
-  loc2 = compresso.raw_locations(compressed2)
-  assert len(loc1) < len(loc2)
-
-
 @pytest.mark.parametrize('dtype', DTYPES)
 def test_arange_field(dtype):
   labels = np.arange(0,1024).reshape((16,16,4)).astype(dtype)
@@ -57,6 +51,11 @@ def test_2d_arange_field(dtype):
 @pytest.mark.parametrize('dtype', DTYPES)
 def test_2_field(dtype):
   labels = np.arange(0,1024).reshape((16,16,4)).astype(dtype)
+  compressed = compresso.compress(labels)
+  reconstituted = compresso.decompress(compressed)
+  assert np.all(labels == reconstituted)
+  
+  labels[2,2,1] = np.iinfo(dtype).max
   compressed = compresso.compress(labels)
   reconstituted = compresso.decompress(compressed)
   assert np.all(labels == reconstituted)
