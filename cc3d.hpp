@@ -156,7 +156,7 @@ template <typename OUT = uint32_t>
 OUT* relabel(
     OUT* out_labels, const int64_t voxels,
     const int64_t num_labels, DisjointSet<uint32_t> &equivalences,
-    size_t &N = _dummy_N, OUT start_label = 0
+    size_t &N = _dummy_N, OUT start_label = 1
   ) {
 
   if (num_labels == 0) {
@@ -181,7 +181,7 @@ OUT* relabel(
   }
 
   // Raster Scan 2: Write final labels based on equivalences
-  N = next_label - 1;
+  N = next_label - start_label;
   if (N < static_cast<size_t>(num_labels)) {
     for (int64_t loc = 0; loc < voxels; loc++) {
       out_labels[loc] = renumber[out_labels[loc]];
