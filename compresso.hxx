@@ -668,17 +668,9 @@ void decode_nonboundary_labels(
 		const size_t sx, const size_t sy, const size_t sz,
 		LABEL* output
 ) {
-	const size_t sxy = sx * sy;
-
-	for (size_t z = 0; z < sz; z++) {
-		for (size_t y = 0; y < sy; y++) {
-			for (size_t x = 0; x < sx; x++) {
-				size_t iv = x + sx * y + sxy * z;
-				if (components[iv] > 0) {
-					output[iv] = ids[components[iv] - 1];
-				}
-			}
-		}
+	const size_t voxels = sx * sy * sz;
+	for (size_t i = 0; i < voxels; i++) {
+		output[i] = ids[components[i]];
 	}
 }
 
@@ -790,14 +782,14 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	size_t num_condensed_windows = window_bytes / sizeof(WINDOW);
 
 	// allocate memory for all arrays
-	std::vector<LABEL> ids(header.id_size);
+	std::vector<LABEL> ids(header.id_size + 1); // +1 to allow vectorized mapping w/ no if statement guarding zero
 	std::vector<WINDOW> window_values(header.value_size);
 	std::vector<LABEL> locations(header.location_size);
 	std::vector<WINDOW> windows(num_condensed_windows);
 
 	size_t iv = CompressoHeader::header_size;
-	for (size_t ix = 0; ix < ids.size(); ix++, iv += sizeof(LABEL)) {
-		ids[ix] = ctoi<LABEL>(buffer, iv);
+	for (size_t ix = 0; ix < ids.size() - 1; ix++, iv += sizeof(LABEL)) {
+		ids[ix + 1] = ctoi<LABEL>(buffer, iv);
 	}
 	for (size_t ix = 0; ix < window_values.size(); ix++, iv += sizeof(WINDOW)) {
 		window_values[ix] = ctoi<WINDOW>(buffer, iv);
