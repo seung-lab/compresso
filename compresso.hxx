@@ -626,6 +626,14 @@ std::vector<unsigned char> compress(
 			boundaries, ids
 		);
 	}
+	else if (xstep * ystep * zstep <= 32) { // 4x4x2 for example
+		return compress_helper<T, uint32_t>(
+			labels, 
+			sx, sy, sz, 
+			xstep, ystep, zstep, 
+			boundaries, ids
+		);
+	}
 	else { // for 8x8x1 step size
 		return compress_helper<T, uint64_t>(
 			labels, 
@@ -800,9 +808,9 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 		return NULL;
 	}
 
-	const size_t nz = (sz + zstep - 1) / zstep; // round up
-	const size_t ny = (sy + ystep - 1) / ystep; // round up
 	const size_t nx = (sx + xstep - 1) / xstep; // round up
+	const size_t ny = (sy + ystep - 1) / ystep; // round up
+	const size_t nz = (sz + zstep - 1) / zstep; // round up
 	const size_t nblocks = nz * ny * nx;
 
 	size_t window_bytes = (
@@ -871,11 +879,21 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 	bool window16 = (
 		static_cast<int>(header.xstep) * static_cast<int>(header.ystep) * static_cast<int>(header.zstep) <= 16
 	);
+	bool window32 = (
+		static_cast<int>(header.xstep) * static_cast<int>(header.ystep) * static_cast<int>(header.zstep) <= 32
+	);
 
 	if (header.data_width == 1) {
 		if (window16) {
 			return reinterpret_cast<void*>(
 				decompress<uint8_t,uint16_t>(
+					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
+				)
+			);
+		}
+		else if (window32) {
+			return reinterpret_cast<void*>(
+				decompress<uint8_t,uint32_t>(
 					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
 				)
 			);
@@ -896,6 +914,13 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 				)
 			);
 		}
+		else if (window32) {
+			return reinterpret_cast<void*>(
+				decompress<uint16_t,uint32_t>(
+					buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
+				)
+			);
+		}
 		else {
 			return reinterpret_cast<void*>(
 				decompress<uint16_t, uint64_t>(
@@ -912,6 +937,13 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 				)
 			);		
 		}
+		else if (window32) {
+			return reinterpret_cast<void*>(
+				decompress<uint32_t,uint32_t>(
+					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
+				)
+			);
+		}
 		else {
 			return reinterpret_cast<void*>(
 				decompress<uint32_t, uint64_t>(
@@ -927,6 +959,13 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
 				)
 			);		
+		}
+		else if (window32) {
+			return reinterpret_cast<void*>(
+				decompress<uint32_t,uint32_t>(
+					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
+				)
+			);
 		}
 		else {
 			return reinterpret_cast<void*>(
