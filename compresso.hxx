@@ -126,7 +126,7 @@ struct CompressoHeader {
 public:
 	static constexpr size_t header_size{35};
 
-	static constexpr char magic[]{ "cpso" }; 
+	static constexpr char magic[4]{ 'c', 'p', 's', 'o' }; 
 	static constexpr uint8_t format_version{0};
 	uint8_t data_width; // label width in bits
 	uint16_t sx;
