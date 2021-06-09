@@ -229,6 +229,9 @@ bool* extract_boundaries(
 				else if (y < sy - 1 && data[loc] != data[loc + sx]) {
 					boundaries[loc] = true;
 				}
+				// else if (z < sz - 1 && data[loc] != data[loc + sxy]) {
+				// 	boundaries[loc] = true;	
+				// }
 			}
 		}
 	}
@@ -326,6 +329,9 @@ std::vector<T> encode_indeterminate_locations(
 				else if (y > 0 && !boundaries[loc - sx]) {
 					continue;
 				}
+				// else if (z > 0 && !boundaries[loc - sxy]) {
+				// 	continue;
+				// }
 				
 				size_t left = loc - 1;
 				size_t right = loc + 1;
@@ -736,6 +742,10 @@ void decode_indeterminate_locations(
 					labels[loc] = labels[loc - sx];
 					continue;
 				}
+				// else if (z > 0 && !boundaries[loc - sxy]) {
+				// 	labels[loc] = labels[loc - sxy];
+				// 	continue;
+				// }
 				
 				size_t offset = locations[index];
 
