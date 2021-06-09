@@ -159,11 +159,6 @@ OUT* relabel(
     size_t &N = _dummy_N, OUT start_label = 1
   ) {
 
-  if (num_labels == 0) {
-    N = num_labels;
-    return out_labels;
-  }
-
   OUT label;
   OUT* renumber = new OUT[num_labels + 1]();
   OUT next_label = start_label;
@@ -182,10 +177,8 @@ OUT* relabel(
 
   // Raster Scan 2: Write final labels based on equivalences
   N = next_label - start_label;
-  if (N < static_cast<size_t>(num_labels)) {
-    for (int64_t loc = 0; loc < voxels; loc++) {
-      out_labels[loc] = renumber[out_labels[loc]];
-    }
+  for (int64_t loc = 0; loc < voxels; loc++) {
+    out_labels[loc] = renumber[out_labels[loc]];
   }
 
   delete[] renumber;
@@ -198,7 +191,7 @@ OUT* connected_components2d_4(
     bool* in_labels, 
     const int64_t sx, const int64_t sy, const int64_t sz,
     size_t max_labels, OUT *out_labels = NULL, 
-    size_t &N = _dummy_N, OUT start_label = 0
+    size_t &N = _dummy_N, OUT start_label = 1
   ) {
 
   const int64_t sxy = sx * sy;
