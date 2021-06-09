@@ -40,7 +40,11 @@ pip install compresso
 
 ## Codec Changes
 
-The original codec has been significantly updated and is no longer compatible with the original. Here are the important changes we made that differ from the code published alongside the paper.
+The original codec has been updated and is no longer compatible with the original. Below are the important changes we made that differ from the code published alongside the paper. 
+
+Implementation wise, we also fixed up several bugs, added guards against data corruption, did some performance tuning, and made sure that the entire codec is implemented in C++ and called by Python. Thus, the codec is usable in both C++ and Python as well as any languages, such as Web Assembly, that C++ can be transpiled to. 
+
+Thank you to the original authors for publishing your code and algorithm from which this repo is derived.
 
 ### Updated Header
 
