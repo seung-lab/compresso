@@ -265,9 +265,9 @@ std::vector<T> encode_boundaries(
 
 	const size_t sxy = sx * sy;
 
-	const size_t nz = (sz + (zstep / 2)) / zstep;
-	const size_t ny = (sy + (ystep / 2)) / ystep;
-	const size_t nx = (sx + (xstep / 2)) / xstep;
+	const size_t nz = (sz + zstep - 1) / zstep; // round up
+	const size_t ny = (sy + ystep - 1) / ystep; // round up
+	const size_t nx = (sx + xstep - 1) / xstep; // round up
 	const size_t nblocks = nz * ny * nx;
 
 	std::vector<T> boundary_data(nblocks);
