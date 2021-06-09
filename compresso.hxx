@@ -876,6 +876,9 @@ template <>
 void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* output) {
 	CompressoHeader header(buffer);
 
+	bool window8 = (
+		static_cast<int>(header.xstep) * static_cast<int>(header.ystep) * static_cast<int>(header.zstep) <= 8
+	);
 	bool window16 = (
 		static_cast<int>(header.xstep) * static_cast<int>(header.ystep) * static_cast<int>(header.zstep) <= 16
 	);
@@ -884,7 +887,14 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 	);
 
 	if (header.data_width == 1) {
-		if (window16) {
+		if (window8) {
+			return reinterpret_cast<void*>(
+				decompress<uint8_t,uint8_t>(
+					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
+				)
+			);
+		}
+		else if (window16) {
 			return reinterpret_cast<void*>(
 				decompress<uint8_t,uint16_t>(
 					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
@@ -907,7 +917,14 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 		}
 	}
 	else if (header.data_width == 2) {
-		if (window16) {
+		if (window8) {
+			return reinterpret_cast<void*>(
+				decompress<uint16_t,uint8_t>(
+					buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
+				)
+			);
+		}
+		else if (window16) {
 			return reinterpret_cast<void*>(
 				decompress<uint16_t,uint16_t>(
 					buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
@@ -930,7 +947,14 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 		}
 	}
 	else if (header.data_width == 4) {
-		if (window16) {
+		if (window8) {
+			return reinterpret_cast<void*>(
+				decompress<uint32_t,uint8_t>(
+					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
+				)
+			);
+		}
+		else if (window16) {
 			return reinterpret_cast<void*>(
 				decompress<uint32_t,uint16_t>(
 					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
@@ -953,7 +977,14 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 		}
 	}
 	else if (header.data_width == 8) {
-		if (window16) {
+		if (window8) {
+			return reinterpret_cast<void*>(
+				decompress<uint64_t,uint8_t>(
+					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
+				)
+			);
+		}
+		else if (window16) {
 			return reinterpret_cast<void*>(
 				decompress<uint64_t,uint16_t>(
 					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
