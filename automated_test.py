@@ -11,9 +11,9 @@ DTYPES = [
 def test_empty(dtype):
   labels = np.zeros((0,0,0), dtype=dtype, order="F")
   compressed = compresso.compress(labels)
-
   reconstituted = compresso.decompress(compressed)
   assert np.all(labels == reconstituted)
+  assert np.all(np.unique(labels) == compresso.labels(compressed))
 
 @pytest.mark.parametrize('dtype', DTYPES)
 def test_uniform_field(dtype):
@@ -22,12 +22,14 @@ def test_uniform_field(dtype):
   reconstituted = compresso.decompress(compressed)
   assert len(compressed) < labels.nbytes
   assert np.all(labels == reconstituted)
+  assert np.all(np.unique(labels) == compresso.labels(compressed))
 
   labels = np.zeros((100,100,100), dtype=dtype, order="F") + np.iinfo(dtype).max
   compressed2 = compresso.compress(labels)
   reconstituted = compresso.decompress(compressed2)
   assert len(compressed2) < labels.nbytes
   assert np.all(labels == reconstituted)
+  assert np.all(np.unique(labels) == compresso.labels(compressed2))
 
 @pytest.mark.parametrize('dtype', DTYPES)
 def test_arange_field(dtype):
@@ -35,11 +37,13 @@ def test_arange_field(dtype):
   compressed = compresso.compress(labels)
   reconstituted = compresso.decompress(compressed)
   assert np.all(labels == reconstituted)
+  assert np.all(np.unique(labels) == compresso.labels(compressed))
 
   labels = np.arange(1,1025).reshape((16,16,4)).astype(dtype)
   compressed = compresso.compress(labels)
   reconstituted = compresso.decompress(compressed)
   assert np.all(labels == reconstituted)
+  assert np.all(np.unique(labels) == compresso.labels(compressed))
 
 @pytest.mark.parametrize('dtype', DTYPES)
 def test_2d_arange_field(dtype):
@@ -47,6 +51,7 @@ def test_2d_arange_field(dtype):
   compressed = compresso.compress(labels)
   reconstituted = compresso.decompress(compressed)
   assert np.all(labels == reconstituted)
+  assert np.all(np.unique(labels) == compresso.labels(compressed))
 
 @pytest.mark.parametrize('dtype', DTYPES)
 def test_2_field(dtype):
@@ -54,11 +59,13 @@ def test_2_field(dtype):
   compressed = compresso.compress(labels)
   reconstituted = compresso.decompress(compressed)
   assert np.all(labels == reconstituted)
+  assert np.all(np.unique(labels) == compresso.labels(compressed))
   
   labels[2,2,1] = np.iinfo(dtype).max
   compressed = compresso.compress(labels)
   reconstituted = compresso.decompress(compressed)
   assert np.all(labels == reconstituted)
+  assert np.all(np.unique(labels) == compresso.labels(compressed))
 
 @pytest.mark.parametrize('order', ("C", "F"))
 @pytest.mark.parametrize('dtype', DTYPES)
@@ -74,3 +81,6 @@ def test_random_field(dtype, order):
 
   reconstituted = compresso.decompress(compressed)
   assert np.all(labels == reconstituted)
+
+  assert np.all(np.unique(labels) == compresso.labels(compressed))
+
