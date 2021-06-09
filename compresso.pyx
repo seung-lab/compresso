@@ -36,6 +36,11 @@ class DecodeError(Exception):
   pass
 
 cdef extern from "compresso.hxx" namespace "pycompresso":
+  vector[unsigned char] cpp_zero_data_stream(
+    size_t sx, size_t sy, size_t sz, 
+    size_t xstep, size_t ystep, size_t zstep,
+    size_t data_width
+  )
   vector[unsigned char] cpp_compress[T](
     T *data, 
     size_t sx, size_t sy, size_t sz, 
@@ -44,7 +49,8 @@ cdef extern from "compresso.hxx" namespace "pycompresso":
   void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output)
   size_t COMPRESSO_HEADER_SIZE
 
-def compress(cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1)) -> bytes:
+
+def compress(data, steps=(4,4,1)) -> bytes:
   """
   compress(ndarray[UINT, ndim=3] data, steps=(4,4,1))
 
@@ -58,7 +64,30 @@ def compress(cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1)) -> bytes:
 
   Return: compressed bytes b'...'
   """
+  while data.ndim > 3:
+    if data.shape[-1] == 1:
+      data = data[..., 0]
+    else:
+      break
+
+  if data.ndim > 3:
+    raise TypeError(f"Image must be at most three dimensional. Got {data.ndim} dimensions.")
+  
+  while data.ndim < 3:
+    data = data[..., np.newaxis]
+
+  sx, sy, sz = data.shape
+  nx, ny, nz = steps
+  data_width = np.dtype(data.dtype).itemsize
+
+  if data.size == 0:
+    return bytes(cpp_zero_data_stream(sx, sy, sz, nx, ny, nz, data_width))
+
   data = np.asfortranarray(data)
+
+  return _compress(data, steps)
+
+def _compress(cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1)) -> bytes:
   sx = data.shape[0]
   sy = data.shape[1]
   sz = data.shape[2]
@@ -252,6 +281,9 @@ def decompress(bytes data):
   dtype = label_dtype(info)
   labels = np.zeros(shape, dtype=dtype, order="F")
 
+  if labels.size == 0:
+    return labels
+
   cdef cnp.ndarray[uint8_t, ndim=3] labels8
   cdef cnp.ndarray[uint16_t, ndim=3] labels16
   cdef cnp.ndarray[uint32_t, ndim=3] labels32
@@ -270,6 +302,9 @@ def decompress(bytes data):
   else:
     labels64 = labels
     outptr = <void*>&labels64[0,0,0]
+
+  if outptr == NULL:
+    raise DecodeError("Unable to decode stream.")
 
   cdef unsigned char* buf = data
   cpp_decompress(buf, len(data), outptr)

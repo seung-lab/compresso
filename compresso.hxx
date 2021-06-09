@@ -180,7 +180,7 @@ public:
 	}
 
 	size_t tochars(std::vector<unsigned char> &buf, size_t idx = 0) const {
-		if ((idx + CompressoHeader::header_size) >= buf.size()) {
+		if ((idx + CompressoHeader::header_size) > buf.size()) {
 			throw std::runtime_error("Unable to write past end of buffer.");
 		}
 
@@ -557,6 +557,25 @@ std::vector<unsigned char> compress_helper(
 	return compressed_data;
 }
 
+std::vector<unsigned char> zero_data_stream(	
+	const size_t sx, const size_t sy, const size_t sz,
+	const size_t xstep, const size_t ystep, const size_t zstep,
+	const size_t data_width
+) {
+	std::vector<unsigned char> compressed_data(CompressoHeader::header_size);
+	
+	CompressoHeader empty_header(
+		/*data_width=*/data_width, 
+		/*sx=*/sx, /*sy=*/sy, /*sz=*/sz,
+		/*xstep=*/xstep, /*ystep=*/ystep, /*zstep=*/zstep,
+		/*id_size=*/0, 
+		/*value_size=*/0, 
+		/*location_size=*/0
+	);
+	empty_header.tochars(compressed_data);
+	return compressed_data;
+}
+
 /* compress
  *
  * Convert 3D integer array data into a compresso encoded byte stream.
@@ -576,6 +595,10 @@ std::vector<unsigned char> compress(
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t xstep = 4, const size_t ystep = 4, const size_t zstep = 1
 ) {
+
+	if (sx * sy * sz == 0) {
+		return zero_data_stream(sx, sy, sz, xstep, ystep, zstep, sizeof(T));
+	}
 
 	if (xstep * ystep * zstep > 64) {
 		throw std::runtime_error("Unable to encode blocks larger than 64 voxels.");
@@ -757,6 +780,12 @@ void decode_indeterminate_locations(
 template <typename LABEL, typename WINDOW>
 LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL) {
 
+	if (num_bytes < CompressoHeader::header_size) {
+		std::string err = "Input too small to be a valid compresso stream. Bytes: ";
+		err += std::to_string(num_bytes);
+		throw std::runtime_error(err);
+	}
+
 	const CompressoHeader header(buffer);
 
 	const size_t sx = header.sx;
@@ -766,6 +795,10 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	const size_t xstep = header.xstep;
 	const size_t ystep = header.ystep;
 	const size_t zstep = header.zstep;
+
+	if (sx * sy * sz == 0) {
+		return NULL;
+	}
 
 	const size_t nz = (sz + zstep - 1) / zstep; // round up
 	const size_t ny = (sy + ystep - 1) / ystep; // round up
@@ -915,6 +948,14 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 namespace pycompresso {
 
 static constexpr size_t COMPRESSO_HEADER_SIZE{compresso::CompressoHeader::header_size};
+
+std::vector<unsigned char> cpp_zero_data_stream(	
+	const size_t sx, const size_t sy, const size_t sz,
+	const size_t xstep, const size_t ystep, const size_t zstep,
+	const size_t data_width
+) {
+	return compresso::zero_data_stream(sx, sy, sz, xstep, ystep, zstep, data_width);
+}
 
 template <typename T>
 std::vector<unsigned char> cpp_compress(
