@@ -580,6 +580,9 @@ std::vector<unsigned char> compress(
 	if (xstep * ystep * zstep > 64) {
 		throw std::runtime_error("Unable to encode blocks larger than 64 voxels.");
 	}
+	else if (xstep * ystep * zstep == 0) {
+		throw std::runtime_error("Unable to encode using zero step sizes.");	
+	}
 
 	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz);
 	size_t num_components = 0;
