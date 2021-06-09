@@ -30,6 +30,8 @@ uniq_labels = compresso.labels(compressed_labels)
 
 **Paper**: Matejek _et al._, "Compresso: Efficient Compression of Segmentation Data For Connectomics", Proceedings of the International Conference on Medical Image Computing and Computer-Assisted Intervention (MICCAI), 2017, 10-14. \[[CITE](https://scholar.google.com/scholar?q=Compresso%3A+Efficient+Compression+of+Segmentation+Data+For+Connectomics) | [PDF](https://vcg.seas.harvard.edu/publications/compresso-efficient-compression-of-segmentation-data-for-connectomics/paper)\]
 
+In more concrete but simple terms, compresso represents the boundary between segments as a boolean bit packed field. Long runs of zeros are run length encoded. The 4-connected components within that field are mapped to a corresponding label. Ambiguous voxels are decoded with reference to their neighbors, or if that fails, by storing their label. A second stage of compression is then applied, such as gzip or lzma. There's a few more details but that's a reasonable overview.
+
 ## Setup
 
 Requires Python 3.6+
