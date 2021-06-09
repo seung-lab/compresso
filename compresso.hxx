@@ -609,7 +609,10 @@ std::vector<unsigned char> compress(
 
 	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz);
 	size_t num_components = 0;
-	uint32_t *components = cc3d::connected_components2d<uint32_t>(boundaries, sx, sy, sz, num_components);
+	uint32_t *components = cc3d::connected_components2d<uint32_t>(
+		boundaries, sx, sy, sz, 
+		/*connectivity=*/4, num_components
+	);
 	
 	std::vector<T> ids = component_map<T>(components, labels, sx, sy, sz, num_components);
 	delete[] components;
@@ -852,7 +855,10 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	windows = std::vector<WINDOW>();
 	window_values = std::vector<WINDOW>();
 
-	uint32_t* components = cc3d::connected_components2d<uint32_t>(boundaries, sx, sy, sz);
+	uint32_t* components = cc3d::connected_components2d<uint32_t>(
+		boundaries, sx, sy, sz,
+		/*connectivity=*/4
+	);
 
 	if (output == NULL) {
 		output = new LABEL[voxels]();
