@@ -772,9 +772,9 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	const size_t ystep = header.ystep;
 	const size_t zstep = header.zstep;
 
-	const size_t nz = (sz + (zstep / 2)) / zstep;
-	const size_t ny = (sy + (ystep / 2)) / ystep;
-	const size_t nx = (sx + (xstep / 2)) / xstep;
+	const size_t nz = (sz + zstep - 1) / zstep; // round up
+	const size_t ny = (sy + ystep - 1) / ystep; // round up
+	const size_t nx = (sx + xstep - 1) / xstep; // round up
 	const size_t nblocks = nz * ny * nx;
 
 	size_t window_bytes = (
