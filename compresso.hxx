@@ -522,11 +522,6 @@ std::vector<unsigned char> compress_helper(
 	const size_t xstep, const size_t ystep, const size_t zstep,
 	bool* boundaries, const std::vector<LABEL>& ids
 ) {
-	const size_t nx = (sz + (zstep / 2)) / zstep;
-	const size_t ny = (sy + (ystep / 2)) / ystep;
-	const size_t nz = (sx + (xstep / 2)) / xstep;
-
-	const size_t nblocks = nx * ny * nz;
 
 	std::vector<WINDOW> windows = encode_boundaries<WINDOW>(boundaries, sx, sy, sz, xstep, ystep, zstep);
 	std::vector<LABEL> locations = encode_indeterminate_locations<LABEL>(boundaries, labels, sx, sy, sz);
@@ -585,9 +580,6 @@ std::vector<unsigned char> compress(
 	if (xstep * ystep * zstep > 64) {
 		throw std::runtime_error("Unable to encode blocks larger than 64 voxels.");
 	}
-
-	// const size_t sxy = sx * sy;
-	const size_t voxels = sx * sy * sz;
 
 	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz);
 	size_t num_components = 0;
@@ -674,7 +666,6 @@ void decode_nonboundary_labels(
 		LABEL* output
 ) {
 	const size_t sxy = sx * sy;
-	const size_t voxels = sxy * sz;
 
 	for (size_t z = 0; z < sz; z++) {
 		for (size_t y = 0; y < sy; y++) {

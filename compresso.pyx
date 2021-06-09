@@ -162,6 +162,16 @@ def labels(bytes buf):
   locations = np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
   
   decoded_locations = np.zeros((locations.size,), dtype=ldtype)
+  decoded = _extract_labels_from_locations(locations, decoded_locations)
+
+  labels = np.concatenate((ids, decoded_locations[:decoded]))
+  return np.unique(labels)
+
+def _extract_labels_from_locations(
+  cnp.ndarray[UINT, ndim=1] locations, 
+  cnp.ndarray[UINT, ndim=1] decoded_locations,
+):
+  """Helper function for labels."""
   cdef size_t i = 0
   cdef size_t j = 0
   cdef size_t sz = locations.size
@@ -174,9 +184,8 @@ def labels(bytes buf):
       decoded_locations[j] = locations[i] - 7
       j += 1
     i += 1
-  
-  labels = np.concatenate((ids, decoded_locations))
-  return np.unique(labels[labels > 0])
+
+  return j # size of decoded_locations
 
 def decompress(bytes data):
   """
