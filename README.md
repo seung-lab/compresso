@@ -30,6 +30,14 @@ uniq_labels = compresso.labels(compressed_labels)
 
 **Paper**: Matejek _et al._, "Compresso: Efficient Compression of Segmentation Data For Connectomics", Proceedings of the International Conference on Medical Image Computing and Computer-Assisted Intervention (MICCAI), 2017, 10-14. \[[CITE](https://scholar.google.com/scholar?q=Compresso%3A+Efficient+Compression+of+Segmentation+Data+For+Connectomics) | [PDF](https://vcg.seas.harvard.edu/publications/compresso-efficient-compression-of-segmentation-data-for-connectomics/paper)\]
 
+## Setup
+
+Requires Python 3.6+
+
+```bash
+pip install compresso
+```
+
 ## Codec Changes
 
 The original codec has been significantly updated and is no longer compatible with the original. Here are the important changes we made that differ from the code published alongside the paper.
@@ -38,6 +46,18 @@ The original codec has been significantly updated and is no longer compatible wi
 
 The previous header was 72 bytes. We updated the header to be only 35 bytes. It now includes the magic number `cpso`, a version number, and the data width of the labels. 
 This additional information makes detecting valid compresso streams easier, allows for updating the format in the future, and allows us to assume smaller byte widths than 64-bit.  
+
+| Attribute         | Value             | Type    | Description                                     |
+|-------------------|-------------------|---------|-------------------------------------------------|
+| magic             | cpso              | char[4] | File magic number.                              |
+| format_version    | 0                 | u8      | Version of the compresso stream.                |
+| data_width        | 1,2,4,or 8        | u8      | Size of the labels in bytes.                    |
+| sx, sy, sz        | >= 0              | u16 x 3 | Size of array dimensions.                       |
+| xstep,ystep,zstep | 0 < product <= 64 | u8 x 3  | Size of structure grid.                         |
+| id_size           | >= 0              | u64     | Size of array mapping of CCL regions to labels. |
+| value_size        | >= 0              | u32     | Size of array mapping windows to renumbering.   |
+| location_size     | >= 0              | u64     | Size of indeterminate locations array.          |
+
 
 ### Char Byte Stream 
 
@@ -55,15 +75,9 @@ The previous codec reserved 6 integers for instructions in the locations stream,
 
 This potentially expands the size of the compressed stream. However, we only use this instruction for non-representable numbers, so for most data it should cause zero increase and minimal increase so long as the non-representable numbers in indeterminate locations are rare. The upside is compresso now handles all possible inputs.
 
-## Requirements
+## Why not 6-connected CCL?
 
-- Python 3.6+
-
-## Setup
-
-```bash
-pip install compresso
-```
+6-connected CCL seems like it would be a win because it would reduce the number of duplicated IDs that need to be stored. However, in an experiment we found that it did significantly decrease IDs, but at the expense of adding many more boundary voxels (since you need to consider the Z direction now) and increasing the number of indeterminate locations far more. It ended up being slower and larger.
 
 ### Results From the Paper
 
