@@ -161,8 +161,10 @@ OUT* relabel(
 
   // Raster Scan 2: Write final labels based on equivalences
   N = next_label - start_label;
-  for (int64_t loc = 0; loc < voxels; loc++) {
-    out_labels[loc] = renumber[out_labels[loc]];
+  if (N < static_cast<size_t>(num_labels) || start_label != 1) {
+    for (int64_t loc = 0; loc < voxels; loc++) {
+      out_labels[loc] = renumber[out_labels[loc]];
+    }
   }
 
   delete[] renumber;
@@ -242,37 +244,155 @@ OUT* connected_components2d_4(
   return relabel<OUT>(out_labels, voxels, next_label, equivalences, N, start_label);
 }
 
+
+template <typename OUT = uint32_t>
+OUT* connected_components3d_6(
+    bool* in_labels, 
+    const int64_t sx, const int64_t sy, const int64_t sz,
+    size_t max_labels, 
+    OUT *out_labels = NULL, size_t &N = _dummy_N
+  ) {
+
+  const int64_t sxy = sx * sy;
+  const int64_t voxels = sxy * sz;
+
+  if (out_labels == NULL) {
+    out_labels = new OUT[voxels]();
+  }
+
+  if (max_labels == 0) {
+    return out_labels;
+  }
+
+  max_labels++; // corrects Cython estimation
+  max_labels = std::min(max_labels, static_cast<size_t>(voxels) + 1); // + 1L for an array with no zeros
+  max_labels = std::min(max_labels, static_cast<size_t>(std::numeric_limits<OUT>::max()));
+
+  DisjointSet<OUT> equivalences(max_labels);
+
+  /*
+    Layout of forward pass mask (which faces backwards). 
+    N is the current location.
+
+    z = -1     z = 0
+    A B C      J K L   y = -1 
+    D E F      M N     y =  0
+    G H I              y = +1
+   -1 0 +1    -1 0   <-- x axis
+  */
+
+  // Z - 1
+  const int64_t B = -sx - sxy;
+  const int64_t E = -sxy;
+  const int64_t D = -1 - sxy;
+
+  // Current Z
+  const int64_t K = -sx;
+  const int64_t M = -1;
+  const int64_t J = -1 - sx;
+  // N = 0;
+
+  int64_t loc = 0;
+  OUT next_label = 0;
+
+  // Raster Scan 1: Set temporary labels and 
+  // record equivalences in a disjoint set.
+
+  for (int64_t z = 0; z < sz; z++) {
+    for (int64_t y = 0; y < sy; y++) {
+      for (int64_t x = 0; x < sx; x++) {
+        loc = x + sx * (y + sy * z);
+
+        const bool cur = in_labels[loc];
+
+        if (cur) {
+          continue;
+        }
+
+        if (x > 0 && !in_labels[loc + M]) {
+          out_labels[loc] = out_labels[loc + M];
+
+          if (y > 0 && !in_labels[loc + K] && in_labels[loc + J]) {
+            equivalences.unify(out_labels[loc], out_labels[loc + K]); 
+            if (z > 0 && !in_labels[loc + E]) {
+              if (in_labels[loc + D] && in_labels[loc + B]) {
+                equivalences.unify(out_labels[loc], out_labels[loc + E]);
+              }
+            }
+          }
+          else if (z > 0 && !in_labels[loc + E] && in_labels[loc + D]) {
+            equivalences.unify(out_labels[loc], out_labels[loc + E]); 
+          }
+        }
+        else if (y > 0 && !in_labels[loc + K]) {
+          out_labels[loc] = out_labels[loc + K];
+
+          if (z > 0 && !in_labels[loc + E] && in_labels[loc + B]) {
+            equivalences.unify(out_labels[loc], out_labels[loc + E]); 
+          }
+        }
+        else if (z > 0 && !in_labels[loc + E]) {
+          out_labels[loc] = out_labels[loc + E];
+        }
+        else {
+          next_label++;
+          out_labels[loc] = next_label;
+          equivalences.add(out_labels[loc]);
+        }
+      }
+    }
+  }
+
+  if (next_label <= 1) {
+    N = next_label;
+    return out_labels;
+  }
+
+  return relabel<OUT>(out_labels, voxels, next_label, equivalences, N, 1);
+}
+
 template <typename OUT = uint64_t>
 OUT* connected_components2d(
   bool* in_labels, 
   const int64_t sx, const int64_t sy, const int64_t sz,
-  size_t &N = _dummy_N
+  const size_t connectivity = 4, size_t &N = _dummy_N
 ) {
 
   const int64_t sxy = sx * sy;
   const int64_t voxels = sxy * sz;
 
-  const size_t max_labels = static_cast<size_t>((sxy + 2) / 2);
+  size_t max_labels = voxels;
   OUT* out_labels = new OUT[voxels]();
+  N = 0;
 
-  N = 0;  
-  for (int64_t z = 0; z < sz; z++) {
-    size_t tmp_N = 0;
-    connected_components2d_4<OUT>(
-      (in_labels + sxy * z), sx, sy, 1, 
-      max_labels, (out_labels + sxy * z), 
-      tmp_N, N + 1
-    );
-    N += tmp_N;
+  if (connectivity == 4) {
+    max_labels = static_cast<size_t>((sxy + 2) / 2);
+  
+    for (int64_t z = 0; z < sz; z++) {
+      size_t tmp_N = 0;
+      connected_components2d_4<OUT>(
+        (in_labels + sxy * z), sx, sy, 1, 
+        max_labels, (out_labels + sxy * z), 
+        tmp_N, N + 1
+      );
+      N += tmp_N;
+    }
+  }
+  else if (connectivity == 6) {
+    max_labels =  static_cast<size_t>(((sx + 1) * (sy + 1) * (sz + 1)) / 2);
+    connected_components3d_6<OUT>(
+      in_labels, sx, sy, sz, 
+      max_labels, out_labels, N
+    );    
+  }
+  else {
+    throw std::runtime_error("Only 4 and 6 connectivities are supported.");
   }
 
   return out_labels;
 }
 
 
-
 };
-
-
 
 #endif
