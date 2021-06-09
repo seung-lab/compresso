@@ -625,8 +625,8 @@ bool* decode_boundaries(
 	const size_t sxy = sx * sy;
 	const size_t voxels = sx * sy * sz;
 
-	const size_t nx = (sy + xstep - 1) / xstep; // round up
-	const size_t ny = (sx + ystep - 1) / ystep; // round up
+	const size_t nx = (sx + xstep - 1) / xstep; // round up
+	const size_t ny = (sy + ystep - 1) / ystep; // round up
 
 	bool* boundaries = new bool[voxels]();
 
