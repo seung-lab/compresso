@@ -16,6 +16,14 @@ def test_empty(dtype):
   assert np.all(np.unique(labels) == compresso.labels(compressed))
 
 @pytest.mark.parametrize('dtype', DTYPES)
+def test_black(dtype):
+  labels = np.zeros((100,100,100), dtype=dtype, order="F")
+  compressed = compresso.compress(labels)
+  reconstituted = compresso.decompress(compressed)
+  assert np.all(labels == reconstituted)
+  assert np.all(np.unique(labels) == compresso.labels(compressed))
+
+@pytest.mark.parametrize('dtype', DTYPES)
 def test_uniform_field(dtype):
   labels = np.zeros((100,100,100), dtype=dtype, order="F") + 1
   compressed = compresso.compress(labels)
