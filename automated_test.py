@@ -15,9 +15,55 @@ def test_empty(dtype):
   reconstituted = compresso.decompress(compressed)
   assert np.all(labels == reconstituted)
 
+@pytest.mark.parametrize('dtype', DTYPES)
+def test_uniform_field(dtype):
+  labels = np.zeros((100,100,100), dtype=dtype, order="F") + 1
+  compressed = compresso.compress(labels)
+  reconstituted = compresso.decompress(compressed)
+  assert len(compressed) < labels.nbytes
+  assert np.all(labels == reconstituted)
+
+  labels = np.zeros((100,100,100), dtype=dtype, order="F") + np.iinfo(dtype).max
+  compressed2 = compresso.compress(labels)
+  reconstituted = compresso.decompress(compressed2)
+  assert len(compressed2) < labels.nbytes
+  assert np.all(labels == reconstituted)
+
+
+  loc1 = compresso.raw_locations(compressed)
+  loc2 = compresso.raw_locations(compressed2)
+  assert len(loc1) < len(loc2)
+
+
+@pytest.mark.parametrize('dtype', DTYPES)
+def test_arange_field(dtype):
+  labels = np.arange(0,1024).reshape((16,16,4)).astype(dtype)
+  compressed = compresso.compress(labels)
+  reconstituted = compresso.decompress(compressed)
+  assert np.all(labels == reconstituted)
+
+  labels = np.arange(1,1025).reshape((16,16,4)).astype(dtype)
+  compressed = compresso.compress(labels)
+  reconstituted = compresso.decompress(compressed)
+  assert np.all(labels == reconstituted)
+
+@pytest.mark.parametrize('dtype', DTYPES)
+def test_2d_arange_field(dtype):
+  labels = np.arange(0,16*16).reshape((16,16,1)).astype(dtype)
+  compressed = compresso.compress(labels)
+  reconstituted = compresso.decompress(compressed)
+  assert np.all(labels == reconstituted)
+
+@pytest.mark.parametrize('dtype', DTYPES)
+def test_2_field(dtype):
+  labels = np.arange(0,1024).reshape((16,16,4)).astype(dtype)
+  compressed = compresso.compress(labels)
+  reconstituted = compresso.decompress(compressed)
+  assert np.all(labels == reconstituted)
+
 @pytest.mark.parametrize('order', ("C", "F"))
 @pytest.mark.parametrize('dtype', DTYPES)
-def test_compress_decompress(dtype, order):
+def test_random_field(dtype, order):
   labels = np.random.randint(0, 25, size=(100, 100, 25)).astype(dtype)
   
   if order == "C":
