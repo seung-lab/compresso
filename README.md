@@ -69,6 +69,6 @@ pip install compresso
 
 **Compression Performance**
 
-![Compression Performance of Connectomics Datasets](/experiments/figures/compression-performance.png?raw=true)
+![Compression Performance of Connectomics Datasets](compression-performance.png?raw=true)
 
 Compression ratios of general-purpose compression methods combined with Compresso and Neuroglancer. Compresso paired with LZMA yields the best compression ratios for all connectomics datasets (left) and in average (four out of five) for the others (right).
