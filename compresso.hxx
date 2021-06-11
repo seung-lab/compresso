@@ -665,9 +665,9 @@ std::vector<unsigned char> compress(
 
 template <typename LABEL, typename WINDOW>
 bool* decode_boundaries(
-		const std::vector<WINDOW> &windows, const std::vector<WINDOW> &window_values, 
-		const size_t sx, const size_t sy, const size_t sz,
-		const size_t xstep, const size_t ystep, const size_t zstep
+	const std::vector<WINDOW> &windows, const std::vector<WINDOW> &window_values, 
+	const size_t sx, const size_t sy, const size_t sz,
+	const size_t xstep, const size_t ystep, const size_t zstep
 ) {
 
 	const size_t sxy = sx * sy;
@@ -675,6 +675,10 @@ bool* decode_boundaries(
 
 	const size_t nx = (sx + xstep - 1) / xstep; // round up
 	const size_t ny = (sy + ystep - 1) / ystep; // round up
+
+	// check for power of two
+	const bool xstep_pot = (xstep != 0) && ((xstep & (xstep - 1)) == 0);
+	const int xshift = std::log2(xstep); // must use log2 here, not lg/lg2 to avoid fp errors
 
 	bool* boundaries = new bool[voxels]();
 
@@ -686,22 +690,37 @@ bool* decode_boundaries(
 	size_t xoffset, yoffset, zoffset;
 
 	for (size_t z = 0; z < sz; z++) {
-		zblock = z / zstep;
-		zoffset = z % zstep;
+		zblock = nx * ny * (z / zstep);
+		zoffset = xstep * ystep * (z % zstep);
 		for (size_t y = 0; y < sy; y++) {
-			yblock = y / ystep;
-			yoffset = y % ystep;
-			for (size_t x = 0; x < sx; x++) {
-				size_t iv = x + sx * y + sxy * z;
-				xblock = x / xstep;
-				xoffset = x % xstep;
+			yblock = nx * (y / ystep);
+			yoffset = xstep * (y % ystep);
 
-				size_t block = xblock + nx * (yblock + ny * zblock);
-				size_t offset = xoffset + xstep * (yoffset + (ystep * zoffset));
+			if (xstep_pot) {
+				for (size_t x = 0; x < sx; x++) {
+					size_t iv = x + sx * y + sxy * z;
 
-				WINDOW value = window_values[windows[block]];
-				if ((value >> offset) & 0b1) { 
-					boundaries[iv] = true;
+					xblock = x >> xshift; // x / xstep
+					xoffset = x & ((1 << xshift) - 1); // x % xstep
+					
+					size_t block = xblock + yblock + zblock;
+					size_t offset = xoffset + yoffset + zoffset;
+
+					WINDOW value = window_values[windows[block]];
+					boundaries[iv] = (value >> offset) & 0b1;
+				}				
+			}
+			else {
+				for (size_t x = 0; x < sx; x++) {
+					size_t iv = x + sx * y + sxy * z;
+					xblock = x / xstep;
+					xoffset = x % xstep;
+					
+					size_t block = xblock + yblock + zblock;
+					size_t offset = xoffset + yoffset + zoffset;
+
+					WINDOW value = window_values[windows[block]];
+					boundaries[iv] = (value >> offset) & 0b1;
 				}
 			}
 		}
