@@ -63,7 +63,7 @@ This additional information makes detecting valid compresso streams easier, allo
 | id_size           | >= 0              | u64     | Size of array mapping of CCL regions to labels. |
 | value_size        | >= 0              | u32     | Size of array mapping windows to renumbering.   |
 | location_size     | >= 0              | u64     | Size of indeterminate locations array.          |
-
+| connectivity      | 4 or 6            | u8      | Connectivity for connected components.          |
 
 ### Char Byte Stream 
 
@@ -81,9 +81,12 @@ The previous codec reserved 6 integers for instructions in the locations stream,
 
 This potentially expands the size of the compressed stream. However, we only use this instruction for non-representable numbers, so for most data it should cause zero increase and minimal increase so long as the non-representable numbers in indeterminate locations are rare. The upside is compresso now handles all possible inputs.
 
-## Why not 6-connected CCL?
+## Supports 4 and 6 Connected Components
 
-6-connected CCL seems like it would be a win because it would reduce the number of duplicated IDs that need to be stored. However, in an experiment we found that it did significantly decrease IDs, but at the expense of adding many more boundary voxels (since you need to consider the Z direction now) and increasing the number of indeterminate locations far more. It ended up being slower and larger.
+6-connected CCL seems like it would be a win because it would reduce the number of duplicated IDs that need to be stored. However, in an experiment we found that it did significantly decrease IDs, but at the expense of adding many more boundary voxels (since you need to consider the Z direction now) and increasing the number of indeterminate locations far more. It ended up being slower and larger on some connectomics segmentation we experimented with. 
+
+However, we suspect that there are some images where 6 would do better. An obvious example is a solid
+color image that has no boundaries. The images where 6 shines will probably have sparser and straighter boundaries so that fewer additional boundary voxels are introduced.
 
 ### Results From the Paper
 
