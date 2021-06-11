@@ -352,7 +352,7 @@ OUT* connected_components3d_6(
 }
 
 template <typename OUT = uint64_t>
-OUT* connected_components2d(
+OUT* connected_components(
   bool* in_labels, 
   const int64_t sx, const int64_t sy, const int64_t sz,
   const size_t connectivity = 4, size_t &N = _dummy_N
