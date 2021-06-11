@@ -38,6 +38,8 @@
 
 namespace compresso {
 
+#define DEFAULT_CONNECTIVITY 4
+
 // little endian serialization of integers to chars
 // returns bytes written
 inline size_t itoc(uint8_t x, std::vector<unsigned char> &buf, size_t idx) {
@@ -121,10 +123,11 @@ uint8_t ctoi(unsigned char* buf, size_t idx) {
  *   id_size          : number of uniq labels (u64) (could be one per voxel)
  *   value_size       : number of values (u32)
  *   location_size    : number of locations (u64)
+ *   connectivity     : CCL algorithm 4 or 6
  */
 struct CompressoHeader {
 public:
-	static constexpr size_t header_size{35};
+	static constexpr size_t header_size{36};
 
 	static constexpr char magic[4]{ 'c', 'p', 's', 'o' }; 
 	static constexpr uint8_t format_version{0};
@@ -138,12 +141,14 @@ public:
 	uint64_t id_size; // label per connected component 
 	uint32_t value_size; // boundary encodings (less than size / 16 or size / 64)
 	uint64_t location_size; // instructions to remap boundaries
+	uint8_t connectivity; // 4 or 6 connected CLL algorithm (almost always 4)
 
 	CompressoHeader() :
 		data_width(8), 
 		sx(1), sy(1), sz(1), 
 		xstep(8), ystep(8), zstep(1),
-		id_size(0), value_size(0), location_size(0)
+		id_size(0), value_size(0), location_size(0),
+		connectivity(4)
 	{}
 
 	CompressoHeader(
@@ -151,12 +156,13 @@ public:
 		const uint16_t _sx, const uint16_t _sy, const uint16_t _sz,
 		const uint8_t _xstep = 4, const uint8_t _ystep = 4, const uint8_t _zstep = 1,
 		const uint64_t _id_size = 0, const uint32_t _value_size = 0, 
-		const uint64_t _location_size = 0
+		const uint64_t _location_size = 0, const uint8_t _connectivity = 4
 	) : 
 		data_width(_data_width), 
 		sx(_sx), sy(_sy), sz(_sz), 
 		xstep(_xstep), ystep(_ystep), zstep(_zstep),
-		id_size(_id_size), value_size(_value_size), location_size(_location_size)
+		id_size(_id_size), value_size(_value_size), location_size(_location_size),
+		connectivity(_connectivity)
 	{}
 
 	CompressoHeader(unsigned char* buf) {
@@ -177,6 +183,14 @@ public:
 		id_size = ctoi<uint64_t>(buf, 15);
 		value_size = ctoi<uint32_t>(buf, 23);
 		location_size = ctoi<uint64_t>(buf, 27);
+		connectivity = ctoi<uint8_t>(buf, 35);
+
+		if (data_width != 1 && data_width != 2 && data_width != 4 && data_width != 8) {
+			throw std::runtime_error("compresso: Invalid data width in stream. Unable to decompress.");
+		}
+		if (connectivity != 4 && connectivity != 6) {
+			throw std::runtime_error("compresso: Invalid connectivity in stream. Unable to decompress.");	
+		}
 	}
 
 	size_t tochars(std::vector<unsigned char> &buf, size_t idx = 0) const {
@@ -526,7 +540,7 @@ std::vector<unsigned char> compress_helper(
 	LABEL* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t xstep, const size_t ystep, const size_t zstep,
-	bool* boundaries, const std::vector<LABEL>& ids
+	const size_t connectivity, bool* boundaries, const std::vector<LABEL>& ids
 ) {
 
 	std::vector<WINDOW> windows = encode_boundaries<WINDOW>(boundaries, sx, sy, sz, xstep, ystep, zstep);
@@ -552,7 +566,8 @@ std::vector<unsigned char> compress_helper(
 		/*xstep=*/xstep, /*ystep=*/ystep, /*zstep=*/zstep,
 		/*id_size=*/ids.size(), 
 		/*value_size=*/window_values.size(), 
-		/*location_size=*/locations.size()
+		/*location_size=*/locations.size(),
+		/*connectivity=*/connectivity
 	);
 
 	write_compressed_stream<LABEL, WINDOW>(
@@ -566,7 +581,7 @@ std::vector<unsigned char> compress_helper(
 std::vector<unsigned char> zero_data_stream(	
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t xstep, const size_t ystep, const size_t zstep,
-	const size_t data_width
+	const size_t data_width, const size_t connectivity
 ) {
 	std::vector<unsigned char> compressed_data(CompressoHeader::header_size);
 	
@@ -576,7 +591,8 @@ std::vector<unsigned char> zero_data_stream(
 		/*xstep=*/xstep, /*ystep=*/ystep, /*zstep=*/zstep,
 		/*id_size=*/0, 
 		/*value_size=*/0, 
-		/*location_size=*/0
+		/*location_size=*/0,
+		/*connectivity*/connectivity
 	);
 	empty_header.tochars(compressed_data);
 	return compressed_data;
@@ -599,11 +615,12 @@ template <typename T>
 std::vector<unsigned char> compress(
 	T* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
-	const size_t xstep = 4, const size_t ystep = 4, const size_t zstep = 1
+	const size_t xstep = 4, const size_t ystep = 4, const size_t zstep = 1,
+	const size_t connectivity = 4
 ) {
 
 	if (sx * sy * sz == 0) {
-		return zero_data_stream(sx, sy, sz, xstep, ystep, zstep, sizeof(T));
+		return zero_data_stream(sx, sy, sz, xstep, ystep, zstep, sizeof(T), connectivity);
 	}
 
 	if (xstep * ystep * zstep > 64) {
@@ -617,7 +634,7 @@ std::vector<unsigned char> compress(
 	size_t num_components = 0;
 	uint32_t *components = cc3d::connected_components<uint32_t>(
 		boundaries, sx, sy, sz, 
-		/*connectivity=*/4, num_components
+		/*connectivity=*/connectivity, num_components
 	);
 	
 	std::vector<T> ids = component_map<T>(components, labels, sx, sy, sz, num_components);
@@ -631,7 +648,7 @@ std::vector<unsigned char> compress(
 		return compress_helper<T, uint8_t>(
 			labels, 
 			sx, sy, sz, 
-			xstep, ystep, zstep, 
+			xstep, ystep, zstep, connectivity,
 			boundaries, ids
 		);
 	}
@@ -639,7 +656,7 @@ std::vector<unsigned char> compress(
 		return compress_helper<T, uint16_t>(
 			labels, 
 			sx, sy, sz, 
-			xstep, ystep, zstep, 
+			xstep, ystep, zstep, connectivity,
 			boundaries, ids
 		);
 	}
@@ -647,7 +664,7 @@ std::vector<unsigned char> compress(
 		return compress_helper<T, uint32_t>(
 			labels, 
 			sx, sy, sz, 
-			xstep, ystep, zstep, 
+			xstep, ystep, zstep, connectivity,
 			boundaries, ids
 		);
 	}
@@ -655,7 +672,7 @@ std::vector<unsigned char> compress(
 		return compress_helper<T, uint64_t>(
 			labels, 
 			sx, sy, sz, 
-			xstep, ystep, zstep, 
+			xstep, ystep, zstep, connectivity,
 			boundaries, ids
 		);
 	}
@@ -893,8 +910,7 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	window_values = std::vector<WINDOW>();
 
 	uint32_t* components = cc3d::connected_components<uint32_t>(
-		boundaries, sx, sy, sz,
-		/*connectivity=*/4
+		boundaries, sx, sy, sz, header.connectivity
 	);
 
 	if (output == NULL) {
@@ -1065,19 +1081,20 @@ static constexpr size_t COMPRESSO_HEADER_SIZE{compresso::CompressoHeader::header
 std::vector<unsigned char> cpp_zero_data_stream(	
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t xstep, const size_t ystep, const size_t zstep,
-	const size_t data_width
+	const size_t data_width, const size_t connectivity
 ) {
-	return compresso::zero_data_stream(sx, sy, sz, xstep, ystep, zstep, data_width);
+	return compresso::zero_data_stream(sx, sy, sz, xstep, ystep, zstep, data_width, connectivity);
 }
 
 template <typename T>
 std::vector<unsigned char> cpp_compress(
 	T* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
-	const size_t xstep = 4, const size_t ystep = 4, const size_t zstep = 1
+	const size_t xstep = 4, const size_t ystep = 4, const size_t zstep = 1,
+	const size_t connectivity = 4
 ) {
 
-	return compresso::compress<T>(labels, sx, sy, sz, xstep, ystep, zstep);
+	return compresso::compress<T>(labels, sx, sy, sz, xstep, ystep, zstep, connectivity);
 }
 
 void* cpp_decompress(unsigned char* buffer, size_t num_bytes, void* output) {

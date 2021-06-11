@@ -39,18 +39,19 @@ cdef extern from "compresso.hxx" namespace "pycompresso":
   vector[unsigned char] cpp_zero_data_stream(
     size_t sx, size_t sy, size_t sz, 
     size_t xstep, size_t ystep, size_t zstep,
-    size_t data_width
+    size_t data_width, size_t connectivity
   )
   vector[unsigned char] cpp_compress[T](
     T *data, 
     size_t sx, size_t sy, size_t sz, 
-    size_t xstep, size_t ystep, size_t zstep
+    size_t xstep, size_t ystep, size_t zstep,
+    size_t connectivity
   )
   void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output)
   size_t COMPRESSO_HEADER_SIZE
 
 
-def compress(data, steps=(4,4,1)) -> bytes:
+def compress(data, steps=(4,4,1), connectivity=4) -> bytes:
   """
   compress(ndarray[UINT, ndim=3] data, steps=(4,4,1))
 
@@ -61,11 +62,16 @@ def compress(data, steps=(4,4,1)) -> bytes:
     Grid size for classifying the boundary structure.
     Smaller sizes (up to a point) are more likely to compress because 
     they repeat more frequently. (4,4,1) and (8,8,1) are typical.
+  connectivity: 4 or 6. 4 means we use 2D connected components and
+    6 means we use 3D connected components.
 
   Return: compressed bytes b'...'
   """
   if steps not in ((4,4,1), (8,8,1)):
     raise ValueError(f"{steps} steps are not currently supported. 4x4x1 and 8x8x1 are.")
+
+  if connectivity not in (4,6):
+    raise ValueError(f"{connectivity} connectivity must be 4 or 6.")
 
   while data.ndim > 3:
     if data.shape[-1] == 1:
@@ -84,13 +90,16 @@ def compress(data, steps=(4,4,1)) -> bytes:
   data_width = np.dtype(data.dtype).itemsize
 
   if data.size == 0:
-    return bytes(cpp_zero_data_stream(sx, sy, sz, nx, ny, nz, data_width))
+    return bytes(cpp_zero_data_stream(sx, sy, sz, nx, ny, nz, data_width, connectivity))
 
   data = np.asfortranarray(data)
 
-  return _compress(data, steps)
+  return _compress(data, steps, connectivity)
 
-def _compress(cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1)) -> bytes:
+def _compress(
+  cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1),
+  unsigned int connectivity=4
+) -> bytes:
   sx = data.shape[0]
   sy = data.shape[1]
   sz = data.shape[2]
@@ -106,16 +115,16 @@ def _compress(cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1)) -> bytes:
 
   if data.dtype in (np.uint8, bool):
     arr8 = data.view(np.uint8)
-    buf = cpp_compress[uint8_t](&arr8[0,0,0], sx, sy, sz, nx, ny, nz)
+    buf = cpp_compress[uint8_t](&arr8[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
   elif data.dtype == np.uint16:
     arr16 = data
-    buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz)
+    buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
   elif data.dtype == np.uint32:
     arr32 = data
-    buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz)
+    buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
   elif data.dtype == np.uint64:
     arr64 = data
-    buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz)
+    buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
   else:
     raise TypeError(f"Type {data.dtype} not supported. Only uints and bool are supported.")
 
@@ -166,6 +175,7 @@ def header(buf : bytes) -> dict:
     "id_size": toint(buf[15:23]),
     "value_size": toint(buf[23:27]),
     "location_size": toint(buf[27:35]),
+    "connectivity": buf[35],
   }
 
 def nbytes(buf : bytes):
