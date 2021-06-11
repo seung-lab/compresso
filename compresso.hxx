@@ -186,10 +186,14 @@ public:
 		connectivity = ctoi<uint8_t>(buf, 35);
 
 		if (data_width != 1 && data_width != 2 && data_width != 4 && data_width != 8) {
-			throw std::runtime_error("compresso: Invalid data width in stream. Unable to decompress.");
+			std::string err = "compresso: Invalid data width in stream. Unable to decompress. Got: ";
+			err += std::to_string(data_width);
+			throw std::runtime_error(err);
 		}
 		if (connectivity != 4 && connectivity != 6) {
-			throw std::runtime_error("compresso: Invalid connectivity in stream. Unable to decompress.");	
+			std::string err = "compresso: Invalid connectivity in stream. Unable to decompress. Got: ";
+			err += std::to_string(connectivity);
+			throw std::runtime_error(err);	
 		}
 	}
 
@@ -214,6 +218,7 @@ public:
 		i += itoc(id_size, buf, i);
 		i += itoc(value_size, buf, i);
 		i += itoc(location_size, buf, i);
+		i += itoc(connectivity, buf, i);
 
 		return i - idx;
 	}
@@ -226,7 +231,8 @@ public:
 template <typename LABEL>
 bool* extract_boundaries(
 	LABEL *data, 
-	const size_t sx, const size_t sy, const size_t sz
+	const size_t sx, const size_t sy, const size_t sz,
+	const size_t connectivity
 ) {
 	const size_t sxy = sx * sy;
 	const size_t voxels = sxy * sz;
@@ -243,9 +249,9 @@ bool* extract_boundaries(
 				else if (y < sy - 1 && data[loc] != data[loc + sx]) {
 					boundaries[loc] = true;
 				}
-				// else if (z < sz - 1 && data[loc] != data[loc + sxy]) {
-				// 	boundaries[loc] = true;	
-				// }
+				else if (connectivity == 6 && z < sz - 1 && data[loc] != data[loc + sxy]) {
+					boundaries[loc] = true;	
+				}
 			}
 		}
 	}
@@ -323,7 +329,8 @@ std::vector<T> encode_boundaries(
 template <typename T>
 std::vector<T> encode_indeterminate_locations(
 		bool* boundaries, T* labels, 
-		const size_t sx, const size_t sy, const size_t sz
+		const size_t sx, const size_t sy, const size_t sz,
+		const size_t connectivity
 ) {
 	const size_t sxy = sx * sy;
 	std::vector<T> locations;
@@ -343,9 +350,9 @@ std::vector<T> encode_indeterminate_locations(
 				else if (y > 0 && !boundaries[loc - sx]) {
 					continue;
 				}
-				// else if (z > 0 && !boundaries[loc - sxy]) {
-				// 	continue;
-				// }
+				else if (connectivity == 6 && z > 0 && !boundaries[loc - sxy]) {
+					continue;
+				}
 				
 				size_t left = loc - 1;
 				size_t right = loc + 1;
@@ -544,7 +551,9 @@ std::vector<unsigned char> compress_helper(
 ) {
 
 	std::vector<WINDOW> windows = encode_boundaries<WINDOW>(boundaries, sx, sy, sz, xstep, ystep, zstep);
-	std::vector<LABEL> locations = encode_indeterminate_locations<LABEL>(boundaries, labels, sx, sy, sz);
+	std::vector<LABEL> locations = encode_indeterminate_locations<LABEL>(
+		boundaries, labels, sx, sy, sz, connectivity
+	);
 	delete[] boundaries;
 
 	std::vector<WINDOW> window_values = unique<WINDOW>(windows);
@@ -630,7 +639,7 @@ std::vector<unsigned char> compress(
 		throw std::runtime_error("Unable to encode using zero step sizes.");	
 	}
 
-	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz);
+	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz, connectivity);
 	size_t num_components = 0;
 	uint32_t *components = cc3d::connected_components<uint32_t>(
 		boundaries, sx, sy, sz, 
@@ -762,7 +771,8 @@ template <typename LABEL>
 void decode_indeterminate_locations(
 		bool *boundaries, LABEL *labels, 
 		const std::vector<LABEL> &locations, 
-		const size_t sx, const size_t sy, const size_t sz
+		const size_t sx, const size_t sy, const size_t sz,
+		const size_t connectivity
 ) {
 	const size_t sxy = sx * sy;
 
@@ -786,10 +796,10 @@ void decode_indeterminate_locations(
 					labels[loc] = labels[loc - sx];
 					continue;
 				}
-				// else if (z > 0 && !boundaries[loc - sxy]) {
-				// 	labels[loc] = labels[loc - sxy];
-				// 	continue;
-				// }
+				else if (connectivity == 6 && z > 0 && !boundaries[loc - sxy]) {
+					labels[loc] = labels[loc - sxy];
+					continue;
+				}
 				
 				size_t offset = locations[index];
 
@@ -923,7 +933,8 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 
 	decode_indeterminate_locations<LABEL>(
 		boundaries, output, locations, 
-		sx, sy, sz
+		sx, sy, sz,
+		header.connectivity
 	);
 
 	delete[] boundaries;
