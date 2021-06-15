@@ -25,6 +25,7 @@ uniq_labels = compresso.labels(compressed_labels)
 ```
 
 ```bash
+# CLI compression of numpy data
 $ compresso data.npy # -> data.npy.cpso
 $ compresso -d data.npy.cpso # -> data.npy
 $ compresso --help
