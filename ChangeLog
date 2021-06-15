@@ -1,6 +1,102 @@
 CHANGES
 =======
 
+* chore: rename connectomics.cpso.lzma to connectomics.npy.cpso.lzma
+* chore: add sample data to repo
+* chore: compresso.hxx to compresso.hpp and add MANIFEST.in
+* docs: note that any possible input is possible in header
+* docs: name author of modifications
+* chore: skip pypy builds
+* docs: describe the stream format better
+* chore: add github builds
+* fix(encode\_boundaries): ensure 1 is correct type
+* chore: update all runtime\_errors to start with "compresso"
+* fix: ensure that zero locations can never segfault
+* feat: allow nonstandard step sizes
+* fix: incorrect casting of pointers
+* chore(setup.cfg): replace deprecated hyphens
+* docs: describe support for 6 connected
+* feat: support for both 4 and 6 connectivity (4 is default)
+* feat: add connectivity to header
+* refactor(cc3d): change name of main fn to connected\_components
+* perf(decompress): improve decode\_boundary performance
+* docs: change wording slightly
+* docs: description of the algorithm
+* fix: uint8 windows
+* docs: discuss implementation changes
+* docs: save edits needed to experiment with 6-way ccl
+* docs: update readme
+* fix: use new interface to cc3d
+* fix(cc3d): add back in optimizations
+* chore: update year
+* chore: update license for cc3d.hpp to LGPLv3
+* docs: compresson performance in docs
+* fix: add figure back in to docs
+* docs: describe modifications to the protocol
+* fix: support window8 in cpp
+* test: add tests for steps
+* fix: start to support uint32 windows
+* test: check black arrays
+* test: ensure compresso.labels matches actual unique labels
+* chore: update appveyor
+* fix: magic should be cpso not cpso\0
+* test: make sure maximum values are handled
+* feat: add more tests
+* fix: handle zero length arrays
+* fix(cc3d): can't use optimizations with start\_label
+* docs: add comments
+* feat: add python methods for inspecting the raw stream
+* perf: vectorize decoding of ccids
+* chore: whitespace
+* fix: prevent amplification of start label
+* fix(cc3d): start label was not assigned correctly
+* fix: better error messages for decoding locations
+* fix: incorrect nx and ny
+* fix: add check for zero step size
+* fix: more rounding errors for nx,ny,nz
+* fix: bug in boundary decoding
+* fix: bug with rounding nblocks up
+* fix: memory leak
+* fix: ensure labels handles 0 properly
+* fix(labels): use new decoding protocol for locations
+* fix: able to encode last 6 units for indeterminate locations
+* docs: fix error in docstring
+* feat: add functions for reading labels and dtypes from compressed stream
+* docs: add a header
+* fix: lots of cleanup
+* fix(cc3d): start\_label required some finessing
+* fix: make sure output pointer is mapped to right data type
+* fix: cc3d needs to offset start label as well in relabel
+* fix: bug in rle compression
+* fix: skipping first values for uniform arrays
+* fix(cc3d): need to have a new offset label for each z level
+* perf: specialization for uint16\_t window renumber
+* wip: trying to figure out decoding error
+* fix: compiles!
+* fix: forgot to decode RLE
+* feat: add decompression
+* feat: support uint16 for 4x4x1
+* refactor: cc3d switched to use black as on
+* perf: maybe faster unique
+* fix: some cleanup
+* refactor: move stream writing into a function
+* fix: some encoding errors
+* feat: read header function
+* fix: bounds check was in the wrong direction
+* wip: overhauling the code
+* fix: wrong order of arguments
+* fix: try to match the 2d slice processing of original connected components
+* fix: memory errors
+* wip: attempting to fix ordering
+* test: add order test
+* fix: unsigned long -> uint64\_t
+* chore: no support for 32-bit windows
+* chore: update build system
+* docs: place note on unofficialness in a more attractive location
+* docs: remove inapplicable section on running experiments
+* docs: add example, badge, and update requirements
+* chore: a few changes for the 1.0 release
+
 1.0.0
 -----
 
