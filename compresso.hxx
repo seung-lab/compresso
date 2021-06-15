@@ -199,7 +199,7 @@ public:
 
 	size_t tochars(std::vector<unsigned char> &buf, size_t idx = 0) const {
 		if ((idx + CompressoHeader::header_size) > buf.size()) {
-			throw std::runtime_error("Unable to write past end of buffer.");
+			throw std::runtime_error("compresso: Unable to write past end of buffer.");
 		}
 
 		size_t i = idx;
@@ -633,10 +633,10 @@ std::vector<unsigned char> compress(
 	}
 
 	if (xstep * ystep * zstep > 64) {
-		throw std::runtime_error("Unable to encode blocks larger than 64 voxels.");
+		throw std::runtime_error("compresso: Unable to encode blocks larger than 64 voxels.");
 	}
 	else if (xstep * ystep * zstep == 0) {
-		throw std::runtime_error("Unable to encode using zero step sizes.");	
+		throw std::runtime_error("compresso: Unable to encode using zero step sizes.");	
 	}
 
 	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz, connectivity);
@@ -859,7 +859,7 @@ template <typename LABEL, typename WINDOW>
 LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL) {
 
 	if (num_bytes < CompressoHeader::header_size) {
-		std::string err = "Input too small to be a valid compresso stream. Bytes: ";
+		std::string err = "compresso: Input too small to be a valid stream. Bytes: ";
 		err += std::to_string(num_bytes);
 		throw std::runtime_error(err);
 	}
