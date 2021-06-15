@@ -40,6 +40,25 @@ Requires Python 3.6+
 pip install compresso
 ```
 
+## Versions
+
+| Major Version | Format Version | Description                                                    |
+|---------------|----------------|----------------------------------------------------------------|
+| 1             | -              | Initial Release. Not usable due to bugs. No format versioning. |
+| 2             | 0              | First major release.                                           |
+
+## Compresso Stream Format
+
+| Section   | Bytes                                     | Description                                                                                                     |
+|-----------|-------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| Header    | 36                                        | Metadata incl. length of fields.                                                                                |
+| ids       | header.data_width * header.id_size        | Map of CCL regions to labels.                                                                                   |
+| values    | window_size * header.value_size           | Values of renumbered windows. Bitfields describing boundaries.                                                  |
+| locations | header.data_width * header.locations_size | Sequence of 7 control codes and labels + 7 that describe how to decode indeterminate locations in the boundary. |
+| windows   | The rest of the stream.                   | Sequence of numbers to be remapped from values. Describes the boundary structure of labels.                     |
+
+`window_size` is the smallest data type that will contain `xstep * ystep * zstep`. For example, `steps=(4,4,1)` uses uint16 while `steps=(8,8,1)` uses uint64.
+
 ## Codec Changes
 
 The original codec has been updated and is no longer compatible with the original. Below are the important changes we made that differ from the code published alongside the paper. 
@@ -81,12 +100,15 @@ The previous codec reserved 6 integers for instructions in the locations stream,
 
 This potentially expands the size of the compressed stream. However, we only use this instruction for non-representable numbers, so for most data it should cause zero increase and minimal increase so long as the non-representable numbers in indeterminate locations are rare. The upside is compresso now handles all possible inputs.
 
-## Supports 4 and 6 Connected Components
+### Supports 4 and 6 Connected Components
 
 6-connected CCL seems like it would be a win because it would reduce the number of duplicated IDs that need to be stored. However, in an experiment we found that it did significantly decrease IDs, but at the expense of adding many more boundary voxels (since you need to consider the Z direction now) and increasing the number of indeterminate locations far more. It ended up being slower and larger on some connectomics segmentation we experimented with. 
 
 However, we suspect that there are some images where 6 would do better. An obvious example is a solid
 color image that has no boundaries. The images where 6 shines will probably have sparser and straighter boundaries so that fewer additional boundary voxels are introduced.
+
+
+
 
 ### Results From the Paper
 
