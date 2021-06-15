@@ -37,7 +37,7 @@ class DecodeError(Exception):
   """Unable to decode the stream."""
   pass
 
-cdef extern from "compresso.hxx" namespace "pycompresso":
+cdef extern from "compresso.hpp" namespace "pycompresso":
   vector[unsigned char] cpp_zero_data_stream(
     size_t sx, size_t sy, size_t sz, 
     size_t xstep, size_t ystep, size_t zstep,
