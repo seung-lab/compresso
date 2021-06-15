@@ -318,7 +318,7 @@ std::vector<T> encode_boundaries(
 				size_t block = xblock + nx * yblock + (ny * nx) * zblock;
 				size_t offset = xoffset + xstep * yoffset + (ystep * xstep) * zoffset;
 
-				boundary_data[block] += (1LU << offset);
+				boundary_data[block] += (static_cast<T>(1) << offset);
 			}
 		}
 	}
