@@ -6,6 +6,8 @@ B. Matejek, D. Haehn, F. Lekschas, M. Mitzenmacher, and H. Pfister.
 Springer: Intl. Conf. on Medical Image Computing and Computer-Assisted Intervention.
 2017.
 
+Modifications by William Silversmith.
+
 https://vcg.seas.harvard.edu/publications/compresso-efficient-compression-of-segmentation-data-for-connectomics
 https://github.com/vcg/compresso
 
