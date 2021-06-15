@@ -14,4 +14,9 @@ setuptools.setup(
       language='c++'
     )
   ],
+  entry_points={
+    "console_scripts": [
+      "compresso=compresso_cli:main"
+    ],
+  },
   pbr=True)
