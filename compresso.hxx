@@ -8,7 +8,9 @@
  * includes some byte width optimizations 
  * and additional header fields in the output
  * and various functions have been somewhat
- * tuned for speed. 
+ * tuned for speed. It also has a modified 
+ * indeterminate locations algorithm to accomodate
+ * any possible input.
  *
  * You can find the Compresso paper here:
  * https://vcg.seas.harvard.edu/publications/compresso-efficient-compression-of-segmentation-data-for-connectomics
