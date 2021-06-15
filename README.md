@@ -24,6 +24,12 @@ header = compresso.header(compressed_labels)
 uniq_labels = compresso.labels(compressed_labels)
 ```
 
+```bash
+$ compresso data.npy # -> data.npy.cpso
+$ compresso -d data.npy.cpso # -> data.npy
+$ compresso --help
+```
+
 *NOTE: This is an extensive modification of the work by Matejek et al. which can be found here: https://github.com/VCG/compresso. It is not compatible with RhoANA streams.*
 
 > Recent advances in segmentation methods for connectomics and biomedical imaging produce very large datasets with labels that assign object classes to image pixels. The resulting label volumes are bigger than the raw image data and need compression for efficient storage and transfer. General-purpose compression methods are less effective because the label data consists of large low-frequency regions with structured boundaries unlike natural image data. We present Compresso, a new compression scheme for label data that outperforms existing approaches by using a sliding window to exploit redundancy across border regions in 2D and 3D. We compare our method to existing compression schemes and provide a detailed evaluation on eleven biomedical and image segmentation datasets. Our method provides a factor of 600-2200x compression for label volumes, with running times suitable for practice.
