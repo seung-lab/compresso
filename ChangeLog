@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+* docs: note that this implementation is format version 0
+* docs: note that a second stage compressor is needed
+* docs: make CLI example clearer
+* chore: update changelog
+* fix: really add CLI
+* feat: add compresso cli
+* chore: delete obsolete dockerfile
+* chore: update dockerfile with oldest-supported-numpy
 * chore: rename connectomics.cpso.lzma to connectomics.npy.cpso.lzma
 * chore: add sample data to repo
 * chore: compresso.hxx to compresso.hpp and add MANIFEST.in
