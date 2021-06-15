@@ -7,7 +7,8 @@ DTYPES = [
   np.uint8, np.uint16, np.uint32, np.uint64,
 ]
 STEPS = [
-  (4,4,1), (8,8,1)
+  (4,4,1), (5,5,1), (8,8,1),
+  (4,4,2), (5,5,2)
 ]
 CONNECTIVITY = (4,6)
 

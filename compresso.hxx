@@ -1063,8 +1063,8 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 		}
 		else if (window32) {
 			return reinterpret_cast<void*>(
-				decompress<uint32_t,uint32_t>(
-					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
+				decompress<uint64_t,uint32_t>(
+					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
 				)
 			);
 		}
