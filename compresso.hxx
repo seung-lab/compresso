@@ -800,6 +800,9 @@ void decode_indeterminate_locations(
 					labels[loc] = labels[loc - sxy];
 					continue;
 				}
+				else if (locations.size() == 0) {
+					throw std::runtime_error("compresso: unable to decode indeterminate locations. (no locations)");
+				}
 				
 				size_t offset = locations[index];
 
