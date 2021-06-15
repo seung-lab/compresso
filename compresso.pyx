@@ -1,6 +1,8 @@
 """
 Python bindings for the Compresso labeled image compression algorithm.
 
+Compatible with format version 0.
+
 B. Matejek, D. Haehn, F. Lekschas, M. Mitzenmacher, and H. Pfister.
 "Compresso: Efficient Compression of Segmentation Data for Connectomics".
 Springer: Intl. Conf. on Medical Image Computing and Computer-Assisted Intervention.

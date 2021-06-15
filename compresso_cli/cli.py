@@ -13,6 +13,8 @@ def main(compress, source):
 	"""
 	Compress and decompress compresso files to and from numpy .npy files.
 
+	Compatible with compresso format version 0 streams.
+
 	The compresso algorithm can be found in this paper:
 	
 	B. Matejek, D. Haehn, F. Lekschas, M. Mitzenmacher, and H. Pfister.
