@@ -67,9 +67,6 @@ def compress(data, steps=(4,4,1), connectivity=4) -> bytes:
 
   Return: compressed bytes b'...'
   """
-  if steps not in ((4,4,1), (8,8,1)):
-    raise ValueError(f"{steps} steps are not currently supported. 4x4x1 and 8x8x1 are.")
-
   if connectivity not in (4,6):
     raise ValueError(f"{connectivity} connectivity must be 4 or 6.")
 
