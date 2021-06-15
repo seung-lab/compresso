@@ -26,6 +26,8 @@ uniq_labels = compresso.labels(compressed_labels)
 
 ```bash
 # CLI compression of numpy data
+# Compresso is designed to use a second stage compressor
+# so use gzip, lzma, or others on the output file.
 $ compresso data.npy # -> data.npy.cpso
 $ compresso -d data.npy.cpso # -> data.npy
 $ compresso --help
