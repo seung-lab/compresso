@@ -1,6 +1,6 @@
 // Used when compiling wasm module.
 mergeInto(LibraryManager.library, {
-  _neuroglancer_compresso_decompress: function() {
+  compresso_receive_decoded_image: function() {
     alert(arguments);
   },
 });

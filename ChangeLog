@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+2.0.0
+-----
+
+* chore: update changelog
 * docs: note that this implementation is format version 0
 * docs: note that a second stage compressor is needed
 * docs: make CLI example clearer
