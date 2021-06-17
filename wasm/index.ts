@@ -18,7 +18,7 @@
  * by William Silversmith, 2021
  */
 
-import dracoWasmUrl from './neuroglancer_draco.wasm';
+import compressoWasmUrl from './compresso.wasm';
 
 declare const WebAssembly: any;
 
@@ -56,8 +56,7 @@ function emscripten_realloc_buffer(size: number) {
   }
 }
 
-let decodeResult: Uint8Array|Uint16Array|Uint32Array|BigUint64Array|Error|undefined = undefined;
-let numPartitions = 0;
+let decodeResult: TypedArray|Error|undefined = undefined;
 
 const imports = {
   env: {
@@ -66,34 +65,30 @@ const imports = {
     __memory_base: 1024,
     __table_base: 0,
     _compresso_receive_decoded_image: function(
-        imagePointer: number, 
+        image_ptr: number, 
         sx: number, sy: number, sz: number, 
         data_width: number
     ) {
       const voxels = sx * sy * sz;
-      let image : Uint8Array|Uint16Array|Uint32Array|BigUint64Array;
+      let image : TypedArray;
       if (data_width === 1) {
-        image = new Uint8Array(memory.buffer, imagePointer, voxels);
+        image = new Uint8Array(memory.buffer, image_ptr, voxels);
       }
       else if (data_width === 2) {
-        image = new Uint16Array(memory.buffer, imagePointer, voxels);
+        image = new Uint16Array(memory.buffer, image_ptr, voxels);
       }
       else if (data_width === 4) {
-        image = new Uint32Array(memory.buffer, imagePointer, voxels);
+        image = new Uint32Array(memory.buffer, image_ptr, voxels);
       }
       else if (data_width === 8) {
-        image = new BigUint64Array(memory.buffer, imagePointer, voxels);
+        image = new BigUint64Array(memory.buffer, image_ptr, voxels);
       }
       else {
-        throw new Error(`data_width must be 1, 2, 4, or 8. Got: ${data_width}`);
+        decodeResult = new Error(`data_width must be 1, 2, 4, or 8. Got: ${data_width}`);
+        return;
       }
 
-      const mesh: RawPartitionedMeshData = {
-        indices,
-        vertexPositions,
-        subChunkOffsets,
-      };
-      decodeResult = mesh;
+      decodeResult = image;
     },
     _emscripten_memcpy_big: function(d: number, s: number, n: number) {
       heap8.set(heap8.subarray(s, s + n), d);
@@ -134,25 +129,57 @@ const imports = {
   },
 };
 
-const dracoModulePromise = fetch(dracoWasmUrl)
+const compressoModulePromise = fetch(compressoWasmUrl)
                                .then(response => response.arrayBuffer())
                                .then(wasmCode => WebAssembly.instantiate(wasmCode, imports));
 
-export function decodeDracoPartitioned(
-    buffer: Uint8Array, vertexQuantizationBits: number,
-    partition: boolean): Promise<RawPartitionedMeshData> {
-  return dracoModulePromise.then(m => {
-    const offset = m.instance.exports._malloc(buffer.byteLength);
-    heap8.set(buffer, offset);
-    numPartitions = partition ? 8 : 1;
-    const code = m.instance.exports._neuroglancer_draco_decode(
-        offset, buffer.byteLength, partition, vertexQuantizationBits);
+function imageSize (buffer: Uint8Array) : number {
+  const magic = (
+       buffer[0] == 'c' && buffer[1] == 'p' 
+    && buffer[2] == 's' && buffer[3] == 'o'
+  );
+  if (!magic) {
+    return -1;
+  }
+  const format = buffer[4];
+  if (format !== 0) {
+    return -2;
+  }
+
+  let u16 = (lower, upper) => { return (lower|0) + (upper << 8) };
+
+  const data_width = buffer[5];
+  const sx = u16(buffer[6], buffer[7]);
+  const sy = u16(buffer[8], buffer[9]);
+  const sz = u16(buffer[9], buffer[10]);
+
+  return sx * sy * sz * data_width;
+}
+
+export function decodeCompresso(buffer: Uint8Array) 
+  : Promise<TypedArray> 
+{
+  return compressoModulePromise.then(m => {
+    const nbytes = imageSize(buffer);
+    if (nbytes < 0) {
+      throw new Error(`Failed to decode compresso image. imageSize code: ${nbytes}`);
+    }
+
+    const buf_ptr = m.instance.exports._malloc(buffer.byteLength);
+    heap8.set(buffer, buf_ptr);
+
+    const image_ptr = m.instance.exports._malloc(nbytes);
+    
+    const code = m.instance.exports._compresso_decompress(
+      buf_ptr, buffer.byteLength, image_ptr
+    );
+    
     if (code === 0) {
       const r = decodeResult;
       decodeResult = undefined;
       if (r instanceof Error) throw r;
       return r!;
     }
-    throw new Error(`Failed to decode draco mesh: ${code}`);
+    throw new Error(`Failed to decode compresso image. decoder code: ${code}`);
   });
 }
