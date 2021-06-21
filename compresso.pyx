@@ -50,8 +50,8 @@ cdef extern from "compresso.hpp" namespace "pycompresso":
     size_t sx, size_t sy, size_t sz, 
     size_t xstep, size_t ystep, size_t zstep,
     size_t connectivity
-  )
-  void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output)
+  ) except +
+  void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output) except +
   size_t COMPRESSO_HEADER_SIZE
 
 
@@ -325,7 +325,10 @@ def decompress(bytes data):
     raise DecodeError("Unable to decode stream.")
 
   cdef unsigned char* buf = data
-  cpp_decompress(buf, len(data), outptr)
+  try:
+    cpp_decompress(buf, len(data), outptr)
+  except RuntimeError as err:
+    raise DecodeError(err)
 
   return labels
 

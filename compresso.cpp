@@ -1999,6 +1999,14 @@ static int __Pyx__GetException(PyThreadState *tstate, PyObject **type, PyObject 
 static int __Pyx_GetException(PyObject **type, PyObject **value, PyObject **tb);
 #endif
 
+/* SwapException.proto */
+#if CYTHON_FAST_THREAD_STATE
+#define __Pyx_ExceptionSwap(type, value, tb)  __Pyx__ExceptionSwap(__pyx_tstate, type, value, tb)
+static CYTHON_INLINE void __Pyx__ExceptionSwap(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb);
+#else
+static CYTHON_INLINE void __Pyx_ExceptionSwap(PyObject **type, PyObject **value, PyObject **tb);
+#endif
+
 /* ListCompAppend.proto */
 #if CYTHON_USE_PYLIST_INTERNALS && CYTHON_ASSUME_SAFE_MACROS
 static CYTHON_INLINE int __Pyx_ListComp_Append(PyObject* list, PyObject* x) {
@@ -2063,14 +2071,6 @@ static CYTHON_INLINE PyObject* __Pyx_decode_c_string(
 
 /* GetAttr3.proto */
 static CYTHON_INLINE PyObject *__Pyx_GetAttr3(PyObject *, PyObject *, PyObject *);
-
-/* SwapException.proto */
-#if CYTHON_FAST_THREAD_STATE
-#define __Pyx_ExceptionSwap(type, value, tb)  __Pyx__ExceptionSwap(__pyx_tstate, type, value, tb)
-static CYTHON_INLINE void __Pyx__ExceptionSwap(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb);
-#else
-static CYTHON_INLINE void __Pyx_ExceptionSwap(PyObject **type, PyObject **value, PyObject **tb);
-#endif
 
 /* Import.proto */
 static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level);
@@ -2286,6 +2286,48 @@ static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_ds_nn_
 
 /* ToPyCTupleUtility.proto */
 static PyObject* __pyx_convert__to_py___pyx_ctuple_long__and_long__and_long(__pyx_ctuple_long__and_long__and_long);
+
+/* CppExceptionConversion.proto */
+#ifndef __Pyx_CppExn2PyErr
+#include <new>
+#include <typeinfo>
+#include <stdexcept>
+#include <ios>
+static void __Pyx_CppExn2PyErr() {
+  try {
+    if (PyErr_Occurred())
+      ; // let the latest Python exn pass through and ignore the current one
+    else
+      throw;
+  } catch (const std::bad_alloc& exn) {
+    PyErr_SetString(PyExc_MemoryError, exn.what());
+  } catch (const std::bad_cast& exn) {
+    PyErr_SetString(PyExc_TypeError, exn.what());
+  } catch (const std::bad_typeid& exn) {
+    PyErr_SetString(PyExc_TypeError, exn.what());
+  } catch (const std::domain_error& exn) {
+    PyErr_SetString(PyExc_ValueError, exn.what());
+  } catch (const std::invalid_argument& exn) {
+    PyErr_SetString(PyExc_ValueError, exn.what());
+  } catch (const std::ios_base::failure& exn) {
+    PyErr_SetString(PyExc_IOError, exn.what());
+  } catch (const std::out_of_range& exn) {
+    PyErr_SetString(PyExc_IndexError, exn.what());
+  } catch (const std::overflow_error& exn) {
+    PyErr_SetString(PyExc_OverflowError, exn.what());
+  } catch (const std::range_error& exn) {
+    PyErr_SetString(PyExc_ArithmeticError, exn.what());
+  } catch (const std::underflow_error& exn) {
+    PyErr_SetString(PyExc_ArithmeticError, exn.what());
+  } catch (const std::exception& exn) {
+    PyErr_SetString(PyExc_RuntimeError, exn.what());
+  }
+  catch (...)
+  {
+    PyErr_SetString(PyExc_RuntimeError, "Unknown exception");
+  }
+}
+#endif
 
 /* RealImag.proto */
 #if CYTHON_CCOMPLEX
@@ -2562,6 +2604,7 @@ static const char __pyx_k_sy[] = "sy";
 static const char __pyx_k_sz[] = "sz";
 static const char __pyx_k_buf[] = "buf";
 static const char __pyx_k_doc[] = "__doc__";
+static const char __pyx_k_err[] = "err";
 static const char __pyx_k_ids[] = "ids";
 static const char __pyx_k_new[] = "__new__";
 static const char __pyx_k_obj[] = "obj";
@@ -2828,6 +2871,7 @@ static PyObject *__pyx_n_s_dtype_is_object;
 static PyObject *__pyx_n_s_dtypes;
 static PyObject *__pyx_n_s_encode;
 static PyObject *__pyx_n_s_enumerate;
+static PyObject *__pyx_n_s_err;
 static PyObject *__pyx_n_s_error;
 static PyObject *__pyx_n_s_extract_labels_from_locations;
 static PyObject *__pyx_n_s_flags;
@@ -4629,11 +4673,15 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
   size_t __pyx_t_13;
   size_t __pyx_t_14;
   size_t __pyx_t_15;
-  __Pyx_memviewslice __pyx_t_16 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_16;
   __Pyx_memviewslice __pyx_t_17 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  __Pyx_memviewslice __pyx_t_18 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  Py_ssize_t __pyx_t_19;
-  Py_UCS4 __pyx_t_20;
+  std::vector<unsigned char>  __pyx_t_18;
+  __Pyx_memviewslice __pyx_t_19 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_20;
+  __Pyx_memviewslice __pyx_t_21 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_22;
+  Py_ssize_t __pyx_t_23;
+  Py_UCS4 __pyx_t_24;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -4838,7 +4886,13 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint8_t>((&(*((uint8_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr8.data + __pyx_t_9 * __pyx_v_arr8.strides[0]) ) + __pyx_t_10 * __pyx_v_arr8.strides[1]) ) + __pyx_t_11 * __pyx_v_arr8.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    try {
+      __pyx_t_16 = pycompresso::cpp_compress<uint8_t>((&(*((uint8_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr8.data + __pyx_t_9 * __pyx_v_arr8.strides[0]) ) + __pyx_t_10 * __pyx_v_arr8.strides[1]) ) + __pyx_t_11 * __pyx_v_arr8.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 119, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_16;
 
     /* "compresso.pyx":117
  *   cdef vector[unsigned char] buf
@@ -4878,10 +4932,10 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   elif data.dtype == np.uint32:
  */
-    __pyx_t_16 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint16_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_16.memview)) __PYX_ERR(0, 121, __pyx_L1_error)
-    __pyx_v_arr16 = __pyx_t_16;
-    __pyx_t_16.memview = NULL;
-    __pyx_t_16.data = NULL;
+    __pyx_t_17 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint16_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_17.memview)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_v_arr16 = __pyx_t_17;
+    __pyx_t_17.memview = NULL;
+    __pyx_t_17.data = NULL;
 
     /* "compresso.pyx":122
  *   elif data.dtype == np.uint16:
@@ -4913,7 +4967,13 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint16_t>((&(*((uint16_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr16.data + __pyx_t_11 * __pyx_v_arr16.strides[0]) ) + __pyx_t_10 * __pyx_v_arr16.strides[1]) ) + __pyx_t_9 * __pyx_v_arr16.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    try {
+      __pyx_t_18 = pycompresso::cpp_compress<uint16_t>((&(*((uint16_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr16.data + __pyx_t_11 * __pyx_v_arr16.strides[0]) ) + __pyx_t_10 * __pyx_v_arr16.strides[1]) ) + __pyx_t_9 * __pyx_v_arr16.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 122, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_18;
 
     /* "compresso.pyx":120
  *     arr8 = data.view(np.uint8)
@@ -4953,10 +5013,10 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   elif data.dtype == np.uint64:
  */
-    __pyx_t_17 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint32_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_17.memview)) __PYX_ERR(0, 124, __pyx_L1_error)
-    __pyx_v_arr32 = __pyx_t_17;
-    __pyx_t_17.memview = NULL;
-    __pyx_t_17.data = NULL;
+    __pyx_t_19 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint32_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_19.memview)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_v_arr32 = __pyx_t_19;
+    __pyx_t_19.memview = NULL;
+    __pyx_t_19.data = NULL;
 
     /* "compresso.pyx":125
  *   elif data.dtype == np.uint32:
@@ -4988,7 +5048,13 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint32_t>((&(*((uint32_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr32.data + __pyx_t_9 * __pyx_v_arr32.strides[0]) ) + __pyx_t_10 * __pyx_v_arr32.strides[1]) ) + __pyx_t_11 * __pyx_v_arr32.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    try {
+      __pyx_t_20 = pycompresso::cpp_compress<uint32_t>((&(*((uint32_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr32.data + __pyx_t_9 * __pyx_v_arr32.strides[0]) ) + __pyx_t_10 * __pyx_v_arr32.strides[1]) ) + __pyx_t_11 * __pyx_v_arr32.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 125, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_20;
 
     /* "compresso.pyx":123
  *     arr16 = data
@@ -5028,10 +5094,10 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   else:
  */
-    __pyx_t_18 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint64_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_18.memview)) __PYX_ERR(0, 127, __pyx_L1_error)
-    __pyx_v_arr64 = __pyx_t_18;
-    __pyx_t_18.memview = NULL;
-    __pyx_t_18.data = NULL;
+    __pyx_t_21 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint64_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_21.memview)) __PYX_ERR(0, 127, __pyx_L1_error)
+    __pyx_v_arr64 = __pyx_t_21;
+    __pyx_t_21.memview = NULL;
+    __pyx_t_21.data = NULL;
 
     /* "compresso.pyx":128
  *   elif data.dtype == np.uint64:
@@ -5063,7 +5129,13 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint64_t>((&(*((uint64_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr64.data + __pyx_t_11 * __pyx_v_arr64.strides[0]) ) + __pyx_t_10 * __pyx_v_arr64.strides[1]) ) + __pyx_t_9 * __pyx_v_arr64.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    try {
+      __pyx_t_22 = pycompresso::cpp_compress<uint64_t>((&(*((uint64_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr64.data + __pyx_t_11 * __pyx_v_arr64.strides[0]) ) + __pyx_t_10 * __pyx_v_arr64.strides[1]) ) + __pyx_t_9 * __pyx_v_arr64.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 128, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_22;
 
     /* "compresso.pyx":126
  *     arr32 = data
@@ -5085,10 +5157,10 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
   /*else*/ {
     __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_19 = 0;
-    __pyx_t_20 = 127;
+    __pyx_t_23 = 0;
+    __pyx_t_24 = 127;
     __Pyx_INCREF(__pyx_kp_u_Type);
-    __pyx_t_19 += 5;
+    __pyx_t_23 += 5;
     __Pyx_GIVEREF(__pyx_kp_u_Type);
     PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_kp_u_Type);
     __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_data), __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 130, __pyx_L1_error)
@@ -5096,16 +5168,16 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_4 = __Pyx_PyObject_FormatSimple(__pyx_t_2, __pyx_empty_unicode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_20 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_20) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_20;
-    __pyx_t_19 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
+    __pyx_t_24 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_24) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_24;
+    __pyx_t_23 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_4);
     PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_4);
     __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_kp_u_not_supported_Only_uints_and_bo);
-    __pyx_t_19 += 50;
+    __pyx_t_23 += 50;
     __Pyx_GIVEREF(__pyx_kp_u_not_supported_Only_uints_and_bo);
     PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_kp_u_not_supported_Only_uints_and_bo);
-    __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_3, 3, __pyx_t_19, __pyx_t_20); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_3, 3, __pyx_t_23, __pyx_t_24); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
@@ -5149,9 +5221,9 @@ static PyObject *__pyx_pf_9compresso_28_compress(CYTHON_UNUSED PyObject *__pyx_s
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __PYX_XDEC_MEMVIEW(&__pyx_t_8, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_16, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_t_17, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_18, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_19, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_21, 1);
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
@@ -5342,11 +5414,15 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
   size_t __pyx_t_13;
   size_t __pyx_t_14;
   size_t __pyx_t_15;
-  __Pyx_memviewslice __pyx_t_16 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_16;
   __Pyx_memviewslice __pyx_t_17 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  __Pyx_memviewslice __pyx_t_18 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  Py_ssize_t __pyx_t_19;
-  Py_UCS4 __pyx_t_20;
+  std::vector<unsigned char>  __pyx_t_18;
+  __Pyx_memviewslice __pyx_t_19 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_20;
+  __Pyx_memviewslice __pyx_t_21 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_22;
+  Py_ssize_t __pyx_t_23;
+  Py_UCS4 __pyx_t_24;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -5551,7 +5627,13 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint8_t>((&(*((uint8_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr8.data + __pyx_t_9 * __pyx_v_arr8.strides[0]) ) + __pyx_t_10 * __pyx_v_arr8.strides[1]) ) + __pyx_t_11 * __pyx_v_arr8.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    try {
+      __pyx_t_16 = pycompresso::cpp_compress<uint8_t>((&(*((uint8_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr8.data + __pyx_t_9 * __pyx_v_arr8.strides[0]) ) + __pyx_t_10 * __pyx_v_arr8.strides[1]) ) + __pyx_t_11 * __pyx_v_arr8.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 119, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_16;
 
     /* "compresso.pyx":117
  *   cdef vector[unsigned char] buf
@@ -5591,10 +5673,10 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   elif data.dtype == np.uint32:
  */
-    __pyx_t_16 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint16_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_16.memview)) __PYX_ERR(0, 121, __pyx_L1_error)
-    __pyx_v_arr16 = __pyx_t_16;
-    __pyx_t_16.memview = NULL;
-    __pyx_t_16.data = NULL;
+    __pyx_t_17 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint16_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_17.memview)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_v_arr16 = __pyx_t_17;
+    __pyx_t_17.memview = NULL;
+    __pyx_t_17.data = NULL;
 
     /* "compresso.pyx":122
  *   elif data.dtype == np.uint16:
@@ -5626,7 +5708,13 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint16_t>((&(*((uint16_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr16.data + __pyx_t_11 * __pyx_v_arr16.strides[0]) ) + __pyx_t_10 * __pyx_v_arr16.strides[1]) ) + __pyx_t_9 * __pyx_v_arr16.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    try {
+      __pyx_t_18 = pycompresso::cpp_compress<uint16_t>((&(*((uint16_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr16.data + __pyx_t_11 * __pyx_v_arr16.strides[0]) ) + __pyx_t_10 * __pyx_v_arr16.strides[1]) ) + __pyx_t_9 * __pyx_v_arr16.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 122, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_18;
 
     /* "compresso.pyx":120
  *     arr8 = data.view(np.uint8)
@@ -5666,10 +5754,10 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   elif data.dtype == np.uint64:
  */
-    __pyx_t_17 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint32_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_17.memview)) __PYX_ERR(0, 124, __pyx_L1_error)
-    __pyx_v_arr32 = __pyx_t_17;
-    __pyx_t_17.memview = NULL;
-    __pyx_t_17.data = NULL;
+    __pyx_t_19 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint32_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_19.memview)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_v_arr32 = __pyx_t_19;
+    __pyx_t_19.memview = NULL;
+    __pyx_t_19.data = NULL;
 
     /* "compresso.pyx":125
  *   elif data.dtype == np.uint32:
@@ -5701,7 +5789,13 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint32_t>((&(*((uint32_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr32.data + __pyx_t_9 * __pyx_v_arr32.strides[0]) ) + __pyx_t_10 * __pyx_v_arr32.strides[1]) ) + __pyx_t_11 * __pyx_v_arr32.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    try {
+      __pyx_t_20 = pycompresso::cpp_compress<uint32_t>((&(*((uint32_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr32.data + __pyx_t_9 * __pyx_v_arr32.strides[0]) ) + __pyx_t_10 * __pyx_v_arr32.strides[1]) ) + __pyx_t_11 * __pyx_v_arr32.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 125, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_20;
 
     /* "compresso.pyx":123
  *     arr16 = data
@@ -5741,10 +5835,10 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   else:
  */
-    __pyx_t_18 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint64_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_18.memview)) __PYX_ERR(0, 127, __pyx_L1_error)
-    __pyx_v_arr64 = __pyx_t_18;
-    __pyx_t_18.memview = NULL;
-    __pyx_t_18.data = NULL;
+    __pyx_t_21 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint64_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_21.memview)) __PYX_ERR(0, 127, __pyx_L1_error)
+    __pyx_v_arr64 = __pyx_t_21;
+    __pyx_t_21.memview = NULL;
+    __pyx_t_21.data = NULL;
 
     /* "compresso.pyx":128
  *   elif data.dtype == np.uint64:
@@ -5776,7 +5870,13 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint64_t>((&(*((uint64_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr64.data + __pyx_t_11 * __pyx_v_arr64.strides[0]) ) + __pyx_t_10 * __pyx_v_arr64.strides[1]) ) + __pyx_t_9 * __pyx_v_arr64.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    try {
+      __pyx_t_22 = pycompresso::cpp_compress<uint64_t>((&(*((uint64_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr64.data + __pyx_t_11 * __pyx_v_arr64.strides[0]) ) + __pyx_t_10 * __pyx_v_arr64.strides[1]) ) + __pyx_t_9 * __pyx_v_arr64.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 128, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_22;
 
     /* "compresso.pyx":126
  *     arr32 = data
@@ -5798,10 +5898,10 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
   /*else*/ {
     __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_19 = 0;
-    __pyx_t_20 = 127;
+    __pyx_t_23 = 0;
+    __pyx_t_24 = 127;
     __Pyx_INCREF(__pyx_kp_u_Type);
-    __pyx_t_19 += 5;
+    __pyx_t_23 += 5;
     __Pyx_GIVEREF(__pyx_kp_u_Type);
     PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_kp_u_Type);
     __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_data), __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 130, __pyx_L1_error)
@@ -5809,16 +5909,16 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_4 = __Pyx_PyObject_FormatSimple(__pyx_t_2, __pyx_empty_unicode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_20 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_20) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_20;
-    __pyx_t_19 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
+    __pyx_t_24 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_24) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_24;
+    __pyx_t_23 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_4);
     PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_4);
     __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_kp_u_not_supported_Only_uints_and_bo);
-    __pyx_t_19 += 50;
+    __pyx_t_23 += 50;
     __Pyx_GIVEREF(__pyx_kp_u_not_supported_Only_uints_and_bo);
     PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_kp_u_not_supported_Only_uints_and_bo);
-    __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_3, 3, __pyx_t_19, __pyx_t_20); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_3, 3, __pyx_t_23, __pyx_t_24); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
@@ -5862,9 +5962,9 @@ static PyObject *__pyx_pf_9compresso_30_compress(CYTHON_UNUSED PyObject *__pyx_s
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __PYX_XDEC_MEMVIEW(&__pyx_t_8, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_16, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_t_17, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_18, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_19, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_21, 1);
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
@@ -6055,11 +6155,15 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
   size_t __pyx_t_13;
   size_t __pyx_t_14;
   size_t __pyx_t_15;
-  __Pyx_memviewslice __pyx_t_16 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_16;
   __Pyx_memviewslice __pyx_t_17 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  __Pyx_memviewslice __pyx_t_18 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  Py_ssize_t __pyx_t_19;
-  Py_UCS4 __pyx_t_20;
+  std::vector<unsigned char>  __pyx_t_18;
+  __Pyx_memviewslice __pyx_t_19 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_20;
+  __Pyx_memviewslice __pyx_t_21 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_22;
+  Py_ssize_t __pyx_t_23;
+  Py_UCS4 __pyx_t_24;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -6264,7 +6368,13 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint8_t>((&(*((uint8_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr8.data + __pyx_t_9 * __pyx_v_arr8.strides[0]) ) + __pyx_t_10 * __pyx_v_arr8.strides[1]) ) + __pyx_t_11 * __pyx_v_arr8.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    try {
+      __pyx_t_16 = pycompresso::cpp_compress<uint8_t>((&(*((uint8_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr8.data + __pyx_t_9 * __pyx_v_arr8.strides[0]) ) + __pyx_t_10 * __pyx_v_arr8.strides[1]) ) + __pyx_t_11 * __pyx_v_arr8.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 119, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_16;
 
     /* "compresso.pyx":117
  *   cdef vector[unsigned char] buf
@@ -6304,10 +6414,10 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   elif data.dtype == np.uint32:
  */
-    __pyx_t_16 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint16_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_16.memview)) __PYX_ERR(0, 121, __pyx_L1_error)
-    __pyx_v_arr16 = __pyx_t_16;
-    __pyx_t_16.memview = NULL;
-    __pyx_t_16.data = NULL;
+    __pyx_t_17 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint16_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_17.memview)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_v_arr16 = __pyx_t_17;
+    __pyx_t_17.memview = NULL;
+    __pyx_t_17.data = NULL;
 
     /* "compresso.pyx":122
  *   elif data.dtype == np.uint16:
@@ -6339,7 +6449,13 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint16_t>((&(*((uint16_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr16.data + __pyx_t_11 * __pyx_v_arr16.strides[0]) ) + __pyx_t_10 * __pyx_v_arr16.strides[1]) ) + __pyx_t_9 * __pyx_v_arr16.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    try {
+      __pyx_t_18 = pycompresso::cpp_compress<uint16_t>((&(*((uint16_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr16.data + __pyx_t_11 * __pyx_v_arr16.strides[0]) ) + __pyx_t_10 * __pyx_v_arr16.strides[1]) ) + __pyx_t_9 * __pyx_v_arr16.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 122, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_18;
 
     /* "compresso.pyx":120
  *     arr8 = data.view(np.uint8)
@@ -6379,10 +6495,10 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   elif data.dtype == np.uint64:
  */
-    __pyx_t_17 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint32_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_17.memview)) __PYX_ERR(0, 124, __pyx_L1_error)
-    __pyx_v_arr32 = __pyx_t_17;
-    __pyx_t_17.memview = NULL;
-    __pyx_t_17.data = NULL;
+    __pyx_t_19 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint32_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_19.memview)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_v_arr32 = __pyx_t_19;
+    __pyx_t_19.memview = NULL;
+    __pyx_t_19.data = NULL;
 
     /* "compresso.pyx":125
  *   elif data.dtype == np.uint32:
@@ -6414,7 +6530,13 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint32_t>((&(*((uint32_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr32.data + __pyx_t_9 * __pyx_v_arr32.strides[0]) ) + __pyx_t_10 * __pyx_v_arr32.strides[1]) ) + __pyx_t_11 * __pyx_v_arr32.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    try {
+      __pyx_t_20 = pycompresso::cpp_compress<uint32_t>((&(*((uint32_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr32.data + __pyx_t_9 * __pyx_v_arr32.strides[0]) ) + __pyx_t_10 * __pyx_v_arr32.strides[1]) ) + __pyx_t_11 * __pyx_v_arr32.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 125, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_20;
 
     /* "compresso.pyx":123
  *     arr16 = data
@@ -6454,10 +6576,10 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   else:
  */
-    __pyx_t_18 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint64_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_18.memview)) __PYX_ERR(0, 127, __pyx_L1_error)
-    __pyx_v_arr64 = __pyx_t_18;
-    __pyx_t_18.memview = NULL;
-    __pyx_t_18.data = NULL;
+    __pyx_t_21 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint64_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_21.memview)) __PYX_ERR(0, 127, __pyx_L1_error)
+    __pyx_v_arr64 = __pyx_t_21;
+    __pyx_t_21.memview = NULL;
+    __pyx_t_21.data = NULL;
 
     /* "compresso.pyx":128
  *   elif data.dtype == np.uint64:
@@ -6489,7 +6611,13 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint64_t>((&(*((uint64_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr64.data + __pyx_t_11 * __pyx_v_arr64.strides[0]) ) + __pyx_t_10 * __pyx_v_arr64.strides[1]) ) + __pyx_t_9 * __pyx_v_arr64.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    try {
+      __pyx_t_22 = pycompresso::cpp_compress<uint64_t>((&(*((uint64_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr64.data + __pyx_t_11 * __pyx_v_arr64.strides[0]) ) + __pyx_t_10 * __pyx_v_arr64.strides[1]) ) + __pyx_t_9 * __pyx_v_arr64.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 128, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_22;
 
     /* "compresso.pyx":126
  *     arr32 = data
@@ -6511,10 +6639,10 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
   /*else*/ {
     __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_19 = 0;
-    __pyx_t_20 = 127;
+    __pyx_t_23 = 0;
+    __pyx_t_24 = 127;
     __Pyx_INCREF(__pyx_kp_u_Type);
-    __pyx_t_19 += 5;
+    __pyx_t_23 += 5;
     __Pyx_GIVEREF(__pyx_kp_u_Type);
     PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_kp_u_Type);
     __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_data), __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 130, __pyx_L1_error)
@@ -6522,16 +6650,16 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_4 = __Pyx_PyObject_FormatSimple(__pyx_t_2, __pyx_empty_unicode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_20 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_20) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_20;
-    __pyx_t_19 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
+    __pyx_t_24 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_24) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_24;
+    __pyx_t_23 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_4);
     PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_4);
     __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_kp_u_not_supported_Only_uints_and_bo);
-    __pyx_t_19 += 50;
+    __pyx_t_23 += 50;
     __Pyx_GIVEREF(__pyx_kp_u_not_supported_Only_uints_and_bo);
     PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_kp_u_not_supported_Only_uints_and_bo);
-    __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_3, 3, __pyx_t_19, __pyx_t_20); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_3, 3, __pyx_t_23, __pyx_t_24); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
@@ -6575,9 +6703,9 @@ static PyObject *__pyx_pf_9compresso_32_compress(CYTHON_UNUSED PyObject *__pyx_s
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __PYX_XDEC_MEMVIEW(&__pyx_t_8, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_16, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_t_17, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_18, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_19, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_21, 1);
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
@@ -6768,11 +6896,15 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
   size_t __pyx_t_13;
   size_t __pyx_t_14;
   size_t __pyx_t_15;
-  __Pyx_memviewslice __pyx_t_16 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_16;
   __Pyx_memviewslice __pyx_t_17 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  __Pyx_memviewslice __pyx_t_18 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  Py_ssize_t __pyx_t_19;
-  Py_UCS4 __pyx_t_20;
+  std::vector<unsigned char>  __pyx_t_18;
+  __Pyx_memviewslice __pyx_t_19 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_20;
+  __Pyx_memviewslice __pyx_t_21 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  std::vector<unsigned char>  __pyx_t_22;
+  Py_ssize_t __pyx_t_23;
+  Py_UCS4 __pyx_t_24;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -6977,7 +7109,13 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 119, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint8_t>((&(*((uint8_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr8.data + __pyx_t_9 * __pyx_v_arr8.strides[0]) ) + __pyx_t_10 * __pyx_v_arr8.strides[1]) ) + __pyx_t_11 * __pyx_v_arr8.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    try {
+      __pyx_t_16 = pycompresso::cpp_compress<uint8_t>((&(*((uint8_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr8.data + __pyx_t_9 * __pyx_v_arr8.strides[0]) ) + __pyx_t_10 * __pyx_v_arr8.strides[1]) ) + __pyx_t_11 * __pyx_v_arr8.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 119, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_16;
 
     /* "compresso.pyx":117
  *   cdef vector[unsigned char] buf
@@ -7017,10 +7155,10 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   elif data.dtype == np.uint32:
  */
-    __pyx_t_16 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint16_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_16.memview)) __PYX_ERR(0, 121, __pyx_L1_error)
-    __pyx_v_arr16 = __pyx_t_16;
-    __pyx_t_16.memview = NULL;
-    __pyx_t_16.data = NULL;
+    __pyx_t_17 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint16_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_17.memview)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_v_arr16 = __pyx_t_17;
+    __pyx_t_17.memview = NULL;
+    __pyx_t_17.data = NULL;
 
     /* "compresso.pyx":122
  *   elif data.dtype == np.uint16:
@@ -7052,7 +7190,13 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint16_t>((&(*((uint16_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr16.data + __pyx_t_11 * __pyx_v_arr16.strides[0]) ) + __pyx_t_10 * __pyx_v_arr16.strides[1]) ) + __pyx_t_9 * __pyx_v_arr16.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    try {
+      __pyx_t_18 = pycompresso::cpp_compress<uint16_t>((&(*((uint16_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr16.data + __pyx_t_11 * __pyx_v_arr16.strides[0]) ) + __pyx_t_10 * __pyx_v_arr16.strides[1]) ) + __pyx_t_9 * __pyx_v_arr16.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 122, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_18;
 
     /* "compresso.pyx":120
  *     arr8 = data.view(np.uint8)
@@ -7092,10 +7236,10 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   elif data.dtype == np.uint64:
  */
-    __pyx_t_17 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint32_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_17.memview)) __PYX_ERR(0, 124, __pyx_L1_error)
-    __pyx_v_arr32 = __pyx_t_17;
-    __pyx_t_17.memview = NULL;
-    __pyx_t_17.data = NULL;
+    __pyx_t_19 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint32_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_19.memview)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __pyx_v_arr32 = __pyx_t_19;
+    __pyx_t_19.memview = NULL;
+    __pyx_t_19.data = NULL;
 
     /* "compresso.pyx":125
  *   elif data.dtype == np.uint32:
@@ -7127,7 +7271,13 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint32_t>((&(*((uint32_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr32.data + __pyx_t_9 * __pyx_v_arr32.strides[0]) ) + __pyx_t_10 * __pyx_v_arr32.strides[1]) ) + __pyx_t_11 * __pyx_v_arr32.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    try {
+      __pyx_t_20 = pycompresso::cpp_compress<uint32_t>((&(*((uint32_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr32.data + __pyx_t_9 * __pyx_v_arr32.strides[0]) ) + __pyx_t_10 * __pyx_v_arr32.strides[1]) ) + __pyx_t_11 * __pyx_v_arr32.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 125, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_20;
 
     /* "compresso.pyx":123
  *     arr16 = data
@@ -7167,10 +7317,10 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
  *     buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
  *   else:
  */
-    __pyx_t_18 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint64_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_18.memview)) __PYX_ERR(0, 127, __pyx_L1_error)
-    __pyx_v_arr64 = __pyx_t_18;
-    __pyx_t_18.memview = NULL;
-    __pyx_t_18.data = NULL;
+    __pyx_t_21 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_uint64_t(((PyObject *)__pyx_v_data), PyBUF_WRITABLE); if (unlikely(!__pyx_t_21.memview)) __PYX_ERR(0, 127, __pyx_L1_error)
+    __pyx_v_arr64 = __pyx_t_21;
+    __pyx_t_21.memview = NULL;
+    __pyx_t_21.data = NULL;
 
     /* "compresso.pyx":128
  *   elif data.dtype == np.uint64:
@@ -7202,7 +7352,13 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_nx); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
     __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_ny); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
     __pyx_t_13 = __Pyx_PyInt_As_size_t(__pyx_v_nz); if (unlikely((__pyx_t_13 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
-    __pyx_v_buf = pycompresso::cpp_compress<uint64_t>((&(*((uint64_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr64.data + __pyx_t_11 * __pyx_v_arr64.strides[0]) ) + __pyx_t_10 * __pyx_v_arr64.strides[1]) ) + __pyx_t_9 * __pyx_v_arr64.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    try {
+      __pyx_t_22 = pycompresso::cpp_compress<uint64_t>((&(*((uint64_t *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_arr64.data + __pyx_t_11 * __pyx_v_arr64.strides[0]) ) + __pyx_t_10 * __pyx_v_arr64.strides[1]) ) + __pyx_t_9 * __pyx_v_arr64.strides[2]) )))), __pyx_v_sx, __pyx_v_sy, __pyx_v_sz, __pyx_t_15, __pyx_t_14, __pyx_t_13, __pyx_v_connectivity);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 128, __pyx_L1_error)
+    }
+    __pyx_v_buf = __pyx_t_22;
 
     /* "compresso.pyx":126
  *     arr32 = data
@@ -7224,10 +7380,10 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
   /*else*/ {
     __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_19 = 0;
-    __pyx_t_20 = 127;
+    __pyx_t_23 = 0;
+    __pyx_t_24 = 127;
     __Pyx_INCREF(__pyx_kp_u_Type);
-    __pyx_t_19 += 5;
+    __pyx_t_23 += 5;
     __Pyx_GIVEREF(__pyx_kp_u_Type);
     PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_kp_u_Type);
     __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_data), __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 130, __pyx_L1_error)
@@ -7235,16 +7391,16 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
     __pyx_t_4 = __Pyx_PyObject_FormatSimple(__pyx_t_2, __pyx_empty_unicode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_20 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_20) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_20;
-    __pyx_t_19 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
+    __pyx_t_24 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_24) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_24;
+    __pyx_t_23 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_4);
     PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_4);
     __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_kp_u_not_supported_Only_uints_and_bo);
-    __pyx_t_19 += 50;
+    __pyx_t_23 += 50;
     __Pyx_GIVEREF(__pyx_kp_u_not_supported_Only_uints_and_bo);
     PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_kp_u_not_supported_Only_uints_and_bo);
-    __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_3, 3, __pyx_t_19, __pyx_t_20); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_3, 3, __pyx_t_23, __pyx_t_24); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
@@ -7288,9 +7444,9 @@ static PyObject *__pyx_pf_9compresso_34_compress(CYTHON_UNUSED PyObject *__pyx_s
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __PYX_XDEC_MEMVIEW(&__pyx_t_8, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_16, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_t_17, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_18, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_19, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_21, 1);
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
@@ -12043,6 +12199,7 @@ static PyObject *__pyx_pf_9compresso_26decompress(CYTHON_UNUSED PyObject *__pyx_
   PyArrayObject *__pyx_v_labels64 = 0;
   void *__pyx_v_outptr;
   unsigned char *__pyx_v_buf;
+  PyObject *__pyx_v_err = NULL;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_labels16;
   __Pyx_Buffer __pyx_pybuffer_labels16;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_labels32;
@@ -12067,6 +12224,16 @@ static PyObject *__pyx_pf_9compresso_26decompress(CYTHON_UNUSED PyObject *__pyx_
   Py_ssize_t __pyx_t_12;
   unsigned char *__pyx_t_13;
   Py_ssize_t __pyx_t_14;
+  PyObject *__pyx_t_15 = NULL;
+  PyObject *__pyx_t_16 = NULL;
+  int __pyx_t_17;
+  char const *__pyx_t_18;
+  PyObject *__pyx_t_19 = NULL;
+  PyObject *__pyx_t_20 = NULL;
+  PyObject *__pyx_t_21 = NULL;
+  PyObject *__pyx_t_22 = NULL;
+  PyObject *__pyx_t_23 = NULL;
+  PyObject *__pyx_t_24 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -12609,8 +12776,8 @@ static PyObject *__pyx_pf_9compresso_26decompress(CYTHON_UNUSED PyObject *__pyx_
  *     raise DecodeError("Unable to decode stream.")
  * 
  *   cdef unsigned char* buf = data             # <<<<<<<<<<<<<<
- *   cpp_decompress(buf, len(data), outptr)
- * 
+ *   try:
+ *     cpp_decompress(buf, len(data), outptr)
  */
   if (unlikely(__pyx_v_data == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
@@ -12622,19 +12789,168 @@ static PyObject *__pyx_pf_9compresso_26decompress(CYTHON_UNUSED PyObject *__pyx_
   /* "compresso.pyx":328
  * 
  *   cdef unsigned char* buf = data
- *   cpp_decompress(buf, len(data), outptr)             # <<<<<<<<<<<<<<
+ *   try:             # <<<<<<<<<<<<<<
+ *     cpp_decompress(buf, len(data), outptr)
+ *   except Exception as err:
+ */
+  {
+    __Pyx_PyThreadState_declare
+    __Pyx_PyThreadState_assign
+    __Pyx_ExceptionSave(&__pyx_t_7, &__pyx_t_8, &__pyx_t_9);
+    __Pyx_XGOTREF(__pyx_t_7);
+    __Pyx_XGOTREF(__pyx_t_8);
+    __Pyx_XGOTREF(__pyx_t_9);
+    /*try:*/ {
+
+      /* "compresso.pyx":329
+ *   cdef unsigned char* buf = data
+ *   try:
+ *     cpp_decompress(buf, len(data), outptr)             # <<<<<<<<<<<<<<
+ *   except Exception as err:
+ *     raise DecodeError(err)
+ */
+      if (unlikely(__pyx_v_data == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+        __PYX_ERR(0, 329, __pyx_L6_error)
+      }
+      __pyx_t_14 = PyBytes_GET_SIZE(__pyx_v_data); if (unlikely(__pyx_t_14 == ((Py_ssize_t)-1))) __PYX_ERR(0, 329, __pyx_L6_error)
+      try {
+        pycompresso::cpp_decompress(__pyx_v_buf, __pyx_t_14, __pyx_v_outptr);
+      } catch(...) {
+        __Pyx_CppExn2PyErr();
+        __PYX_ERR(0, 329, __pyx_L6_error)
+      }
+
+      /* "compresso.pyx":328
+ * 
+ *   cdef unsigned char* buf = data
+ *   try:             # <<<<<<<<<<<<<<
+ *     cpp_decompress(buf, len(data), outptr)
+ *   except Exception as err:
+ */
+    }
+    __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
+    goto __pyx_L11_try_end;
+    __pyx_L6_error:;
+    __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+
+    /* "compresso.pyx":330
+ *   try:
+ *     cpp_decompress(buf, len(data), outptr)
+ *   except Exception as err:             # <<<<<<<<<<<<<<
+ *     raise DecodeError(err)
+ * 
+ */
+    __pyx_t_6 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(&((PyTypeObject*)PyExc_Exception)[0])));
+    if (__pyx_t_6) {
+      __Pyx_AddTraceback("compresso.decompress", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      if (__Pyx_GetException(&__pyx_t_2, &__pyx_t_1, &__pyx_t_4) < 0) __PYX_ERR(0, 330, __pyx_L8_except_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_GOTREF(__pyx_t_4);
+      __Pyx_INCREF(__pyx_t_1);
+      __pyx_v_err = __pyx_t_1;
+      /*try:*/ {
+
+        /* "compresso.pyx":331
+ *     cpp_decompress(buf, len(data), outptr)
+ *   except Exception as err:
+ *     raise DecodeError(err)             # <<<<<<<<<<<<<<
  * 
  *   return labels
  */
-  if (unlikely(__pyx_v_data == Py_None)) {
-    PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 328, __pyx_L1_error)
-  }
-  __pyx_t_14 = PyBytes_GET_SIZE(__pyx_v_data); if (unlikely(__pyx_t_14 == ((Py_ssize_t)-1))) __PYX_ERR(0, 328, __pyx_L1_error)
-  (void)(pycompresso::cpp_decompress(__pyx_v_buf, __pyx_t_14, __pyx_v_outptr));
+        __Pyx_GetModuleGlobalName(__pyx_t_15, __pyx_n_s_DecodeError); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 331, __pyx_L17_error)
+        __Pyx_GOTREF(__pyx_t_15);
+        __pyx_t_16 = NULL;
+        if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_15))) {
+          __pyx_t_16 = PyMethod_GET_SELF(__pyx_t_15);
+          if (likely(__pyx_t_16)) {
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_15);
+            __Pyx_INCREF(__pyx_t_16);
+            __Pyx_INCREF(function);
+            __Pyx_DECREF_SET(__pyx_t_15, function);
+          }
+        }
+        __pyx_t_3 = (__pyx_t_16) ? __Pyx_PyObject_Call2Args(__pyx_t_15, __pyx_t_16, __pyx_v_err) : __Pyx_PyObject_CallOneArg(__pyx_t_15, __pyx_v_err);
+        __Pyx_XDECREF(__pyx_t_16); __pyx_t_16 = 0;
+        if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 331, __pyx_L17_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
+        __Pyx_Raise(__pyx_t_3, 0, 0, 0);
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __PYX_ERR(0, 331, __pyx_L17_error)
+      }
 
-  /* "compresso.pyx":330
- *   cpp_decompress(buf, len(data), outptr)
+      /* "compresso.pyx":330
+ *   try:
+ *     cpp_decompress(buf, len(data), outptr)
+ *   except Exception as err:             # <<<<<<<<<<<<<<
+ *     raise DecodeError(err)
+ * 
+ */
+      /*finally:*/ {
+        __pyx_L17_error:;
+        /*exception exit:*/{
+          __Pyx_PyThreadState_declare
+          __Pyx_PyThreadState_assign
+          __pyx_t_19 = 0; __pyx_t_20 = 0; __pyx_t_21 = 0; __pyx_t_22 = 0; __pyx_t_23 = 0; __pyx_t_24 = 0;
+          __Pyx_XDECREF(__pyx_t_15); __pyx_t_15 = 0;
+          __Pyx_XDECREF(__pyx_t_16); __pyx_t_16 = 0;
+          __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+          if (PY_MAJOR_VERSION >= 3) __Pyx_ExceptionSwap(&__pyx_t_22, &__pyx_t_23, &__pyx_t_24);
+          if ((PY_MAJOR_VERSION < 3) || unlikely(__Pyx_GetException(&__pyx_t_19, &__pyx_t_20, &__pyx_t_21) < 0)) __Pyx_ErrFetch(&__pyx_t_19, &__pyx_t_20, &__pyx_t_21);
+          __Pyx_XGOTREF(__pyx_t_19);
+          __Pyx_XGOTREF(__pyx_t_20);
+          __Pyx_XGOTREF(__pyx_t_21);
+          __Pyx_XGOTREF(__pyx_t_22);
+          __Pyx_XGOTREF(__pyx_t_23);
+          __Pyx_XGOTREF(__pyx_t_24);
+          __pyx_t_6 = __pyx_lineno; __pyx_t_17 = __pyx_clineno; __pyx_t_18 = __pyx_filename;
+          {
+            __Pyx_DECREF(__pyx_v_err);
+            __pyx_v_err = NULL;
+          }
+          if (PY_MAJOR_VERSION >= 3) {
+            __Pyx_XGIVEREF(__pyx_t_22);
+            __Pyx_XGIVEREF(__pyx_t_23);
+            __Pyx_XGIVEREF(__pyx_t_24);
+            __Pyx_ExceptionReset(__pyx_t_22, __pyx_t_23, __pyx_t_24);
+          }
+          __Pyx_XGIVEREF(__pyx_t_19);
+          __Pyx_XGIVEREF(__pyx_t_20);
+          __Pyx_XGIVEREF(__pyx_t_21);
+          __Pyx_ErrRestore(__pyx_t_19, __pyx_t_20, __pyx_t_21);
+          __pyx_t_19 = 0; __pyx_t_20 = 0; __pyx_t_21 = 0; __pyx_t_22 = 0; __pyx_t_23 = 0; __pyx_t_24 = 0;
+          __pyx_lineno = __pyx_t_6; __pyx_clineno = __pyx_t_17; __pyx_filename = __pyx_t_18;
+          goto __pyx_L8_except_error;
+        }
+      }
+    }
+    goto __pyx_L8_except_error;
+    __pyx_L8_except_error:;
+
+    /* "compresso.pyx":328
+ * 
+ *   cdef unsigned char* buf = data
+ *   try:             # <<<<<<<<<<<<<<
+ *     cpp_decompress(buf, len(data), outptr)
+ *   except Exception as err:
+ */
+    __Pyx_XGIVEREF(__pyx_t_7);
+    __Pyx_XGIVEREF(__pyx_t_8);
+    __Pyx_XGIVEREF(__pyx_t_9);
+    __Pyx_ExceptionReset(__pyx_t_7, __pyx_t_8, __pyx_t_9);
+    goto __pyx_L1_error;
+    __pyx_L11_try_end:;
+  }
+
+  /* "compresso.pyx":333
+ *     raise DecodeError(err)
  * 
  *   return labels             # <<<<<<<<<<<<<<
  * 
@@ -12659,6 +12975,8 @@ static PyObject *__pyx_pf_9compresso_26decompress(CYTHON_UNUSED PyObject *__pyx_
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_15);
+  __Pyx_XDECREF(__pyx_t_16);
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
@@ -12685,6 +13003,7 @@ static PyObject *__pyx_pf_9compresso_26decompress(CYTHON_UNUSED PyObject *__pyx_
   __Pyx_XDECREF((PyObject *)__pyx_v_labels16);
   __Pyx_XDECREF((PyObject *)__pyx_v_labels32);
   __Pyx_XDECREF((PyObject *)__pyx_v_labels64);
+  __Pyx_XDECREF(__pyx_v_err);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -27457,6 +27776,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_dtypes, __pyx_k_dtypes, sizeof(__pyx_k_dtypes), 0, 0, 1, 1},
   {&__pyx_n_s_encode, __pyx_k_encode, sizeof(__pyx_k_encode), 0, 0, 1, 1},
   {&__pyx_n_s_enumerate, __pyx_k_enumerate, sizeof(__pyx_k_enumerate), 0, 0, 1, 1},
+  {&__pyx_n_s_err, __pyx_k_err, sizeof(__pyx_k_err), 0, 0, 1, 1},
   {&__pyx_n_s_error, __pyx_k_error, sizeof(__pyx_k_error), 0, 0, 1, 1},
   {&__pyx_n_s_extract_labels_from_locations, __pyx_k_extract_labels_from_locations, sizeof(__pyx_k_extract_labels_from_locations), 0, 0, 1, 1},
   {&__pyx_n_s_flags, __pyx_k_flags, sizeof(__pyx_k_flags), 0, 0, 1, 1},
@@ -28023,10 +28343,10 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  *   """
  *   Decompress a compresso encoded byte stream into a three dimensional
  */
-  __pyx_tuple__56 = PyTuple_Pack(11, __pyx_n_s_data, __pyx_n_s_info, __pyx_n_s_shape, __pyx_n_s_dtype, __pyx_n_s_labels, __pyx_n_s_labels8, __pyx_n_s_labels16, __pyx_n_s_labels32, __pyx_n_s_labels64, __pyx_n_s_outptr, __pyx_n_s_buf); if (unlikely(!__pyx_tuple__56)) __PYX_ERR(0, 289, __pyx_L1_error)
+  __pyx_tuple__56 = PyTuple_Pack(12, __pyx_n_s_data, __pyx_n_s_info, __pyx_n_s_shape, __pyx_n_s_dtype, __pyx_n_s_labels, __pyx_n_s_labels8, __pyx_n_s_labels16, __pyx_n_s_labels32, __pyx_n_s_labels64, __pyx_n_s_outptr, __pyx_n_s_buf, __pyx_n_s_err); if (unlikely(!__pyx_tuple__56)) __PYX_ERR(0, 289, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__56);
   __Pyx_GIVEREF(__pyx_tuple__56);
-  __pyx_codeobj__57 = (PyObject*)__Pyx_PyCode_New(1, 0, 11, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__56, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_compresso_pyx, __pyx_n_s_decompress, 289, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__57)) __PYX_ERR(0, 289, __pyx_L1_error)
+  __pyx_codeobj__57 = (PyObject*)__Pyx_PyCode_New(1, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__56, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_compresso_pyx, __pyx_n_s_decompress, 289, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__57)) __PYX_ERR(0, 289, __pyx_L1_error)
 
   /* "View.MemoryView":286
  *         return self.name
@@ -32273,6 +32593,41 @@ bad:
     return -1;
 }
 
+/* SwapException */
+  #if CYTHON_FAST_THREAD_STATE
+static CYTHON_INLINE void __Pyx__ExceptionSwap(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb) {
+    PyObject *tmp_type, *tmp_value, *tmp_tb;
+    #if CYTHON_USE_EXC_INFO_STACK
+    _PyErr_StackItem *exc_info = tstate->exc_info;
+    tmp_type = exc_info->exc_type;
+    tmp_value = exc_info->exc_value;
+    tmp_tb = exc_info->exc_traceback;
+    exc_info->exc_type = *type;
+    exc_info->exc_value = *value;
+    exc_info->exc_traceback = *tb;
+    #else
+    tmp_type = tstate->exc_type;
+    tmp_value = tstate->exc_value;
+    tmp_tb = tstate->exc_traceback;
+    tstate->exc_type = *type;
+    tstate->exc_value = *value;
+    tstate->exc_traceback = *tb;
+    #endif
+    *type = tmp_type;
+    *value = tmp_value;
+    *tb = tmp_tb;
+}
+#else
+static CYTHON_INLINE void __Pyx_ExceptionSwap(PyObject **type, PyObject **value, PyObject **tb) {
+    PyObject *tmp_type, *tmp_value, *tmp_tb;
+    PyErr_GetExcInfo(&tmp_type, &tmp_value, &tmp_tb);
+    PyErr_SetExcInfo(*type, *value, *tb);
+    *type = tmp_type;
+    *value = tmp_value;
+    *tb = tmp_tb;
+}
+#endif
+
 /* BytesEquals */
   static CYTHON_INLINE int __Pyx_PyBytes_Equals(PyObject* s1, PyObject* s2, int equals) {
 #if CYTHON_COMPILING_IN_PYPY
@@ -32490,41 +32845,6 @@ static CYTHON_INLINE PyObject *__Pyx_GetAttr3(PyObject *o, PyObject *n, PyObject
     PyObject *r = __Pyx_GetAttr(o, n);
     return (likely(r)) ? r : __Pyx_GetAttr3Default(d);
 }
-
-/* SwapException */
-  #if CYTHON_FAST_THREAD_STATE
-static CYTHON_INLINE void __Pyx__ExceptionSwap(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb) {
-    PyObject *tmp_type, *tmp_value, *tmp_tb;
-    #if CYTHON_USE_EXC_INFO_STACK
-    _PyErr_StackItem *exc_info = tstate->exc_info;
-    tmp_type = exc_info->exc_type;
-    tmp_value = exc_info->exc_value;
-    tmp_tb = exc_info->exc_traceback;
-    exc_info->exc_type = *type;
-    exc_info->exc_value = *value;
-    exc_info->exc_traceback = *tb;
-    #else
-    tmp_type = tstate->exc_type;
-    tmp_value = tstate->exc_value;
-    tmp_tb = tstate->exc_traceback;
-    tstate->exc_type = *type;
-    tstate->exc_value = *value;
-    tstate->exc_traceback = *tb;
-    #endif
-    *type = tmp_type;
-    *value = tmp_value;
-    *tb = tmp_tb;
-}
-#else
-static CYTHON_INLINE void __Pyx_ExceptionSwap(PyObject **type, PyObject **value, PyObject **tb) {
-    PyObject *tmp_type, *tmp_value, *tmp_tb;
-    PyErr_GetExcInfo(&tmp_type, &tmp_value, &tmp_tb);
-    PyErr_SetExcInfo(*type, *value, *tb);
-    *type = tmp_type;
-    *value = tmp_value;
-    *tb = tmp_tb;
-}
-#endif
 
 /* Import */
   static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
