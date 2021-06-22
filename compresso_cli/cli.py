@@ -22,7 +22,7 @@ class Tuple3(click.ParamType):
 
 @click.command()
 @click.option("-c/-d", "--compress/--decompress", default=True, is_flag=True, help="Decompress to a numpy .npy file.", show_default=True)
-@click.option('--steps', type=Tuple3(), default="4,4,1", help="Compression step size. No effect on decompression.", show_default=True)
+@click.option('--steps', type=Tuple3(), default=None, help="Compression step size. No effect on decompression.", show_default=True)
 @click.option('--six', is_flag=True, default=False, help="Use 6-way CCL instead of 4-way. No effect on decompression.", show_default=True)
 @click.argument("source", nargs=-1)
 def main(compress, source, steps, six):
@@ -41,7 +41,7 @@ def main(compress, source, steps, six):
 	This program was written by Brian Matejek and William Silversmith
 	and is MIT licensed.
 	"""
-	if len(steps) != 3:
+	if steps is not None and len(steps) != 3:
 		raise ValueError(f"steps must be a comma delimited set of three numbers that multiply to > 0 and <= 64.")
 
 	for i in range(len(source)):

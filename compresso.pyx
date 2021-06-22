@@ -59,7 +59,7 @@ cdef extern from "compresso.hpp" namespace "pycompresso":
   size_t COMPRESSO_HEADER_SIZE
 
 
-def compress(data, steps=(4,4,1), connectivity=4) -> bytes:
+def compress(data, steps=None, connectivity=4) -> bytes:
   """
   compress(ndarray[UINT, ndim=3] data, steps=(4,4,1))
 
@@ -75,6 +75,11 @@ def compress(data, steps=(4,4,1), connectivity=4) -> bytes:
 
   Return: compressed bytes b'...'
   """
+  explicit_steps = True
+  if steps is None:
+    steps = (4,4,1)
+    explicit_steps = False
+
   if connectivity not in (4,6):
     raise ValueError(f"{connectivity} connectivity must be 4 or 6.")
 
@@ -102,7 +107,10 @@ def compress(data, steps=(4,4,1), connectivity=4) -> bytes:
   try:
     return _compress(data, steps, connectivity)
   except RuntimeError as err:
-    raise EncodeError(err)
+    if "Unable to RLE encode" in str(err) and not explicit_steps:
+      return compress(data, steps=(8,8,1), connectivity=connectivity)
+    else:
+      raise EncodeError(err)
 
 def _compress(
   cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1),

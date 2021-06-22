@@ -1,4 +1,5 @@
 import pytest
+import gzip
 
 import numpy as np
 import compresso
@@ -110,4 +111,29 @@ def test_random_field(dtype, order, steps, connectivity):
   assert np.all(labels == reconstituted)
 
   assert np.all(np.unique(labels) == compresso.labels(compressed))
+
+# Watershed volumes can blow out the RLE encoding
+# due to too many windows.
+def test_watershed():
+  with gzip.open("./ws.npy.cpso.gz", "rb") as f:
+    binary = f.read()
+
+  labels = compresso.decompress(binary)
+  del binary
+
+  binary = compresso.compress(labels)
+  head = compresso.header(binary)
+  assert head["xstep"] == 8
+  assert head["ystep"] == 8
+  assert head["zstep"] == 1
+
+  try:
+    binary = compresso.compress(labels, steps=(4,4,1))
+    assert False
+  except compresso.EncodeError:
+    pass
+  
+
+
+
 
