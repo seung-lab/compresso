@@ -717,12 +717,19 @@ bool* decode_boundaries(
 	size_t xblock, yblock, zblock;
 	size_t xoffset, yoffset, zoffset;
 
+	WINDOW* tmp_window_vals = new WINDOW[nx]();
+
 	for (size_t z = 0; z < sz; z++) {
 		zblock = nx * ny * (z / zstep);
 		zoffset = xstep * ystep * (z % zstep);
 		for (size_t y = 0; y < sy; y++) {
 			yblock = nx * (y / ystep);
 			yoffset = xstep * (y % ystep);
+
+			for (size_t xb = 0; xb < nx; xb++) {
+				size_t block = xb + yblock + zblock;
+				tmp_window_vals[xb] = window_values[windows[block]];
+			}
 
 			if (xstep_pot) {
 				for (size_t x = 0; x < sx; x++) {
@@ -731,10 +738,9 @@ bool* decode_boundaries(
 					xblock = x >> xshift; // x / xstep
 					xoffset = x & ((1 << xshift) - 1); // x % xstep
 					
-					size_t block = xblock + yblock + zblock;
 					size_t offset = xoffset + yoffset + zoffset;
 
-					WINDOW value = window_values[windows[block]];
+					WINDOW value = tmp_window_vals[xblock];
 					boundaries[iv] = (value >> offset) & 0b1;
 				}				
 			}
@@ -744,15 +750,16 @@ bool* decode_boundaries(
 					xblock = x / xstep;
 					xoffset = x % xstep;
 					
-					size_t block = xblock + yblock + zblock;
 					size_t offset = xoffset + yoffset + zoffset;
 
-					WINDOW value = window_values[windows[block]];
+					WINDOW value = tmp_window_vals[xblock];
 					boundaries[iv] = (value >> offset) & 0b1;
 				}
 			}
 		}
 	}
+
+	delete[] tmp_window_vals;
 
 	return boundaries;
 }
