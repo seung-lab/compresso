@@ -475,7 +475,10 @@ std::vector<T> run_length_encode_windows(const std::vector<T> &windows) {
 	size_t max_run = std::numeric_limits<T>::max() / 2;
 
 	for (size_t i = 0; i < windows.size(); i++) {
-		if (windows[i] == 0) {
+		if (windows[i] > max_run) {
+			throw std::runtime_error("compresso: Unable to RLE encode. Too many windows. Use 64-bit steps e.g. (8,8,1) instead.");
+		}
+		else if (windows[i] == 0) {
 			zero_run++;
 			if (zero_run < max_run) {
 				continue;

@@ -35,6 +35,10 @@ ctypedef fused UINT:
   uint32_t
   uint64_t
 
+class EncodeError(Exception):
+  """Unable to encode the stream."""
+  pass
+
 class DecodeError(Exception):
   """Unable to decode the stream."""
   pass
@@ -95,7 +99,10 @@ def compress(data, steps=(4,4,1), connectivity=4) -> bytes:
 
   data = np.asfortranarray(data)
 
-  return _compress(data, steps, connectivity)
+  try:
+    return _compress(data, steps, connectivity)
+  except RuntimeError as err:
+    raise EncodeError(err)
 
 def _compress(
   cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1),
