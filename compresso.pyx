@@ -306,7 +306,11 @@ def _extract_labels_from_locations(
   return j # size of decoded_locations
 
 def remap(bytes buf, dict mapping, preserve_missing_labels=False):
-  """Remap the labels of a compresso stream without decompressing."""
+  """
+  bytes remap(bytes buf, dict mapping, preserve_missing_labels=False)
+
+  Remap the labels of a compresso stream without decompressing.
+  """
   ids = np.copy(raw_ids(buf))
 
   cdef size_t i = 0  

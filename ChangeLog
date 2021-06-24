@@ -1,6 +1,22 @@
 CHANGES
 =======
 
+2.2.0
+-----
+
+* feat: if RLE encode error, automatically recompress as 8,8,1
+
+2.1.0
+-----
+
+* fix: throw error if unable to RLE encode windows
+* fix: catch cpp exceptions in Python
+* feat(cli): adds steps and six flags
+
+2.0.0
+-----
+
+* chore: update changelog
 * docs: note that this implementation is format version 0
 * docs: note that a second stage compressor is needed
 * docs: make CLI example clearer
