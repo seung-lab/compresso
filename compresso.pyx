@@ -305,6 +305,50 @@ def _extract_labels_from_locations(
 
   return j # size of decoded_locations
 
+def remap(bytes buf, dict mapping, preserve_missing_labels=False):
+  """Remap the labels of a compresso stream without decompressing."""
+  ids = np.copy(raw_ids(buf))
+
+  cdef size_t i = 0  
+  cdef size_t size = ids.size
+  for i in range(size):
+    try:
+      ids[i] = mapping[ids[i]]
+    except KeyError:
+      if not preserve_missing_labels:
+        raise
+
+  locations = np.copy(raw_locations(buf))
+  i = 0
+  size = locations.size
+  while i < size:
+    if locations[i] == 6:
+      try:
+        locations[i+1] = mapping[locations[i+1]]
+      except KeyError:
+        if not preserve_missing_labels:
+          raise
+      i += 1
+    elif locations[i] > 6:
+      try:
+        locations[i] = mapping[locations[i] - 7] + 7
+      except KeyError:
+        if not preserve_missing_labels:
+          raise
+    i += 1  
+
+  head = raw_header(buf)
+  values = raw_values(buf)
+  windows = raw_windows(buf)
+
+  return (
+    head.tobytes()
+    + ids.tobytes()
+    + values.tobytes() 
+    + locations.tobytes() 
+    + windows.tobytes()
+  )
+
 def decompress(bytes data):
   """
   Decompress a compresso encoded byte stream into a three dimensional 
@@ -351,12 +395,36 @@ def decompress(bytes data):
 
   return labels
 
+def valid(bytes buf):
+  """Does the buffer appear to be a valid compresso stream?"""
+  if len(buf) < <Py_ssize_t>COMPRESSO_HEADER_SIZE:
+    return False
 
+  head = header(buf)
+  if head["magic"] != b"cpso":
+    return False
 
+  if head["format_version"] != 0:
+    return False
 
+  cdef int window_bits = head["xstep"] * head["ystep"] * head["zstep"]
+  cdef int window_bytes = 0
+  if window_bits <= 8:
+    window_bytes = 1
+  elif window_bits <= 16:
+    window_bytes = 2
+  elif window_bits <= 32:
+    window_bytes = 4
+  else:
+    window_bytes = 8
 
+  min_size = (
+    COMPRESSO_HEADER_SIZE 
+    + (head["id_size"] * head["data_width"]) 
+    + (head["value_size"] * window_bits)
+    + (head["location_size"] * head["data_width"])
+  )
+  if len(buf) < min_size:
+    return False
 
-
-
-
-
+  return True

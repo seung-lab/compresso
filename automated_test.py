@@ -133,6 +133,21 @@ def test_watershed():
   except compresso.EncodeError:
     pass
   
+@pytest.mark.parametrize('dtype', DTYPES)
+@pytest.mark.parametrize('steps', STEPS)
+@pytest.mark.parametrize('connectivity', CONNECTIVITY)
+def test_remap(dtype, steps, connectivity):
+  labels = np.random.randint(0, 15, size=(64,63,61)).astype(dtype)
+
+  remap = { i: i+20 for i in range(15) }
+
+  binary = compresso.compress(labels)
+  assert np.all(compresso.labels(binary) == list(range(15)))
+
+  binary2 = compresso.remap(binary, remap)
+  assert np.all(compresso.labels(binary2) == list(range(20, 35)))
+
+
 
 
 
