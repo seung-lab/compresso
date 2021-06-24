@@ -2,3 +2,5 @@ include cc3d.hpp
 include compresso.hpp
 include LICENSE
 include COPYING.LESSER
+exclude connectomics.npy.cpso.lzma
+exclude ws.npy.cpso.gz
