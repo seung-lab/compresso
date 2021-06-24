@@ -23,6 +23,7 @@ cimport cython
 cimport numpy as cnp
 import numpy as np
 import ctypes
+from libcpp cimport bool as native_bool
 from libcpp.vector cimport vector
 from libc.stdint cimport (
   int8_t, int16_t, int32_t, int64_t,
@@ -305,7 +306,7 @@ def _extract_labels_from_locations(
 
   return j # size of decoded_locations
 
-def remap(bytes buf, dict mapping, preserve_missing_labels=False):
+def remap(bytes buf, dict mapping, native_bool preserve_missing_labels=False):
   """
   bytes remap(bytes buf, dict mapping, preserve_missing_labels=False)
 
@@ -323,8 +324,27 @@ def remap(bytes buf, dict mapping, preserve_missing_labels=False):
         raise
 
   locations = np.copy(raw_locations(buf))
-  i = 0
-  size = locations.size
+  locations = _remap_locations(locations, mapping, preserve_missing_labels)
+
+  head = raw_header(buf)
+  values = raw_values(buf)
+  windows = raw_windows(buf)
+
+  return (
+    head.tobytes()
+    + ids.tobytes()
+    + values.tobytes() 
+    + locations.tobytes() 
+    + windows.tobytes()
+  )
+
+def _remap_locations(
+  cnp.ndarray[UINT] locations, 
+  dict mapping, 
+  native_bool preserve_missing_labels
+):
+  cdef size_t i = 0
+  cdef size_t size = locations.size
   while i < size:
     if locations[i] == 6:
       try:
@@ -340,18 +360,8 @@ def remap(bytes buf, dict mapping, preserve_missing_labels=False):
         if not preserve_missing_labels:
           raise
     i += 1  
-
-  head = raw_header(buf)
-  values = raw_values(buf)
-  windows = raw_windows(buf)
-
-  return (
-    head.tobytes()
-    + ids.tobytes()
-    + values.tobytes() 
-    + locations.tobytes() 
-    + windows.tobytes()
-  )
+  
+  return locations
 
 def decompress(bytes data):
   """
