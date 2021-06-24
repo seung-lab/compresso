@@ -26,8 +26,8 @@ uniq_labels = compresso.labels(compressed_labels)
 # Remap labels without decompressing. Could
 # be useful for e.g. proofreading.
 compressed_remapped = compresso.remap(
-	compressed_labels, { 1: 2, 2: 3, ... },
-	preserve_missing_labels=True
+  compressed_labels, { 1: 2, 2: 3, ... },
+  preserve_missing_labels=True
 )
 
 # Checks if the stream appears to be valid.
