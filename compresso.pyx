@@ -146,12 +146,12 @@ def _compress(
 
   return bytes(buf)
 
-def check_compatibility(buf : bytes):
+def check_compatibility(bytes buf):
   format_version = buf[4]
   if format_version != 0:
     raise DecodeError(f"Unable to decode format version {format_version}. Only version 0 is supported.")
 
-def label_dtype(info : dict):
+def label_dtype(dict info):
   """Given a header dict, return the dtype for the labels."""
   dtypes = {
     1: np.uint8,
@@ -161,7 +161,7 @@ def label_dtype(info : dict):
   }
   return dtypes[info["data_width"]]  
 
-def window_dtype(info : dict):
+def window_dtype(dict info):
   """Given a header dict, return the dtype for the boundary windows."""
   window_size = info["xstep"] * info["ystep"] * info["zstep"]
   if window_size <= 16:
@@ -171,7 +171,7 @@ def window_dtype(info : dict):
   else:
     return np.uint64
 
-def header(buf : bytes) -> dict:
+def header(bytes buf):
   """
   Decodes the header into a python dict.
   """
@@ -194,10 +194,14 @@ def header(buf : bytes) -> dict:
     "connectivity": buf[35],
   }
 
-def nbytes(buf : bytes):
+def nbytes(bytes buf):
   """Compute the number of bytes the decompressed array will consume."""
   info = header(buf)
   return info["sx"] * info["sy"] * info["sz"] * info["data_width"]
+
+def raw_header(bytes buf):
+  """Return the bytes corresponding to the header."""
+  return np.frombuffer(buf[:COMPRESSO_HEADER_SIZE], dtype=np.uint8)
 
 def raw_ids(bytes buf):
   """Return the ids buffer from the compressed stream."""
