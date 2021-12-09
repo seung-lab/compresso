@@ -1,5 +1,6 @@
 import pytest
 import gzip
+from io import BytesIO
 
 import numpy as np
 import compresso
@@ -132,6 +133,19 @@ def test_watershed():
     assert False
   except compresso.EncodeError:
     pass
+
+# This volume blew out a previous logic error in
+# the RLE encoder where zero overflow was not 
+# handled correctly.
+def test_rle_overflow():
+  with gzip.open("./rle_defect.npy.gz", "rb") as f:
+    binary = BytesIO(f.read())
+
+  labels = np.load(binary)
+
+  binary = compresso.compress(labels, steps=(4,4,1))
+  labels = compresso.decompress(binary)
+
   
 @pytest.mark.parametrize('dtype', DTYPES)
 @pytest.mark.parametrize('steps', STEPS)
