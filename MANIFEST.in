@@ -4,3 +4,10 @@ include LICENSE
 include COPYING.LESSER
 exclude connectomics.npy.cpso.lzma
 exclude ws.npy.cpso.gz
+exclude rle_defect.npy.gz
+exclude tox.ini
+exclude manylinux2014.Dockerfile
+exclude build_linux.sh
+exclude .github
+exclude appveryor.yml
+exclude .editorconfig
