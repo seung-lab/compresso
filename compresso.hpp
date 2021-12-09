@@ -492,9 +492,11 @@ std::vector<T> run_length_encode_windows(const std::vector<T> &windows) {
 		}
 		else if (windows[i] == 0) {
 			zero_run++;
-			if (zero_run < max_run) {
-				continue;
+			if (zero_run == max_run) {
+				rle_windows.push_back((zero_run << 1) | 1);
+				zero_run = 0;
 			}
+			continue;
 		}
 		
 		if (zero_run) {
