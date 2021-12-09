@@ -330,9 +330,9 @@ std::vector<T> encode_boundaries(
 
 template <typename T>
 std::vector<T> encode_indeterminate_locations(
-		bool* boundaries, T* labels, 
-		const size_t sx, const size_t sy, const size_t sz,
-		const size_t connectivity
+	bool* boundaries, T* labels, 
+	const size_t sx, const size_t sy, const size_t sz,
+	const size_t connectivity
 ) {
 	const size_t sxy = sx * sy;
 	std::vector<T> locations;
@@ -762,9 +762,9 @@ bool* decode_boundaries(
 
 template <typename LABEL>
 void decode_nonboundary_labels(
-		uint32_t *components, const std::vector<LABEL> &ids, 
-		const size_t sx, const size_t sy, const size_t sz,
-		LABEL* output
+	uint32_t *components, const std::vector<LABEL> &ids, 
+	const size_t sx, const size_t sy, const size_t sz,
+	LABEL* output
 ) {
 	const size_t voxels = sx * sy * sz;
 	for (size_t i = 0; i < voxels; i++) {
@@ -774,10 +774,10 @@ void decode_nonboundary_labels(
 
 template <typename LABEL>
 void decode_indeterminate_locations(
-		bool *boundaries, LABEL *labels, 
-		const std::vector<LABEL> &locations, 
-		const size_t sx, const size_t sy, const size_t sz,
-		const size_t connectivity
+	bool *boundaries, LABEL *labels, 
+	const std::vector<LABEL> &locations, 
+	const size_t sx, const size_t sy, const size_t sz,
+	const size_t connectivity
 ) {
 	const size_t sxy = sx * sy;
 
