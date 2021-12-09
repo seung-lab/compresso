@@ -225,6 +225,18 @@ public:
 		return i - idx;
 	}
 
+	static bool valid_header(unsigned char* buf) {
+		bool valid_magic = (buf[0] == 'c' && buf[1] == 'p' && buf[2] == 's' && buf[3] == 'o');
+		uint8_t format_version = buf[4];
+		uint8_t dwidth = ctoi<uint8_t>(buf, 5);
+		uint8_t connect = ctoi<uint8_t>(buf, 35);
+
+		bool valid_dtype = (dwidth == 1 || dwidth == 2 || dwidth == 4 || dwidth == 8);
+		bool valid_connectivity = (connect == 4 || connect == 6);
+
+		return valid_magic && (format_version == 0) && valid_dtype && valid_connectivity;
+	}
+
 	static CompressoHeader fromchars(unsigned char* buf) {
 		return CompressoHeader(buf);
 	}
@@ -950,8 +962,44 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	return output;
 }
 
+template <typename WINDOW>
+void* decompress_helper(
+	unsigned char* buffer, size_t num_bytes, 
+	void* output, const CompressoHeader &header
+) {
+	if (header.data_width == 1) {
+		return decompress<uint8_t,WINDOW>(
+			buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
+		);
+	}
+	else if (header.data_width == 2) {
+		return decompress<uint16_t,WINDOW>(
+			buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
+		);
+	}
+	else if (header.data_width == 4) {
+		return decompress<uint32_t,WINDOW>(
+			buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
+		);
+	}
+	else if (header.data_width == 8) {
+		return decompress<uint64_t,WINDOW>(
+			buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
+		);
+	}
+	else {
+		std::string err = "compresso: Invalid data width: ";
+		err += std::to_string(header.data_width);
+		throw std::runtime_error(err);
+	}
+}
+
 template <>
 void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* output) {
+	if (!CompressoHeader::valid_header(buffer)) {
+		throw std::runtime_error("compresso: Invalid header.");
+	}
+
 	CompressoHeader header(buffer);
 
 	bool window8 = (
@@ -964,130 +1012,33 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 		static_cast<int>(header.xstep) * static_cast<int>(header.ystep) * static_cast<int>(header.zstep) <= 32
 	);
 
-	if (header.data_width == 1) {
-		if (window8) {
-			return reinterpret_cast<void*>(
-				decompress<uint8_t,uint8_t>(
-					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
-				)
-			);
-		}
-		else if (window16) {
-			return reinterpret_cast<void*>(
-				decompress<uint8_t,uint16_t>(
-					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
-				)
-			);
-		}
-		else if (window32) {
-			return reinterpret_cast<void*>(
-				decompress<uint8_t,uint32_t>(
-					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
-				)
-			);
-		}
-		else {
-			return reinterpret_cast<void*>(
-				decompress<uint8_t, uint64_t>(
-					buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
-				)
-			);			
-		}
+	if (window8) {
+		return decompress_helper<uint8_t>(
+			buffer, num_bytes, 
+			reinterpret_cast<uint8_t*>(output),
+			header
+		);
 	}
-	else if (header.data_width == 2) {
-		if (window8) {
-			return reinterpret_cast<void*>(
-				decompress<uint16_t,uint8_t>(
-					buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
-				)
-			);
-		}
-		else if (window16) {
-			return reinterpret_cast<void*>(
-				decompress<uint16_t,uint16_t>(
-					buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
-				)
-			);
-		}
-		else if (window32) {
-			return reinterpret_cast<void*>(
-				decompress<uint16_t,uint32_t>(
-					buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
-				)
-			);
-		}
-		else {
-			return reinterpret_cast<void*>(
-				decompress<uint16_t, uint64_t>(
-					buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
-				)
-			);			
-		}
+	else if (window16) {
+		return decompress_helper<uint16_t>(
+			buffer, num_bytes, 
+			reinterpret_cast<uint8_t*>(output),
+			header
+		);
 	}
-	else if (header.data_width == 4) {
-		if (window8) {
-			return reinterpret_cast<void*>(
-				decompress<uint32_t,uint8_t>(
-					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
-				)
-			);
-		}
-		else if (window16) {
-			return reinterpret_cast<void*>(
-				decompress<uint32_t,uint16_t>(
-					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
-				)
-			);		
-		}
-		else if (window32) {
-			return reinterpret_cast<void*>(
-				decompress<uint32_t,uint32_t>(
-					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
-				)
-			);
-		}
-		else {
-			return reinterpret_cast<void*>(
-				decompress<uint32_t, uint64_t>(
-					buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
-				)
-			);			
-		}
-	}
-	else if (header.data_width == 8) {
-		if (window8) {
-			return reinterpret_cast<void*>(
-				decompress<uint64_t,uint8_t>(
-					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
-				)
-			);
-		}
-		else if (window16) {
-			return reinterpret_cast<void*>(
-				decompress<uint64_t,uint16_t>(
-					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
-				)
-			);		
-		}
-		else if (window32) {
-			return reinterpret_cast<void*>(
-				decompress<uint64_t,uint32_t>(
-					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
-				)
-			);
-		}
-		else {
-			return reinterpret_cast<void*>(
-				decompress<uint64_t, uint64_t>(
-					buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
-				)
-			);			
-		}
+	else if (window32) {
+		return decompress_helper<uint32_t>(
+			buffer, num_bytes, 
+			reinterpret_cast<uint8_t*>(output),
+			header
+		);
 	}
 	else {
-		std::string err = "compresso: Invalid data width: ";
-		err += std::to_string(header.data_width);
-		throw std::runtime_error(err);
+		return decompress_helper<uint64_t>(
+			buffer, num_bytes, 
+			reinterpret_cast<uint8_t*>(output),
+			header
+		);	
 	}
 }
 
