@@ -17094,7 +17094,7 @@ static PyObject *__pyx_pw_9compresso_35valid(PyObject *__pyx_self, PyObject *__p
 static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_buf) {
   PyObject *__pyx_v_head = NULL;
   int __pyx_v_window_bits;
-  CYTHON_UNUSED int __pyx_v_window_bytes;
+  int __pyx_v_window_bytes;
   PyObject *__pyx_v_min_size = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -17382,7 +17382,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  *   min_size = (
  *     COMPRESSO_HEADER_SIZE             # <<<<<<<<<<<<<<
  *     + (head["id_size"] * head["data_width"])
- *     + (head["value_size"] * window_bits)
+ *     + (head["value_size"] * window_bytes)
  */
   __pyx_t_4 = __Pyx_PyInt_FromSize_t(pycompresso::COMPRESSO_HEADER_SIZE); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 436, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
@@ -17391,7 +17391,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  *   min_size = (
  *     COMPRESSO_HEADER_SIZE
  *     + (head["id_size"] * head["data_width"])             # <<<<<<<<<<<<<<
- *     + (head["value_size"] * window_bits)
+ *     + (head["value_size"] * window_bytes)
  *     + (head["location_size"] * head["data_width"])
  */
   __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_id_size); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 437, __pyx_L1_error)
@@ -17410,13 +17410,13 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
   /* "compresso.pyx":438
  *     COMPRESSO_HEADER_SIZE
  *     + (head["id_size"] * head["data_width"])
- *     + (head["value_size"] * window_bits)             # <<<<<<<<<<<<<<
+ *     + (head["value_size"] * window_bytes)             # <<<<<<<<<<<<<<
  *     + (head["location_size"] * head["data_width"])
  *   )
  */
   __pyx_t_7 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_value_size); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 438, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_window_bits); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 438, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_window_bytes); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 438, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_3 = PyNumber_Multiply(__pyx_t_7, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 438, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
@@ -17429,7 +17429,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
 
   /* "compresso.pyx":439
  *     + (head["id_size"] * head["data_width"])
- *     + (head["value_size"] * window_bits)
+ *     + (head["value_size"] * window_bytes)
  *     + (head["location_size"] * head["data_width"])             # <<<<<<<<<<<<<<
  *   )
  *   if len(buf) < min_size:

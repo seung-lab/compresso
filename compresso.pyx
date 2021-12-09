@@ -435,7 +435,7 @@ def valid(bytes buf):
   min_size = (
     COMPRESSO_HEADER_SIZE 
     + (head["id_size"] * head["data_width"]) 
-    + (head["value_size"] * window_bits)
+    + (head["value_size"] * window_bytes)
     + (head["location_size"] * head["data_width"])
   )
   if len(buf) < min_size:
