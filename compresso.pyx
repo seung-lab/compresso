@@ -91,6 +91,9 @@ def compress(data, steps=None, connectivity=4, random_access_z_index=True) -> by
   if connectivity not in (4,6):
     raise ValueError(f"{connectivity} connectivity must be 4 or 6.")
 
+  if connectivity == 6:
+    random_access_z_index = False
+
   while data.ndim > 3:
     if data.shape[-1] == 1:
       data = data[..., 0]
@@ -397,20 +400,22 @@ def decompress(bytes data, z=None):
   Returns: 3d ndarray
   """
   info = header(data)
-  cdef size_t sz = info["sz"]
+  sz = info["sz"]
 
-  cdef size_t zstart = 0
-  cdef size_t zend = sz
+  zstart = 0
+  zend = sz
   if isinstance(z, int):
     zstart = z
     zend = z + 1
   elif hasattr(z, "__getitem__"):
     zstart, zend = z[0], z[1]
 
-  if zstart < 0 or zstart >= sz:
+  if zstart < 0 or zstart > sz:
     raise ValueError(f"zstart must be between 0 and sz - 1 ({sz-1}): {zstart}")
-  if zend < 1 or zend > sz:
+  if zend < 0 or zend > sz:
     raise ValueError(f"zend must be between 1 and sz ({sz}): {zend}")
+  if zend < zstart:
+    raise ValueError(f"zend ({zend}) must be >= zstart ({zstart})")
 
 
   shape = (info["sx"], info["sy"], zend - zstart)

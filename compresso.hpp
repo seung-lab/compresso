@@ -966,10 +966,12 @@ LABEL* decompress(
 	}
 
 	const bool random_access_z_index = (header.format_version == 1);
-	if (!random_access_z_index && (zstart > 0 || zend < header.sz || header.connectivity == 6)) {
+	if (!random_access_z_index && (zstart > 0 || zend < header.sz)) {
 		throw std::runtime_error("compresso: Cannot random access z slices without the index.");
 	}
-
+	if (random_access_z_index && header.connectivity == 6 && (zstart > 0 || zend < header.sz)) {
+		throw std::runtime_error("compresso: Connectivity 6 does not support random access.");
+	}
 
 	const size_t sx = header.sx;
 	const size_t sy = header.sy;
