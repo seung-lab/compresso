@@ -60,9 +60,9 @@ cdef extern from "compresso.hpp" namespace "pycompresso":
   size_t COMPRESSO_HEADER_SIZE
 
 
-def compress(data, steps=None, connectivity=4) -> bytes:
+def compress(data, steps=None, connectivity=4, random_access_z_index=True) -> bytes:
   """
-  compress(ndarray[UINT, ndim=3] data, steps=(4,4,1))
+  compress(ndarray[UINT, ndim=3] data, steps=(4,4,1), random_access_z_index=True)
 
   Compress a 3d numpy array into a compresso byte stream.
 
@@ -73,6 +73,10 @@ def compress(data, steps=None, connectivity=4) -> bytes:
     they repeat more frequently. (4,4,1) and (8,8,1) are typical.
   connectivity: 4 or 6. 4 means we use 2D connected components and
     6 means we use 3D connected components.
+  random_access_z_index: if True, adds an index proportional to the
+    size of the z index that enables decoding z slices independently.
+    This index is at most 2 * 8 * sz additional bytes. This also changes
+    the format version to indicate the index is present.
 
   Return: compressed bytes b'...'
   """
@@ -106,7 +110,7 @@ def compress(data, steps=None, connectivity=4) -> bytes:
   data = np.asfortranarray(data)
 
   try:
-    return _compress(data, steps, connectivity)
+    return _compress(data, steps, connectivity, random_access_z_index)
   except RuntimeError as err:
     if "Unable to RLE encode" in str(err) and not explicit_steps:
       return compress(data, steps=(8,8,1), connectivity=connectivity)
@@ -115,7 +119,7 @@ def compress(data, steps=None, connectivity=4) -> bytes:
 
 def _compress(
   cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1),
-  unsigned int connectivity=4
+  unsigned int connectivity=4, native_bool random_access_z_index=True
 ) -> bytes:
   sx = data.shape[0]
   sy = data.shape[1]
@@ -132,16 +136,16 @@ def _compress(
 
   if data.dtype in (np.uint8, bool):
     arr8 = data.view(np.uint8)
-    buf = cpp_compress[uint8_t](&arr8[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
+    buf = cpp_compress[uint8_t](&arr8[0,0,0], sx, sy, sz, nx, ny, nz, connectivity, random_access_z_index)
   elif data.dtype == np.uint16:
     arr16 = data
-    buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
+    buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz, connectivity, random_access_z_index)
   elif data.dtype == np.uint32:
     arr32 = data
-    buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
+    buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz, connectivity, random_access_z_index)
   elif data.dtype == np.uint64:
     arr64 = data
-    buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
+    buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz, connectivity, random_access_z_index)
   else:
     raise TypeError(f"Type {data.dtype} not supported. Only uints and bool are supported.")
 
@@ -149,7 +153,7 @@ def _compress(
 
 def check_compatibility(bytes buf):
   format_version = buf[4]
-  if format_version != 0:
+  if format_version > 1:
     raise DecodeError(f"Unable to decode format version {format_version}. Only version 0 is supported.")
 
 def label_dtype(dict info):
@@ -255,6 +259,18 @@ def raw_windows(bytes buf):
   offset = COMPRESSO_HEADER_SIZE + id_bytes + value_bytes + location_bytes
 
   return np.frombuffer(buf[offset:], dtype=wdtype)
+
+def raw_z_index(bytes buf):
+  """Return the z index if present."""
+  info = header(buf)
+  format_version = info["format_version"]
+  sz = info["sz"]
+
+  if format_version == 0:
+    return None
+
+  num_bytes = 2 * 8 * sz
+  return np.frombuffer(buf[-num_bytes:], dtype=np.uint64).reshape((2,sz), order="C")
 
 def labels(bytes buf):
   """
@@ -422,7 +438,9 @@ def valid(bytes buf):
   if head["magic"] != b"cpso":
     return False
 
-  if head["format_version"] != 0:
+  format_version = head["format_version"]
+
+  if format_version not in (0,1):
     return False
 
   cdef int window_bits = head["xstep"] * head["ystep"] * head["zstep"]
@@ -436,11 +454,16 @@ def valid(bytes buf):
   else:
     window_bytes = 8
 
+  zindex_size = 0
+  if format_version == 1:
+    zindex_size = 8 * 2 * head["sz"]
+
   min_size = (
     COMPRESSO_HEADER_SIZE 
     + (head["id_size"] * head["data_width"]) 
     + (head["value_size"] * window_bytes)
     + (head["location_size"] * head["data_width"])
+    + zindex_size
   )
   if len(buf) < min_size:
     return False

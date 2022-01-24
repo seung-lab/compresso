@@ -373,7 +373,7 @@ OUT* connected_components(
       size_t tmp_N = 0;
       connected_components2d_4<OUT>(
         (in_labels + sxy * z), sx, sy, 1, 
-        max_labels, (out_labels + sxy * z), 
+        max_labels, (out_labels + sxy * z),
         tmp_N, N + 1
       );
       num_components_per_slice[z] = tmp_N;
