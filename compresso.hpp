@@ -1068,7 +1068,6 @@ LABEL* decompress(
 		output = new LABEL[sxy * real_sz]();
 	}
 
-
 	decode_nonboundary_labels(components, ids, sx, sy, real_sz, output);
 	delete[] components;
 	ids = std::vector<LABEL>();

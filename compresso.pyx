@@ -496,3 +496,112 @@ def valid(bytes buf):
     return False
 
   return True
+
+class CompressoArray:
+  def __init__(self, binary):
+    self.binary = binary
+
+  @property
+  def size(self):
+    shape = self.shape
+    return shape[0] * shape[1] * shape[2]
+
+  @property
+  def nbytes(self):
+    return len(self.binary)
+
+  @property
+  def dtype(self):
+    return label_dtype(header(self.binary))
+
+  @property
+  def shape(self):
+    head = header(self.binary)
+    return (head["sx"], head["sy"], head["sz"])
+
+  def labels(self):
+    return labels(self.binary)
+
+  def __getitem__(self, slcs):
+    slices = reify_slices(slcs, *self.shape)
+    img = decompress(self.binary, z=(slices[2].start, slices[2].stop))
+    return img[slices[0], slices[1], ::slices[2].step]
+
+def reify_slices(slices, sx, sy, sz):
+  """
+  Convert free attributes of a slice object 
+  (e.g. None (arr[:]) or Ellipsis (arr[..., 0]))
+  into bound variables in the context of this
+  bounding box.
+
+  That is, for a ':' slice, slice.start will be set
+  to the value of the respective minpt index of 
+  this bounding box while slice.stop will be set 
+  to the value of the respective maxpt index.
+
+  Example:
+    reify_slices( (np._s[:],) )
+    
+    >>> [ slice(-1,1,1), slice(-2,2,1), slice(-3,3,1) ]
+
+  Returns: [ slice, ... ]
+  """
+  ndim = 3
+  minpt = (0,0,0)
+  maxpt = (sx,sy,sz)
+
+  integer_types = (int, np.integer)
+  floating_types = (float, np.floating)
+
+  if isinstance(slices, integer_types) or isinstance(slices, floating_types):
+    slices = [ slice(int(slices), int(slices)+1, 1) ]
+  elif type(slices) == slice:
+    slices = [ slices ]
+  elif slices == Ellipsis:
+    slices = []
+
+  slices = list(slices)
+
+  for index, slc in enumerate(slices):
+    if slc == Ellipsis:
+      fill = ndim - len(slices) + 1
+      slices = slices[:index] +  (fill * [ slice(None, None, None) ]) + slices[index+1:]
+      break
+
+  while len(slices) < ndim:
+    slices.append( slice(None, None, None) )
+
+  # First three slices are x,y,z, last is channel. 
+  # Handle only x,y,z here, channel seperately
+  for index, slc in enumerate(slices):
+    if isinstance(slc, integer_types) or isinstance(slc, floating_types):
+      slices[index] = slice(int(slc), int(slc)+1, 1)
+    elif slc == Ellipsis:
+      raise ValueError("More than one Ellipsis operator used at once.")
+    else:
+      start = 0 if slc.start is None else slc.start
+      end = maxpt[index] if slc.stop is None else slc.stop 
+      step = 1 if slc.step is None else slc.step
+
+      if step < 0:
+        raise ValueError(f'Negative step sizes are not supported. Got: {step}')
+
+      if start < 0: # this is support for negative indicies
+        start = maxpt[index] + start         
+      check_bounds(start, minpt[index], maxpt[index])
+      if end < 0: # this is support for negative indicies
+        end = maxpt[index] + end
+      check_bounds(end, minpt[index], maxpt[index])
+
+      slices[index] = slice(start, end, step)
+
+  return slices
+
+def clamp(val, low, high):
+  return min(max(val, low), high)
+
+def check_bounds(val, low, high):
+  if val > high or val < low:
+    raise ValueError(f'Value {val} cannot be outside of inclusive range {low} to {high}')
+  return val
+
