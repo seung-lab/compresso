@@ -1059,7 +1059,7 @@ LABEL* decompress(
 	if (zstart > 0) {
 		for (size_t z = zstart; z < static_cast<size_t>(zend); z++) {
 			for (size_t i = 0; i < sxy; i++) {
-				components[i + sxy * (z-zstart)] += components_index[z-1];
+				components[i + sxy * (z-zstart)] += components_index[zstart-1];
 			}
 		}
 	}
