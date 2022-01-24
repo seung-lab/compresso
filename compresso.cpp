@@ -2453,6 +2453,9 @@ static CYTHON_INLINE unsigned int __Pyx_PyInt_As_unsigned_int(PyObject *);
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_unsigned_int(unsigned int value);
 
 /* CIntFromPy.proto */
+static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *);
+
+/* CIntFromPy.proto */
 static CYTHON_INLINE size_t __Pyx_PyInt_As_size_t(PyObject *);
 
 /* CIntToPy.proto */
@@ -2476,17 +2479,14 @@ static CYTHON_INLINE PyObject* __Pyx_PyInt_From_uint32_t(uint32_t value);
 /* CIntFromPy.proto */
 static CYTHON_INLINE uint32_t __Pyx_PyInt_As_uint32_t(PyObject *);
 
-/* BytesContains.proto */
-static CYTHON_INLINE int __Pyx_BytesContains(PyObject* bytes, char character);
-
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_uint64_t(uint64_t value);
 
-/* CIntFromPy.proto */
-static CYTHON_INLINE uint64_t __Pyx_PyInt_As_uint64_t(PyObject *);
+/* BytesContains.proto */
+static CYTHON_INLINE int __Pyx_BytesContains(PyObject* bytes, char character);
 
 /* CIntFromPy.proto */
-static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *);
+static CYTHON_INLINE uint64_t __Pyx_PyInt_As_uint64_t(PyObject *);
 
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value);
@@ -2638,6 +2638,7 @@ static const char __pyx_k_c[] = "c";
 static const char __pyx_k_i[] = "i";
 static const char __pyx_k_j[] = "j";
 static const char __pyx_k_s[] = "s";
+static const char __pyx_k_z[] = "z";
 static const char __pyx_k__6[] = "";
 static const char __pyx_k__7[] = "()";
 static const char __pyx_k__8[] = "|";
@@ -3091,6 +3092,7 @@ static PyObject *__pyx_n_s_window_size;
 static PyObject *__pyx_n_s_windows;
 static PyObject *__pyx_n_u_xstep;
 static PyObject *__pyx_n_u_ystep;
+static PyObject *__pyx_n_s_z;
 static PyObject *__pyx_n_s_zeros;
 static PyObject *__pyx_n_u_zstep;
 static PyObject *__pyx_pf_9compresso_compress(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_data, PyObject *__pyx_v_steps, PyObject *__pyx_v_connectivity); /* proto */
@@ -3126,7 +3128,7 @@ static PyObject *__pyx_pf_9compresso_56_remap_locations(CYTHON_UNUSED PyObject *
 static PyObject *__pyx_pf_9compresso_58_remap_locations(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_locations, PyObject *__pyx_v_mapping, bool __pyx_v_preserve_missing_labels); /* proto */
 static PyObject *__pyx_pf_9compresso_60_remap_locations(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_locations, PyObject *__pyx_v_mapping, bool __pyx_v_preserve_missing_labels); /* proto */
 static PyObject *__pyx_pf_9compresso_62_remap_locations(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_locations, PyObject *__pyx_v_mapping, bool __pyx_v_preserve_missing_labels); /* proto */
-static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_data); /* proto */
+static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_data, int __pyx_v_z); /* proto */
 static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_buf); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array_2__getbuffer__(struct __pyx_array_obj *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
@@ -14543,7 +14545,7 @@ static PyObject *__pyx_pf_9compresso_56_remap_locations(CYTHON_UNUSED PyObject *
  * 
  *   return locations             # <<<<<<<<<<<<<<
  * 
- * def decompress(bytes data):
+ * def decompress(bytes data, int z = -1):
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(((PyObject *)__pyx_v_locations));
@@ -15090,7 +15092,7 @@ static PyObject *__pyx_pf_9compresso_58_remap_locations(CYTHON_UNUSED PyObject *
  * 
  *   return locations             # <<<<<<<<<<<<<<
  * 
- * def decompress(bytes data):
+ * def decompress(bytes data, int z = -1):
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(((PyObject *)__pyx_v_locations));
@@ -15637,7 +15639,7 @@ static PyObject *__pyx_pf_9compresso_60_remap_locations(CYTHON_UNUSED PyObject *
  * 
  *   return locations             # <<<<<<<<<<<<<<
  * 
- * def decompress(bytes data):
+ * def decompress(bytes data, int z = -1):
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(((PyObject *)__pyx_v_locations));
@@ -16184,7 +16186,7 @@ static PyObject *__pyx_pf_9compresso_62_remap_locations(CYTHON_UNUSED PyObject *
  * 
  *   return locations             # <<<<<<<<<<<<<<
  * 
- * def decompress(bytes data):
+ * def decompress(bytes data, int z = -1):
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(((PyObject *)__pyx_v_locations));
@@ -16224,24 +16226,79 @@ static PyObject *__pyx_pf_9compresso_62_remap_locations(CYTHON_UNUSED PyObject *
 /* "compresso.pyx":366
  *   return locations
  * 
- * def decompress(bytes data):             # <<<<<<<<<<<<<<
+ * def decompress(bytes data, int z = -1):             # <<<<<<<<<<<<<<
  *   """
  *   Decompress a compresso encoded byte stream into a three dimensional
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9compresso_33decompress(PyObject *__pyx_self, PyObject *__pyx_v_data); /*proto*/
+static PyObject *__pyx_pw_9compresso_33decompress(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static char __pyx_doc_9compresso_32decompress[] = "\n  Decompress a compresso encoded byte stream into a three dimensional \n  numpy array containing image segmentation.\n\n  Returns: 3d ndarray\n  ";
-static PyMethodDef __pyx_mdef_9compresso_33decompress = {"decompress", (PyCFunction)__pyx_pw_9compresso_33decompress, METH_O, __pyx_doc_9compresso_32decompress};
-static PyObject *__pyx_pw_9compresso_33decompress(PyObject *__pyx_self, PyObject *__pyx_v_data) {
+static PyMethodDef __pyx_mdef_9compresso_33decompress = {"decompress", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9compresso_33decompress, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9compresso_32decompress};
+static PyObject *__pyx_pw_9compresso_33decompress(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_data = 0;
+  int __pyx_v_z;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("decompress (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_data,&__pyx_n_s_z,0};
+    PyObject* values[2] = {0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_data)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (kw_args > 0) {
+          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_z);
+          if (value) { values[1] = value; kw_args--; }
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "decompress") < 0)) __PYX_ERR(0, 366, __pyx_L3_error)
+      }
+    } else {
+      switch (PyTuple_GET_SIZE(__pyx_args)) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+    }
+    __pyx_v_data = ((PyObject*)values[0]);
+    if (values[1]) {
+      __pyx_v_z = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_z == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 366, __pyx_L3_error)
+    } else {
+      __pyx_v_z = ((int)-1);
+    }
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("decompress", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 366, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("compresso.decompress", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_data), (&PyBytes_Type), 1, "data", 1))) __PYX_ERR(0, 366, __pyx_L1_error)
-  __pyx_r = __pyx_pf_9compresso_32decompress(__pyx_self, ((PyObject*)__pyx_v_data));
+  __pyx_r = __pyx_pf_9compresso_32decompress(__pyx_self, __pyx_v_data, __pyx_v_z);
 
   /* function exit code */
   goto __pyx_L0;
@@ -16252,8 +16309,9 @@ static PyObject *__pyx_pw_9compresso_33decompress(PyObject *__pyx_self, PyObject
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_data) {
+static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_data, int __pyx_v_z) {
   PyObject *__pyx_v_info = NULL;
+  PyObject *__pyx_v_sz = NULL;
   PyObject *__pyx_v_shape = NULL;
   PyObject *__pyx_v_dtype = NULL;
   PyObject *__pyx_v_labels = NULL;
@@ -16277,8 +16335,8 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
   PyObject *__pyx_t_3 = NULL;
-  PyObject *__pyx_t_4 = NULL;
-  int __pyx_t_5;
+  int __pyx_t_4;
+  PyObject *__pyx_t_5 = NULL;
   int __pyx_t_6;
   PyObject *__pyx_t_7 = NULL;
   PyObject *__pyx_t_8 = NULL;
@@ -16323,8 +16381,8 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
  *   Returns: 3d ndarray
  *   """
  *   info = header(data)             # <<<<<<<<<<<<<<
- *   shape = (info["sx"], info["sy"], info["sz"])
- * 
+ *   sz = info["sz"]
+ *   if z >= 0:
  */
   __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_header); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 373, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -16349,103 +16407,142 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
   /* "compresso.pyx":374
  *   """
  *   info = header(data)
- *   shape = (info["sx"], info["sy"], info["sz"])             # <<<<<<<<<<<<<<
+ *   sz = info["sz"]             # <<<<<<<<<<<<<<
+ *   if z >= 0:
+ *     sz = 1
+ */
+  __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_v_info, __pyx_n_u_sz); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_v_sz = __pyx_t_1;
+  __pyx_t_1 = 0;
+
+  /* "compresso.pyx":375
+ *   info = header(data)
+ *   sz = info["sz"]
+ *   if z >= 0:             # <<<<<<<<<<<<<<
+ *     sz = 1
+ * 
+ */
+  __pyx_t_4 = ((__pyx_v_z >= 0) != 0);
+  if (__pyx_t_4) {
+
+    /* "compresso.pyx":376
+ *   sz = info["sz"]
+ *   if z >= 0:
+ *     sz = 1             # <<<<<<<<<<<<<<
+ * 
+ *   shape = (info["sx"], info["sy"], sz)
+ */
+    __Pyx_INCREF(__pyx_int_1);
+    __Pyx_DECREF_SET(__pyx_v_sz, __pyx_int_1);
+
+    /* "compresso.pyx":375
+ *   info = header(data)
+ *   sz = info["sz"]
+ *   if z >= 0:             # <<<<<<<<<<<<<<
+ *     sz = 1
+ * 
+ */
+  }
+
+  /* "compresso.pyx":378
+ *     sz = 1
+ * 
+ *   shape = (info["sx"], info["sy"], sz)             # <<<<<<<<<<<<<<
  * 
  *   dtype = label_dtype(info)
  */
-  __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_v_info, __pyx_n_u_sx); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_v_info, __pyx_n_u_sx); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 378, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_v_info, __pyx_n_u_sy); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_v_info, __pyx_n_u_sy); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 378, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_info, __pyx_n_u_sz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 378, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 374, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_1);
-  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_2);
-  PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_2);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_4, 2, __pyx_t_3);
+  PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_2);
+  __Pyx_INCREF(__pyx_v_sz);
+  __Pyx_GIVEREF(__pyx_v_sz);
+  PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_v_sz);
   __pyx_t_1 = 0;
   __pyx_t_2 = 0;
+  __pyx_v_shape = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_v_shape = ((PyObject*)__pyx_t_4);
-  __pyx_t_4 = 0;
 
-  /* "compresso.pyx":376
- *   shape = (info["sx"], info["sy"], info["sz"])
+  /* "compresso.pyx":380
+ *   shape = (info["sx"], info["sy"], sz)
  * 
  *   dtype = label_dtype(info)             # <<<<<<<<<<<<<<
  *   labels = np.zeros(shape, dtype=dtype, order="F")
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_label_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 376, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = NULL;
-  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
-    __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_3);
-    if (likely(__pyx_t_2)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
-      __Pyx_INCREF(__pyx_t_2);
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_label_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 380, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = NULL;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_1)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_1);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_3, function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
     }
   }
-  __pyx_t_4 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_v_info) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_v_info);
-  __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 376, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_v_dtype = __pyx_t_4;
-  __pyx_t_4 = 0;
+  __pyx_t_3 = (__pyx_t_1) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_1, __pyx_v_info) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_v_info);
+  __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 380, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_dtype = __pyx_t_3;
+  __pyx_t_3 = 0;
 
-  /* "compresso.pyx":377
+  /* "compresso.pyx":381
  * 
  *   dtype = label_dtype(info)
  *   labels = np.zeros(shape, dtype=dtype, order="F")             # <<<<<<<<<<<<<<
  * 
  *   if labels.size == 0:
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 377, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 377, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 381, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 377, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 381, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 381, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_v_shape);
   __Pyx_GIVEREF(__pyx_v_shape);
-  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_v_shape);
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 377, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_v_dtype) < 0) __PYX_ERR(0, 377, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_order, __pyx_n_u_F) < 0) __PYX_ERR(0, 377, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_4, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 377, __pyx_L1_error)
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_v_shape);
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 381, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_v_dtype) < 0) __PYX_ERR(0, 381, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_order, __pyx_n_u_F) < 0) __PYX_ERR(0, 381, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 381, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_labels = __pyx_t_1;
-  __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_v_labels = __pyx_t_5;
+  __pyx_t_5 = 0;
 
-  /* "compresso.pyx":379
+  /* "compresso.pyx":383
  *   labels = np.zeros(shape, dtype=dtype, order="F")
  * 
  *   if labels.size == 0:             # <<<<<<<<<<<<<<
  *     return labels
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_labels, __pyx_n_s_size); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 379, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_labels, __pyx_n_s_size); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 383, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_t_5, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 383, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 379, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 383, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 379, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (__pyx_t_5) {
+  if (__pyx_t_4) {
 
-    /* "compresso.pyx":380
+    /* "compresso.pyx":384
  * 
  *   if labels.size == 0:
  *     return labels             # <<<<<<<<<<<<<<
@@ -16457,7 +16554,7 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
     __pyx_r = __pyx_v_labels;
     goto __pyx_L0;
 
-    /* "compresso.pyx":379
+    /* "compresso.pyx":383
  *   labels = np.zeros(shape, dtype=dtype, order="F")
  * 
  *   if labels.size == 0:             # <<<<<<<<<<<<<<
@@ -16466,38 +16563,38 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
  */
   }
 
-  /* "compresso.pyx":388
+  /* "compresso.pyx":392
  * 
  *   cdef void* outptr
  *   if dtype == np.uint8:             # <<<<<<<<<<<<<<
  *     labels8 = labels
  *     outptr = <void*>&labels8[0,0,0]
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 388, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_uint8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 388, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 392, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_v_dtype, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 388, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_uint8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 392, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 388, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (__pyx_t_5) {
+  __pyx_t_1 = PyObject_RichCompare(__pyx_v_dtype, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 392, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 392, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (__pyx_t_4) {
 
-    /* "compresso.pyx":389
+    /* "compresso.pyx":393
  *   cdef void* outptr
  *   if dtype == np.uint8:
  *     labels8 = labels             # <<<<<<<<<<<<<<
  *     outptr = <void*>&labels8[0,0,0]
  *   elif dtype == np.uint16:
  */
-    if (!(likely(((__pyx_v_labels) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_labels, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 389, __pyx_L1_error)
-    __pyx_t_2 = __pyx_v_labels;
-    __Pyx_INCREF(__pyx_t_2);
+    if (!(likely(((__pyx_v_labels) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_labels, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 393, __pyx_L1_error)
+    __pyx_t_1 = __pyx_v_labels;
+    __Pyx_INCREF(__pyx_t_1);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
       __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_labels8.rcbuffer->pybuffer);
-      __pyx_t_6 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels8.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_2), &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack);
+      __pyx_t_6 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels8.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_1), &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack);
       if (unlikely(__pyx_t_6 < 0)) {
         PyErr_Fetch(&__pyx_t_7, &__pyx_t_8, &__pyx_t_9);
         if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels8.rcbuffer->pybuffer, (PyObject*)__pyx_v_labels8, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) {
@@ -16509,12 +16606,12 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
         __pyx_t_7 = __pyx_t_8 = __pyx_t_9 = 0;
       }
       __pyx_pybuffernd_labels8.diminfo[0].strides = __pyx_pybuffernd_labels8.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_labels8.diminfo[0].shape = __pyx_pybuffernd_labels8.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_labels8.diminfo[1].strides = __pyx_pybuffernd_labels8.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_labels8.diminfo[1].shape = __pyx_pybuffernd_labels8.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_labels8.diminfo[2].strides = __pyx_pybuffernd_labels8.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_labels8.diminfo[2].shape = __pyx_pybuffernd_labels8.rcbuffer->pybuffer.shape[2];
-      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 389, __pyx_L1_error)
+      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 393, __pyx_L1_error)
     }
-    __pyx_v_labels8 = ((PyArrayObject *)__pyx_t_2);
-    __pyx_t_2 = 0;
+    __pyx_v_labels8 = ((PyArrayObject *)__pyx_t_1);
+    __pyx_t_1 = 0;
 
-    /* "compresso.pyx":390
+    /* "compresso.pyx":394
  *   if dtype == np.uint8:
  *     labels8 = labels
  *     outptr = <void*>&labels8[0,0,0]             # <<<<<<<<<<<<<<
@@ -16539,52 +16636,52 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
     } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_labels8.diminfo[2].shape)) __pyx_t_6 = 2;
     if (unlikely(__pyx_t_6 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_6);
-      __PYX_ERR(0, 390, __pyx_L1_error)
+      __PYX_ERR(0, 394, __pyx_L1_error)
     }
     __pyx_v_outptr = ((void *)(&(*__Pyx_BufPtrStrided3d(uint8_t *, __pyx_pybuffernd_labels8.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_labels8.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_labels8.diminfo[1].strides, __pyx_t_12, __pyx_pybuffernd_labels8.diminfo[2].strides))));
 
-    /* "compresso.pyx":388
+    /* "compresso.pyx":392
  * 
  *   cdef void* outptr
  *   if dtype == np.uint8:             # <<<<<<<<<<<<<<
  *     labels8 = labels
  *     outptr = <void*>&labels8[0,0,0]
  */
-    goto __pyx_L4;
+    goto __pyx_L5;
   }
 
-  /* "compresso.pyx":391
+  /* "compresso.pyx":395
  *     labels8 = labels
  *     outptr = <void*>&labels8[0,0,0]
  *   elif dtype == np.uint16:             # <<<<<<<<<<<<<<
  *     labels16 = labels
  *     outptr = <void*>&labels16[0,0,0]
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 391, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_uint16); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 391, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 395, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_v_dtype, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 391, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_uint16); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 395, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 391, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (__pyx_t_5) {
+  __pyx_t_1 = PyObject_RichCompare(__pyx_v_dtype, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 395, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 395, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (__pyx_t_4) {
 
-    /* "compresso.pyx":392
+    /* "compresso.pyx":396
  *     outptr = <void*>&labels8[0,0,0]
  *   elif dtype == np.uint16:
  *     labels16 = labels             # <<<<<<<<<<<<<<
  *     outptr = <void*>&labels16[0,0,0]
  *   elif dtype == np.uint32:
  */
-    if (!(likely(((__pyx_v_labels) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_labels, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 392, __pyx_L1_error)
-    __pyx_t_2 = __pyx_v_labels;
-    __Pyx_INCREF(__pyx_t_2);
+    if (!(likely(((__pyx_v_labels) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_labels, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 396, __pyx_L1_error)
+    __pyx_t_1 = __pyx_v_labels;
+    __Pyx_INCREF(__pyx_t_1);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
       __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_labels16.rcbuffer->pybuffer);
-      __pyx_t_6 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels16.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_2), &__Pyx_TypeInfo_nn_uint16_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack);
+      __pyx_t_6 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels16.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_1), &__Pyx_TypeInfo_nn_uint16_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack);
       if (unlikely(__pyx_t_6 < 0)) {
         PyErr_Fetch(&__pyx_t_9, &__pyx_t_8, &__pyx_t_7);
         if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels16.rcbuffer->pybuffer, (PyObject*)__pyx_v_labels16, &__Pyx_TypeInfo_nn_uint16_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) {
@@ -16596,12 +16693,12 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
         __pyx_t_9 = __pyx_t_8 = __pyx_t_7 = 0;
       }
       __pyx_pybuffernd_labels16.diminfo[0].strides = __pyx_pybuffernd_labels16.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_labels16.diminfo[0].shape = __pyx_pybuffernd_labels16.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_labels16.diminfo[1].strides = __pyx_pybuffernd_labels16.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_labels16.diminfo[1].shape = __pyx_pybuffernd_labels16.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_labels16.diminfo[2].strides = __pyx_pybuffernd_labels16.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_labels16.diminfo[2].shape = __pyx_pybuffernd_labels16.rcbuffer->pybuffer.shape[2];
-      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 392, __pyx_L1_error)
+      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 396, __pyx_L1_error)
     }
-    __pyx_v_labels16 = ((PyArrayObject *)__pyx_t_2);
-    __pyx_t_2 = 0;
+    __pyx_v_labels16 = ((PyArrayObject *)__pyx_t_1);
+    __pyx_t_1 = 0;
 
-    /* "compresso.pyx":393
+    /* "compresso.pyx":397
  *   elif dtype == np.uint16:
  *     labels16 = labels
  *     outptr = <void*>&labels16[0,0,0]             # <<<<<<<<<<<<<<
@@ -16626,52 +16723,52 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
     } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_labels16.diminfo[2].shape)) __pyx_t_6 = 2;
     if (unlikely(__pyx_t_6 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_6);
-      __PYX_ERR(0, 393, __pyx_L1_error)
+      __PYX_ERR(0, 397, __pyx_L1_error)
     }
     __pyx_v_outptr = ((void *)(&(*__Pyx_BufPtrStrided3d(uint16_t *, __pyx_pybuffernd_labels16.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_labels16.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_labels16.diminfo[1].strides, __pyx_t_10, __pyx_pybuffernd_labels16.diminfo[2].strides))));
 
-    /* "compresso.pyx":391
+    /* "compresso.pyx":395
  *     labels8 = labels
  *     outptr = <void*>&labels8[0,0,0]
  *   elif dtype == np.uint16:             # <<<<<<<<<<<<<<
  *     labels16 = labels
  *     outptr = <void*>&labels16[0,0,0]
  */
-    goto __pyx_L4;
+    goto __pyx_L5;
   }
 
-  /* "compresso.pyx":394
+  /* "compresso.pyx":398
  *     labels16 = labels
  *     outptr = <void*>&labels16[0,0,0]
  *   elif dtype == np.uint32:             # <<<<<<<<<<<<<<
  *     labels32 = labels
  *     outptr = <void*>&labels32[0,0,0]
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 394, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_uint32); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 394, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyObject_RichCompare(__pyx_v_dtype, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 394, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_uint32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 398, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 394, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (__pyx_t_5) {
+  __pyx_t_1 = PyObject_RichCompare(__pyx_v_dtype, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 398, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (__pyx_t_4) {
 
-    /* "compresso.pyx":395
+    /* "compresso.pyx":399
  *     outptr = <void*>&labels16[0,0,0]
  *   elif dtype == np.uint32:
  *     labels32 = labels             # <<<<<<<<<<<<<<
  *     outptr = <void*>&labels32[0,0,0]
  *   else:
  */
-    if (!(likely(((__pyx_v_labels) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_labels, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 395, __pyx_L1_error)
-    __pyx_t_2 = __pyx_v_labels;
-    __Pyx_INCREF(__pyx_t_2);
+    if (!(likely(((__pyx_v_labels) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_labels, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 399, __pyx_L1_error)
+    __pyx_t_1 = __pyx_v_labels;
+    __Pyx_INCREF(__pyx_t_1);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
       __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_labels32.rcbuffer->pybuffer);
-      __pyx_t_6 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels32.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_2), &__Pyx_TypeInfo_nn_uint32_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack);
+      __pyx_t_6 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels32.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_1), &__Pyx_TypeInfo_nn_uint32_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack);
       if (unlikely(__pyx_t_6 < 0)) {
         PyErr_Fetch(&__pyx_t_7, &__pyx_t_8, &__pyx_t_9);
         if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels32.rcbuffer->pybuffer, (PyObject*)__pyx_v_labels32, &__Pyx_TypeInfo_nn_uint32_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) {
@@ -16683,12 +16780,12 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
         __pyx_t_7 = __pyx_t_8 = __pyx_t_9 = 0;
       }
       __pyx_pybuffernd_labels32.diminfo[0].strides = __pyx_pybuffernd_labels32.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_labels32.diminfo[0].shape = __pyx_pybuffernd_labels32.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_labels32.diminfo[1].strides = __pyx_pybuffernd_labels32.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_labels32.diminfo[1].shape = __pyx_pybuffernd_labels32.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_labels32.diminfo[2].strides = __pyx_pybuffernd_labels32.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_labels32.diminfo[2].shape = __pyx_pybuffernd_labels32.rcbuffer->pybuffer.shape[2];
-      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 395, __pyx_L1_error)
+      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 399, __pyx_L1_error)
     }
-    __pyx_v_labels32 = ((PyArrayObject *)__pyx_t_2);
-    __pyx_t_2 = 0;
+    __pyx_v_labels32 = ((PyArrayObject *)__pyx_t_1);
+    __pyx_t_1 = 0;
 
-    /* "compresso.pyx":396
+    /* "compresso.pyx":400
  *   elif dtype == np.uint32:
  *     labels32 = labels
  *     outptr = <void*>&labels32[0,0,0]             # <<<<<<<<<<<<<<
@@ -16713,21 +16810,21 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
     } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_labels32.diminfo[2].shape)) __pyx_t_6 = 2;
     if (unlikely(__pyx_t_6 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_6);
-      __PYX_ERR(0, 396, __pyx_L1_error)
+      __PYX_ERR(0, 400, __pyx_L1_error)
     }
     __pyx_v_outptr = ((void *)(&(*__Pyx_BufPtrStrided3d(uint32_t *, __pyx_pybuffernd_labels32.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_labels32.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_labels32.diminfo[1].strides, __pyx_t_12, __pyx_pybuffernd_labels32.diminfo[2].strides))));
 
-    /* "compresso.pyx":394
+    /* "compresso.pyx":398
  *     labels16 = labels
  *     outptr = <void*>&labels16[0,0,0]
  *   elif dtype == np.uint32:             # <<<<<<<<<<<<<<
  *     labels32 = labels
  *     outptr = <void*>&labels32[0,0,0]
  */
-    goto __pyx_L4;
+    goto __pyx_L5;
   }
 
-  /* "compresso.pyx":398
+  /* "compresso.pyx":402
  *     outptr = <void*>&labels32[0,0,0]
  *   else:
  *     labels64 = labels             # <<<<<<<<<<<<<<
@@ -16735,13 +16832,13 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
  * 
  */
   /*else*/ {
-    if (!(likely(((__pyx_v_labels) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_labels, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 398, __pyx_L1_error)
-    __pyx_t_2 = __pyx_v_labels;
-    __Pyx_INCREF(__pyx_t_2);
+    if (!(likely(((__pyx_v_labels) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_labels, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 402, __pyx_L1_error)
+    __pyx_t_1 = __pyx_v_labels;
+    __Pyx_INCREF(__pyx_t_1);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
       __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_labels64.rcbuffer->pybuffer);
-      __pyx_t_6 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels64.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_2), &__Pyx_TypeInfo_nn_uint64_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack);
+      __pyx_t_6 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels64.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_1), &__Pyx_TypeInfo_nn_uint64_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack);
       if (unlikely(__pyx_t_6 < 0)) {
         PyErr_Fetch(&__pyx_t_9, &__pyx_t_8, &__pyx_t_7);
         if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_labels64.rcbuffer->pybuffer, (PyObject*)__pyx_v_labels64, &__Pyx_TypeInfo_nn_uint64_t, PyBUF_FORMAT| PyBUF_STRIDES, 3, 0, __pyx_stack) == -1)) {
@@ -16753,12 +16850,12 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
         __pyx_t_9 = __pyx_t_8 = __pyx_t_7 = 0;
       }
       __pyx_pybuffernd_labels64.diminfo[0].strides = __pyx_pybuffernd_labels64.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_labels64.diminfo[0].shape = __pyx_pybuffernd_labels64.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_labels64.diminfo[1].strides = __pyx_pybuffernd_labels64.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_labels64.diminfo[1].shape = __pyx_pybuffernd_labels64.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_labels64.diminfo[2].strides = __pyx_pybuffernd_labels64.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_labels64.diminfo[2].shape = __pyx_pybuffernd_labels64.rcbuffer->pybuffer.shape[2];
-      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 398, __pyx_L1_error)
+      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 402, __pyx_L1_error)
     }
-    __pyx_v_labels64 = ((PyArrayObject *)__pyx_t_2);
-    __pyx_t_2 = 0;
+    __pyx_v_labels64 = ((PyArrayObject *)__pyx_t_1);
+    __pyx_t_1 = 0;
 
-    /* "compresso.pyx":399
+    /* "compresso.pyx":403
  *   else:
  *     labels64 = labels
  *     outptr = <void*>&labels64[0,0,0]             # <<<<<<<<<<<<<<
@@ -16783,51 +16880,51 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
     } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_labels64.diminfo[2].shape)) __pyx_t_6 = 2;
     if (unlikely(__pyx_t_6 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_6);
-      __PYX_ERR(0, 399, __pyx_L1_error)
+      __PYX_ERR(0, 403, __pyx_L1_error)
     }
     __pyx_v_outptr = ((void *)(&(*__Pyx_BufPtrStrided3d(uint64_t *, __pyx_pybuffernd_labels64.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_labels64.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_labels64.diminfo[1].strides, __pyx_t_10, __pyx_pybuffernd_labels64.diminfo[2].strides))));
   }
-  __pyx_L4:;
+  __pyx_L5:;
 
-  /* "compresso.pyx":401
+  /* "compresso.pyx":405
  *     outptr = <void*>&labels64[0,0,0]
  * 
  *   if outptr == NULL:             # <<<<<<<<<<<<<<
  *     raise DecodeError("Unable to decode stream.")
  * 
  */
-  __pyx_t_5 = ((__pyx_v_outptr == NULL) != 0);
-  if (unlikely(__pyx_t_5)) {
+  __pyx_t_4 = ((__pyx_v_outptr == NULL) != 0);
+  if (unlikely(__pyx_t_4)) {
 
-    /* "compresso.pyx":402
+    /* "compresso.pyx":406
  * 
  *   if outptr == NULL:
  *     raise DecodeError("Unable to decode stream.")             # <<<<<<<<<<<<<<
  * 
  *   cdef unsigned char* buf = data
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_DecodeError); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 402, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_4 = NULL;
-    if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
-      __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_1);
-      if (likely(__pyx_t_4)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-        __Pyx_INCREF(__pyx_t_4);
+    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_DecodeError); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 406, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_3 = NULL;
+    if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_5))) {
+      __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_5);
+      if (likely(__pyx_t_3)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+        __Pyx_INCREF(__pyx_t_3);
         __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_1, function);
+        __Pyx_DECREF_SET(__pyx_t_5, function);
       }
     }
-    __pyx_t_2 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_4, __pyx_kp_u_Unable_to_decode_stream) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_kp_u_Unable_to_decode_stream);
-    __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 402, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_3, __pyx_kp_u_Unable_to_decode_stream) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_kp_u_Unable_to_decode_stream);
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 406, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __Pyx_Raise(__pyx_t_1, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __Pyx_Raise(__pyx_t_2, 0, 0, 0);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 402, __pyx_L1_error)
+    __PYX_ERR(0, 406, __pyx_L1_error)
 
-    /* "compresso.pyx":401
+    /* "compresso.pyx":405
  *     outptr = <void*>&labels64[0,0,0]
  * 
  *   if outptr == NULL:             # <<<<<<<<<<<<<<
@@ -16836,25 +16933,25 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
  */
   }
 
-  /* "compresso.pyx":404
+  /* "compresso.pyx":408
  *     raise DecodeError("Unable to decode stream.")
  * 
  *   cdef unsigned char* buf = data             # <<<<<<<<<<<<<<
  *   try:
- *     cpp_decompress(buf, len(data), outptr)
+ *     cpp_decompress(buf, len(data), outptr, z)
  */
   if (unlikely(__pyx_v_data == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
-    __PYX_ERR(0, 404, __pyx_L1_error)
+    __PYX_ERR(0, 408, __pyx_L1_error)
   }
-  __pyx_t_13 = __Pyx_PyBytes_AsWritableUString(__pyx_v_data); if (unlikely((!__pyx_t_13) && PyErr_Occurred())) __PYX_ERR(0, 404, __pyx_L1_error)
+  __pyx_t_13 = __Pyx_PyBytes_AsWritableUString(__pyx_v_data); if (unlikely((!__pyx_t_13) && PyErr_Occurred())) __PYX_ERR(0, 408, __pyx_L1_error)
   __pyx_v_buf = __pyx_t_13;
 
-  /* "compresso.pyx":405
+  /* "compresso.pyx":409
  * 
  *   cdef unsigned char* buf = data
  *   try:             # <<<<<<<<<<<<<<
- *     cpp_decompress(buf, len(data), outptr)
+ *     cpp_decompress(buf, len(data), outptr, z)
  *   except RuntimeError as err:
  */
   {
@@ -16866,46 +16963,46 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
     __Pyx_XGOTREF(__pyx_t_9);
     /*try:*/ {
 
-      /* "compresso.pyx":406
+      /* "compresso.pyx":410
  *   cdef unsigned char* buf = data
  *   try:
- *     cpp_decompress(buf, len(data), outptr)             # <<<<<<<<<<<<<<
+ *     cpp_decompress(buf, len(data), outptr, z)             # <<<<<<<<<<<<<<
  *   except RuntimeError as err:
  *     raise DecodeError(err)
  */
       if (unlikely(__pyx_v_data == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-        __PYX_ERR(0, 406, __pyx_L6_error)
+        __PYX_ERR(0, 410, __pyx_L7_error)
       }
-      __pyx_t_14 = PyBytes_GET_SIZE(__pyx_v_data); if (unlikely(__pyx_t_14 == ((Py_ssize_t)-1))) __PYX_ERR(0, 406, __pyx_L6_error)
+      __pyx_t_14 = PyBytes_GET_SIZE(__pyx_v_data); if (unlikely(__pyx_t_14 == ((Py_ssize_t)-1))) __PYX_ERR(0, 410, __pyx_L7_error)
       try {
-        pycompresso::cpp_decompress(__pyx_v_buf, __pyx_t_14, __pyx_v_outptr);
+        pycompresso::cpp_decompress(__pyx_v_buf, __pyx_t_14, __pyx_v_outptr, __pyx_v_z);
       } catch(...) {
         __Pyx_CppExn2PyErr();
-        __PYX_ERR(0, 406, __pyx_L6_error)
+        __PYX_ERR(0, 410, __pyx_L7_error)
       }
 
-      /* "compresso.pyx":405
+      /* "compresso.pyx":409
  * 
  *   cdef unsigned char* buf = data
  *   try:             # <<<<<<<<<<<<<<
- *     cpp_decompress(buf, len(data), outptr)
+ *     cpp_decompress(buf, len(data), outptr, z)
  *   except RuntimeError as err:
  */
     }
     __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
     __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
-    goto __pyx_L11_try_end;
-    __pyx_L6_error:;
+    goto __pyx_L12_try_end;
+    __pyx_L7_error:;
     __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-    /* "compresso.pyx":407
+    /* "compresso.pyx":411
  *   try:
- *     cpp_decompress(buf, len(data), outptr)
+ *     cpp_decompress(buf, len(data), outptr, z)
  *   except RuntimeError as err:             # <<<<<<<<<<<<<<
  *     raise DecodeError(err)
  * 
@@ -16913,22 +17010,22 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
     __pyx_t_6 = __Pyx_PyErr_ExceptionMatches(__pyx_builtin_RuntimeError);
     if (__pyx_t_6) {
       __Pyx_AddTraceback("compresso.decompress", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_2, &__pyx_t_1, &__pyx_t_4) < 0) __PYX_ERR(0, 407, __pyx_L8_except_error)
-      __Pyx_GOTREF(__pyx_t_2);
+      if (__Pyx_GetException(&__pyx_t_1, &__pyx_t_5, &__pyx_t_3) < 0) __PYX_ERR(0, 411, __pyx_L9_except_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __Pyx_GOTREF(__pyx_t_4);
-      __Pyx_INCREF(__pyx_t_1);
-      __pyx_v_err = __pyx_t_1;
+      __Pyx_GOTREF(__pyx_t_5);
+      __Pyx_GOTREF(__pyx_t_3);
+      __Pyx_INCREF(__pyx_t_5);
+      __pyx_v_err = __pyx_t_5;
       /*try:*/ {
 
-        /* "compresso.pyx":408
- *     cpp_decompress(buf, len(data), outptr)
+        /* "compresso.pyx":412
+ *     cpp_decompress(buf, len(data), outptr, z)
  *   except RuntimeError as err:
  *     raise DecodeError(err)             # <<<<<<<<<<<<<<
  * 
  *   return labels
  */
-        __Pyx_GetModuleGlobalName(__pyx_t_15, __pyx_n_s_DecodeError); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 408, __pyx_L17_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_15, __pyx_n_s_DecodeError); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 412, __pyx_L18_error)
         __Pyx_GOTREF(__pyx_t_15);
         __pyx_t_16 = NULL;
         if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_15))) {
@@ -16940,32 +17037,32 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
             __Pyx_DECREF_SET(__pyx_t_15, function);
           }
         }
-        __pyx_t_3 = (__pyx_t_16) ? __Pyx_PyObject_Call2Args(__pyx_t_15, __pyx_t_16, __pyx_v_err) : __Pyx_PyObject_CallOneArg(__pyx_t_15, __pyx_v_err);
+        __pyx_t_2 = (__pyx_t_16) ? __Pyx_PyObject_Call2Args(__pyx_t_15, __pyx_t_16, __pyx_v_err) : __Pyx_PyObject_CallOneArg(__pyx_t_15, __pyx_v_err);
         __Pyx_XDECREF(__pyx_t_16); __pyx_t_16 = 0;
-        if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 408, __pyx_L17_error)
-        __Pyx_GOTREF(__pyx_t_3);
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 412, __pyx_L18_error)
+        __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
-        __Pyx_Raise(__pyx_t_3, 0, 0, 0);
-        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-        __PYX_ERR(0, 408, __pyx_L17_error)
+        __Pyx_Raise(__pyx_t_2, 0, 0, 0);
+        __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+        __PYX_ERR(0, 412, __pyx_L18_error)
       }
 
-      /* "compresso.pyx":407
+      /* "compresso.pyx":411
  *   try:
- *     cpp_decompress(buf, len(data), outptr)
+ *     cpp_decompress(buf, len(data), outptr, z)
  *   except RuntimeError as err:             # <<<<<<<<<<<<<<
  *     raise DecodeError(err)
  * 
  */
       /*finally:*/ {
-        __pyx_L17_error:;
+        __pyx_L18_error:;
         /*exception exit:*/{
           __Pyx_PyThreadState_declare
           __Pyx_PyThreadState_assign
           __pyx_t_19 = 0; __pyx_t_20 = 0; __pyx_t_21 = 0; __pyx_t_22 = 0; __pyx_t_23 = 0; __pyx_t_24 = 0;
           __Pyx_XDECREF(__pyx_t_15); __pyx_t_15 = 0;
           __Pyx_XDECREF(__pyx_t_16); __pyx_t_16 = 0;
-          __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+          __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
           if (PY_MAJOR_VERSION >= 3) __Pyx_ExceptionSwap(&__pyx_t_22, &__pyx_t_23, &__pyx_t_24);
           if ((PY_MAJOR_VERSION < 3) || unlikely(__Pyx_GetException(&__pyx_t_19, &__pyx_t_20, &__pyx_t_21) < 0)) __Pyx_ErrFetch(&__pyx_t_19, &__pyx_t_20, &__pyx_t_21);
           __Pyx_XGOTREF(__pyx_t_19);
@@ -16991,18 +17088,18 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
           __Pyx_ErrRestore(__pyx_t_19, __pyx_t_20, __pyx_t_21);
           __pyx_t_19 = 0; __pyx_t_20 = 0; __pyx_t_21 = 0; __pyx_t_22 = 0; __pyx_t_23 = 0; __pyx_t_24 = 0;
           __pyx_lineno = __pyx_t_6; __pyx_clineno = __pyx_t_17; __pyx_filename = __pyx_t_18;
-          goto __pyx_L8_except_error;
+          goto __pyx_L9_except_error;
         }
       }
     }
-    goto __pyx_L8_except_error;
-    __pyx_L8_except_error:;
+    goto __pyx_L9_except_error;
+    __pyx_L9_except_error:;
 
-    /* "compresso.pyx":405
+    /* "compresso.pyx":409
  * 
  *   cdef unsigned char* buf = data
  *   try:             # <<<<<<<<<<<<<<
- *     cpp_decompress(buf, len(data), outptr)
+ *     cpp_decompress(buf, len(data), outptr, z)
  *   except RuntimeError as err:
  */
     __Pyx_XGIVEREF(__pyx_t_7);
@@ -17010,10 +17107,10 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
     __Pyx_XGIVEREF(__pyx_t_9);
     __Pyx_ExceptionReset(__pyx_t_7, __pyx_t_8, __pyx_t_9);
     goto __pyx_L1_error;
-    __pyx_L11_try_end:;
+    __pyx_L12_try_end:;
   }
 
-  /* "compresso.pyx":410
+  /* "compresso.pyx":414
  *     raise DecodeError(err)
  * 
  *   return labels             # <<<<<<<<<<<<<<
@@ -17028,7 +17125,7 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
   /* "compresso.pyx":366
  *   return locations
  * 
- * def decompress(bytes data):             # <<<<<<<<<<<<<<
+ * def decompress(bytes data, int z = -1):             # <<<<<<<<<<<<<<
  *   """
  *   Decompress a compresso encoded byte stream into a three dimensional
  */
@@ -17038,7 +17135,7 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_15);
   __Pyx_XDECREF(__pyx_t_16);
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
@@ -17060,6 +17157,7 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_labels8.rcbuffer->pybuffer);
   __pyx_L2:;
   __Pyx_XDECREF(__pyx_v_info);
+  __Pyx_XDECREF(__pyx_v_sz);
   __Pyx_XDECREF(__pyx_v_shape);
   __Pyx_XDECREF(__pyx_v_dtype);
   __Pyx_XDECREF(__pyx_v_labels);
@@ -17073,7 +17171,7 @@ static PyObject *__pyx_pf_9compresso_32decompress(CYTHON_UNUSED PyObject *__pyx_
   return __pyx_r;
 }
 
-/* "compresso.pyx":412
+/* "compresso.pyx":416
  *   return labels
  * 
  * def valid(bytes buf):             # <<<<<<<<<<<<<<
@@ -17092,7 +17190,7 @@ static PyObject *__pyx_pw_9compresso_35valid(PyObject *__pyx_self, PyObject *__p
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("valid (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_buf), (&PyBytes_Type), 1, "buf", 1))) __PYX_ERR(0, 412, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_buf), (&PyBytes_Type), 1, "buf", 1))) __PYX_ERR(0, 416, __pyx_L1_error)
   __pyx_r = __pyx_pf_9compresso_34valid(__pyx_self, ((PyObject*)__pyx_v_buf));
 
   /* function exit code */
@@ -17123,7 +17221,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("valid", 0);
 
-  /* "compresso.pyx":414
+  /* "compresso.pyx":418
  * def valid(bytes buf):
  *   """Does the buffer appear to be a valid compresso stream?"""
  *   if len(buf) < <Py_ssize_t>COMPRESSO_HEADER_SIZE:             # <<<<<<<<<<<<<<
@@ -17132,13 +17230,13 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
   if (unlikely(__pyx_v_buf == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 414, __pyx_L1_error)
+    __PYX_ERR(0, 418, __pyx_L1_error)
   }
-  __pyx_t_1 = PyBytes_GET_SIZE(__pyx_v_buf); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 414, __pyx_L1_error)
+  __pyx_t_1 = PyBytes_GET_SIZE(__pyx_v_buf); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 418, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_1 < ((Py_ssize_t)pycompresso::COMPRESSO_HEADER_SIZE)) != 0);
   if (__pyx_t_2) {
 
-    /* "compresso.pyx":415
+    /* "compresso.pyx":419
  *   """Does the buffer appear to be a valid compresso stream?"""
  *   if len(buf) < <Py_ssize_t>COMPRESSO_HEADER_SIZE:
  *     return False             # <<<<<<<<<<<<<<
@@ -17150,7 +17248,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
     __pyx_r = Py_False;
     goto __pyx_L0;
 
-    /* "compresso.pyx":414
+    /* "compresso.pyx":418
  * def valid(bytes buf):
  *   """Does the buffer appear to be a valid compresso stream?"""
  *   if len(buf) < <Py_ssize_t>COMPRESSO_HEADER_SIZE:             # <<<<<<<<<<<<<<
@@ -17159,14 +17257,14 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
   }
 
-  /* "compresso.pyx":417
+  /* "compresso.pyx":421
  *     return False
  * 
  *   head = header(buf)             # <<<<<<<<<<<<<<
  *   if head["magic"] != b"cpso":
  *     return False
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_header); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 417, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_header); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 421, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_4))) {
@@ -17180,26 +17278,26 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
   }
   __pyx_t_3 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_5, __pyx_v_buf) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_v_buf);
   __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 417, __pyx_L1_error)
+  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 421, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_head = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "compresso.pyx":418
+  /* "compresso.pyx":422
  * 
  *   head = header(buf)
  *   if head["magic"] != b"cpso":             # <<<<<<<<<<<<<<
  *     return False
  * 
  */
-  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_magic); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 418, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_magic); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 422, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = (__Pyx_PyBytes_Equals(__pyx_t_3, __pyx_n_b_cpso, Py_NE)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 418, __pyx_L1_error)
+  __pyx_t_2 = (__Pyx_PyBytes_Equals(__pyx_t_3, __pyx_n_b_cpso, Py_NE)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 422, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (__pyx_t_2) {
 
-    /* "compresso.pyx":419
+    /* "compresso.pyx":423
  *   head = header(buf)
  *   if head["magic"] != b"cpso":
  *     return False             # <<<<<<<<<<<<<<
@@ -17211,7 +17309,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
     __pyx_r = Py_False;
     goto __pyx_L0;
 
-    /* "compresso.pyx":418
+    /* "compresso.pyx":422
  * 
  *   head = header(buf)
  *   if head["magic"] != b"cpso":             # <<<<<<<<<<<<<<
@@ -17220,23 +17318,23 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
   }
 
-  /* "compresso.pyx":421
+  /* "compresso.pyx":425
  *     return False
  * 
  *   if head["format_version"] != 0:             # <<<<<<<<<<<<<<
  *     return False
  * 
  */
-  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_format_version); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 421, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_format_version); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 425, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_NeObjC(__pyx_t_3, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 421, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_NeObjC(__pyx_t_3, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 425, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 421, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 425, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (__pyx_t_2) {
 
-    /* "compresso.pyx":422
+    /* "compresso.pyx":426
  * 
  *   if head["format_version"] != 0:
  *     return False             # <<<<<<<<<<<<<<
@@ -17248,7 +17346,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
     __pyx_r = Py_False;
     goto __pyx_L0;
 
-    /* "compresso.pyx":421
+    /* "compresso.pyx":425
  *     return False
  * 
  *   if head["format_version"] != 0:             # <<<<<<<<<<<<<<
@@ -17257,32 +17355,32 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
   }
 
-  /* "compresso.pyx":424
+  /* "compresso.pyx":428
  *     return False
  * 
  *   cdef int window_bits = head["xstep"] * head["ystep"] * head["zstep"]             # <<<<<<<<<<<<<<
  *   cdef int window_bytes = 0
  *   if window_bits <= 8:
  */
-  __pyx_t_4 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_xstep); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 424, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_xstep); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 428, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_ystep); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 424, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_ystep); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 428, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = PyNumber_Multiply(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 424, __pyx_L1_error)
+  __pyx_t_5 = PyNumber_Multiply(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 428, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_zstep); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 424, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_zstep); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 428, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyNumber_Multiply(__pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 424, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Multiply(__pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 428, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 424, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 428, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_window_bits = __pyx_t_6;
 
-  /* "compresso.pyx":425
+  /* "compresso.pyx":429
  * 
  *   cdef int window_bits = head["xstep"] * head["ystep"] * head["zstep"]
  *   cdef int window_bytes = 0             # <<<<<<<<<<<<<<
@@ -17291,7 +17389,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
   __pyx_v_window_bytes = 0;
 
-  /* "compresso.pyx":426
+  /* "compresso.pyx":430
  *   cdef int window_bits = head["xstep"] * head["ystep"] * head["zstep"]
  *   cdef int window_bytes = 0
  *   if window_bits <= 8:             # <<<<<<<<<<<<<<
@@ -17301,7 +17399,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
   __pyx_t_2 = ((__pyx_v_window_bits <= 8) != 0);
   if (__pyx_t_2) {
 
-    /* "compresso.pyx":427
+    /* "compresso.pyx":431
  *   cdef int window_bytes = 0
  *   if window_bits <= 8:
  *     window_bytes = 1             # <<<<<<<<<<<<<<
@@ -17310,7 +17408,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
     __pyx_v_window_bytes = 1;
 
-    /* "compresso.pyx":426
+    /* "compresso.pyx":430
  *   cdef int window_bits = head["xstep"] * head["ystep"] * head["zstep"]
  *   cdef int window_bytes = 0
  *   if window_bits <= 8:             # <<<<<<<<<<<<<<
@@ -17320,7 +17418,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
     goto __pyx_L6;
   }
 
-  /* "compresso.pyx":428
+  /* "compresso.pyx":432
  *   if window_bits <= 8:
  *     window_bytes = 1
  *   elif window_bits <= 16:             # <<<<<<<<<<<<<<
@@ -17330,7 +17428,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
   __pyx_t_2 = ((__pyx_v_window_bits <= 16) != 0);
   if (__pyx_t_2) {
 
-    /* "compresso.pyx":429
+    /* "compresso.pyx":433
  *     window_bytes = 1
  *   elif window_bits <= 16:
  *     window_bytes = 2             # <<<<<<<<<<<<<<
@@ -17339,7 +17437,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
     __pyx_v_window_bytes = 2;
 
-    /* "compresso.pyx":428
+    /* "compresso.pyx":432
  *   if window_bits <= 8:
  *     window_bytes = 1
  *   elif window_bits <= 16:             # <<<<<<<<<<<<<<
@@ -17349,7 +17447,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
     goto __pyx_L6;
   }
 
-  /* "compresso.pyx":430
+  /* "compresso.pyx":434
  *   elif window_bits <= 16:
  *     window_bytes = 2
  *   elif window_bits <= 32:             # <<<<<<<<<<<<<<
@@ -17359,7 +17457,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
   __pyx_t_2 = ((__pyx_v_window_bits <= 32) != 0);
   if (__pyx_t_2) {
 
-    /* "compresso.pyx":431
+    /* "compresso.pyx":435
  *     window_bytes = 2
  *   elif window_bits <= 32:
  *     window_bytes = 4             # <<<<<<<<<<<<<<
@@ -17368,7 +17466,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
     __pyx_v_window_bytes = 4;
 
-    /* "compresso.pyx":430
+    /* "compresso.pyx":434
  *   elif window_bits <= 16:
  *     window_bytes = 2
  *   elif window_bits <= 32:             # <<<<<<<<<<<<<<
@@ -17378,7 +17476,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
     goto __pyx_L6;
   }
 
-  /* "compresso.pyx":433
+  /* "compresso.pyx":437
  *     window_bytes = 4
  *   else:
  *     window_bytes = 8             # <<<<<<<<<<<<<<
@@ -17390,79 +17488,79 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
   }
   __pyx_L6:;
 
-  /* "compresso.pyx":436
+  /* "compresso.pyx":440
  * 
  *   min_size = (
  *     COMPRESSO_HEADER_SIZE             # <<<<<<<<<<<<<<
  *     + (head["id_size"] * head["data_width"])
  *     + (head["value_size"] * window_bytes)
  */
-  __pyx_t_4 = __Pyx_PyInt_FromSize_t(pycompresso::COMPRESSO_HEADER_SIZE); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 436, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_FromSize_t(pycompresso::COMPRESSO_HEADER_SIZE); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 440, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
 
-  /* "compresso.pyx":437
+  /* "compresso.pyx":441
  *   min_size = (
  *     COMPRESSO_HEADER_SIZE
  *     + (head["id_size"] * head["data_width"])             # <<<<<<<<<<<<<<
  *     + (head["value_size"] * window_bytes)
  *     + (head["location_size"] * head["data_width"])
  */
-  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_id_size); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 437, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_id_size); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 441, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_data_width); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 437, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_data_width); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 441, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_7 = PyNumber_Multiply(__pyx_t_3, __pyx_t_5); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 437, __pyx_L1_error)
+  __pyx_t_7 = PyNumber_Multiply(__pyx_t_3, __pyx_t_5); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 441, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = PyNumber_Add(__pyx_t_4, __pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 437, __pyx_L1_error)
+  __pyx_t_5 = PyNumber_Add(__pyx_t_4, __pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 441, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "compresso.pyx":438
+  /* "compresso.pyx":442
  *     COMPRESSO_HEADER_SIZE
  *     + (head["id_size"] * head["data_width"])
  *     + (head["value_size"] * window_bytes)             # <<<<<<<<<<<<<<
  *     + (head["location_size"] * head["data_width"])
  *   )
  */
-  __pyx_t_7 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_value_size); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 438, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_value_size); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 442, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_window_bytes); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 438, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_window_bytes); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 442, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_3 = PyNumber_Multiply(__pyx_t_7, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 438, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Multiply(__pyx_t_7, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 442, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = PyNumber_Add(__pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 438, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Add(__pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 442, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "compresso.pyx":439
+  /* "compresso.pyx":443
  *     + (head["id_size"] * head["data_width"])
  *     + (head["value_size"] * window_bytes)
  *     + (head["location_size"] * head["data_width"])             # <<<<<<<<<<<<<<
  *   )
  *   if len(buf) < min_size:
  */
-  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_location_size); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 439, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_location_size); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 443, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_data_width); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 439, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Dict_GetItem(__pyx_v_head, __pyx_n_u_data_width); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 443, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_7 = PyNumber_Multiply(__pyx_t_3, __pyx_t_5); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 439, __pyx_L1_error)
+  __pyx_t_7 = PyNumber_Multiply(__pyx_t_3, __pyx_t_5); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 443, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = PyNumber_Add(__pyx_t_4, __pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 439, __pyx_L1_error)
+  __pyx_t_5 = PyNumber_Add(__pyx_t_4, __pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 443, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __pyx_v_min_size = __pyx_t_5;
   __pyx_t_5 = 0;
 
-  /* "compresso.pyx":441
+  /* "compresso.pyx":445
  *     + (head["location_size"] * head["data_width"])
  *   )
  *   if len(buf) < min_size:             # <<<<<<<<<<<<<<
@@ -17471,18 +17569,18 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
   if (unlikely(__pyx_v_buf == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 441, __pyx_L1_error)
+    __PYX_ERR(0, 445, __pyx_L1_error)
   }
-  __pyx_t_1 = PyBytes_GET_SIZE(__pyx_v_buf); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 441, __pyx_L1_error)
-  __pyx_t_5 = PyInt_FromSsize_t(__pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 441, __pyx_L1_error)
+  __pyx_t_1 = PyBytes_GET_SIZE(__pyx_v_buf); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 445, __pyx_L1_error)
+  __pyx_t_5 = PyInt_FromSsize_t(__pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 445, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_7 = PyObject_RichCompare(__pyx_t_5, __pyx_v_min_size, Py_LT); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 441, __pyx_L1_error)
+  __pyx_t_7 = PyObject_RichCompare(__pyx_t_5, __pyx_v_min_size, Py_LT); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 445, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_7); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 441, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_7); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 445, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   if (__pyx_t_2) {
 
-    /* "compresso.pyx":442
+    /* "compresso.pyx":446
  *   )
  *   if len(buf) < min_size:
  *     return False             # <<<<<<<<<<<<<<
@@ -17494,7 +17592,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
     __pyx_r = Py_False;
     goto __pyx_L0;
 
-    /* "compresso.pyx":441
+    /* "compresso.pyx":445
  *     + (head["location_size"] * head["data_width"])
  *   )
  *   if len(buf) < min_size:             # <<<<<<<<<<<<<<
@@ -17503,7 +17601,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
  */
   }
 
-  /* "compresso.pyx":444
+  /* "compresso.pyx":448
  *     return False
  * 
  *   return True             # <<<<<<<<<<<<<<
@@ -17513,7 +17611,7 @@ static PyObject *__pyx_pf_9compresso_34valid(CYTHON_UNUSED PyObject *__pyx_self,
   __pyx_r = Py_True;
   goto __pyx_L0;
 
-  /* "compresso.pyx":412
+  /* "compresso.pyx":416
  *   return labels
  * 
  * def valid(bytes buf):             # <<<<<<<<<<<<<<
@@ -32630,6 +32728,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_windows, __pyx_k_windows, sizeof(__pyx_k_windows), 0, 0, 1, 1},
   {&__pyx_n_u_xstep, __pyx_k_xstep, sizeof(__pyx_k_xstep), 0, 1, 0, 1},
   {&__pyx_n_u_ystep, __pyx_k_ystep, sizeof(__pyx_k_ystep), 0, 1, 0, 1},
+  {&__pyx_n_s_z, __pyx_k_z, sizeof(__pyx_k_z), 0, 0, 1, 1},
   {&__pyx_n_s_zeros, __pyx_k_zeros, sizeof(__pyx_k_zeros), 0, 0, 1, 1},
   {&__pyx_n_u_zstep, __pyx_k_zstep, sizeof(__pyx_k_zstep), 0, 1, 0, 1},
   {0, 0, 0, 0, 0, 0, 0}
@@ -33111,26 +33210,26 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "compresso.pyx":366
  *   return locations
  * 
- * def decompress(bytes data):             # <<<<<<<<<<<<<<
+ * def decompress(bytes data, int z = -1):             # <<<<<<<<<<<<<<
  *   """
  *   Decompress a compresso encoded byte stream into a three dimensional
  */
-  __pyx_tuple__63 = PyTuple_Pack(12, __pyx_n_s_data, __pyx_n_s_info, __pyx_n_s_shape, __pyx_n_s_dtype, __pyx_n_s_labels, __pyx_n_s_labels8, __pyx_n_s_labels16, __pyx_n_s_labels32, __pyx_n_s_labels64, __pyx_n_s_outptr, __pyx_n_s_buf, __pyx_n_s_err); if (unlikely(!__pyx_tuple__63)) __PYX_ERR(0, 366, __pyx_L1_error)
+  __pyx_tuple__63 = PyTuple_Pack(14, __pyx_n_s_data, __pyx_n_s_z, __pyx_n_s_info, __pyx_n_s_sz, __pyx_n_s_shape, __pyx_n_s_dtype, __pyx_n_s_labels, __pyx_n_s_labels8, __pyx_n_s_labels16, __pyx_n_s_labels32, __pyx_n_s_labels64, __pyx_n_s_outptr, __pyx_n_s_buf, __pyx_n_s_err); if (unlikely(!__pyx_tuple__63)) __PYX_ERR(0, 366, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__63);
   __Pyx_GIVEREF(__pyx_tuple__63);
-  __pyx_codeobj__64 = (PyObject*)__Pyx_PyCode_New(1, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__63, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_compresso_pyx, __pyx_n_s_decompress, 366, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__64)) __PYX_ERR(0, 366, __pyx_L1_error)
+  __pyx_codeobj__64 = (PyObject*)__Pyx_PyCode_New(2, 0, 14, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__63, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_compresso_pyx, __pyx_n_s_decompress, 366, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__64)) __PYX_ERR(0, 366, __pyx_L1_error)
 
-  /* "compresso.pyx":412
+  /* "compresso.pyx":416
  *   return labels
  * 
  * def valid(bytes buf):             # <<<<<<<<<<<<<<
  *   """Does the buffer appear to be a valid compresso stream?"""
  *   if len(buf) < <Py_ssize_t>COMPRESSO_HEADER_SIZE:
  */
-  __pyx_tuple__65 = PyTuple_Pack(5, __pyx_n_s_buf, __pyx_n_s_head, __pyx_n_s_window_bits, __pyx_n_s_window_bytes, __pyx_n_s_min_size); if (unlikely(!__pyx_tuple__65)) __PYX_ERR(0, 412, __pyx_L1_error)
+  __pyx_tuple__65 = PyTuple_Pack(5, __pyx_n_s_buf, __pyx_n_s_head, __pyx_n_s_window_bits, __pyx_n_s_window_bytes, __pyx_n_s_min_size); if (unlikely(!__pyx_tuple__65)) __PYX_ERR(0, 416, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__65);
   __Pyx_GIVEREF(__pyx_tuple__65);
-  __pyx_codeobj__66 = (PyObject*)__Pyx_PyCode_New(1, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__65, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_compresso_pyx, __pyx_n_s_valid, 412, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__66)) __PYX_ERR(0, 412, __pyx_L1_error)
+  __pyx_codeobj__66 = (PyObject*)__Pyx_PyCode_New(1, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__65, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_compresso_pyx, __pyx_n_s_valid, 416, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__66)) __PYX_ERR(0, 416, __pyx_L1_error)
 
   /* "View.MemoryView":286
  *         return self.name
@@ -34135,7 +34234,7 @@ if (!__Pyx_RefNanny) {
   /* "compresso.pyx":366
  *   return locations
  * 
- * def decompress(bytes data):             # <<<<<<<<<<<<<<
+ * def decompress(bytes data, int z = -1):             # <<<<<<<<<<<<<<
  *   """
  *   Decompress a compresso encoded byte stream into a three dimensional
  */
@@ -34144,16 +34243,16 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_decompress, __pyx_t_3) < 0) __PYX_ERR(0, 366, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "compresso.pyx":412
+  /* "compresso.pyx":416
  *   return labels
  * 
  * def valid(bytes buf):             # <<<<<<<<<<<<<<
  *   """Does the buffer appear to be a valid compresso stream?"""
  *   if len(buf) < <Py_ssize_t>COMPRESSO_HEADER_SIZE:
  */
-  __pyx_t_3 = PyCFunction_NewEx(&__pyx_mdef_9compresso_35valid, NULL, __pyx_n_s_compresso); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 412, __pyx_L1_error)
+  __pyx_t_3 = PyCFunction_NewEx(&__pyx_mdef_9compresso_35valid, NULL, __pyx_n_s_compresso); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 416, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_valid, __pyx_t_3) < 0) __PYX_ERR(0, 412, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_valid, __pyx_t_3) < 0) __PYX_ERR(0, 416, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "compresso.pyx":1
@@ -40177,6 +40276,202 @@ raise_neg_overflow:
 }
 
 /* CIntFromPy */
+  static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
+#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+    const int neg_one = (int) -1, const_zero = (int) 0;
+#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+#pragma GCC diagnostic pop
+#endif
+    const int is_unsigned = neg_one > const_zero;
+#if PY_MAJOR_VERSION < 3
+    if (likely(PyInt_Check(x))) {
+        if (sizeof(int) < sizeof(long)) {
+            __PYX_VERIFY_RETURN_INT(int, long, PyInt_AS_LONG(x))
+        } else {
+            long val = PyInt_AS_LONG(x);
+            if (is_unsigned && unlikely(val < 0)) {
+                goto raise_neg_overflow;
+            }
+            return (int) val;
+        }
+    } else
+#endif
+    if (likely(PyLong_Check(x))) {
+        if (is_unsigned) {
+#if CYTHON_USE_PYLONG_INTERNALS
+            const digit* digits = ((PyLongObject*)x)->ob_digit;
+            switch (Py_SIZE(x)) {
+                case  0: return (int) 0;
+                case  1: __PYX_VERIFY_RETURN_INT(int, digit, digits[0])
+                case 2:
+                    if (8 * sizeof(int) > 1 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) >= 2 * PyLong_SHIFT) {
+                            return (int) (((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
+                        }
+                    }
+                    break;
+                case 3:
+                    if (8 * sizeof(int) > 2 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) >= 3 * PyLong_SHIFT) {
+                            return (int) (((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
+                        }
+                    }
+                    break;
+                case 4:
+                    if (8 * sizeof(int) > 3 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) >= 4 * PyLong_SHIFT) {
+                            return (int) (((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
+                        }
+                    }
+                    break;
+            }
+#endif
+#if CYTHON_COMPILING_IN_CPYTHON
+            if (unlikely(Py_SIZE(x) < 0)) {
+                goto raise_neg_overflow;
+            }
+#else
+            {
+                int result = PyObject_RichCompareBool(x, Py_False, Py_LT);
+                if (unlikely(result < 0))
+                    return (int) -1;
+                if (unlikely(result == 1))
+                    goto raise_neg_overflow;
+            }
+#endif
+            if (sizeof(int) <= sizeof(unsigned long)) {
+                __PYX_VERIFY_RETURN_INT_EXC(int, unsigned long, PyLong_AsUnsignedLong(x))
+#ifdef HAVE_LONG_LONG
+            } else if (sizeof(int) <= sizeof(unsigned PY_LONG_LONG)) {
+                __PYX_VERIFY_RETURN_INT_EXC(int, unsigned PY_LONG_LONG, PyLong_AsUnsignedLongLong(x))
+#endif
+            }
+        } else {
+#if CYTHON_USE_PYLONG_INTERNALS
+            const digit* digits = ((PyLongObject*)x)->ob_digit;
+            switch (Py_SIZE(x)) {
+                case  0: return (int) 0;
+                case -1: __PYX_VERIFY_RETURN_INT(int, sdigit, (sdigit) (-(sdigit)digits[0]))
+                case  1: __PYX_VERIFY_RETURN_INT(int,  digit, +digits[0])
+                case -2:
+                    if (8 * sizeof(int) - 1 > 1 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
+                            return (int) (((int)-1)*(((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case 2:
+                    if (8 * sizeof(int) > 1 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
+                            return (int) ((((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case -3:
+                    if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
+                            return (int) (((int)-1)*(((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case 3:
+                    if (8 * sizeof(int) > 2 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
+                            return (int) ((((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case -4:
+                    if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 4 * PyLong_SHIFT) {
+                            return (int) (((int)-1)*(((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case 4:
+                    if (8 * sizeof(int) > 3 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 4 * PyLong_SHIFT) {
+                            return (int) ((((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+            }
+#endif
+            if (sizeof(int) <= sizeof(long)) {
+                __PYX_VERIFY_RETURN_INT_EXC(int, long, PyLong_AsLong(x))
+#ifdef HAVE_LONG_LONG
+            } else if (sizeof(int) <= sizeof(PY_LONG_LONG)) {
+                __PYX_VERIFY_RETURN_INT_EXC(int, PY_LONG_LONG, PyLong_AsLongLong(x))
+#endif
+            }
+        }
+        {
+#if CYTHON_COMPILING_IN_PYPY && !defined(_PyLong_AsByteArray)
+            PyErr_SetString(PyExc_RuntimeError,
+                            "_PyLong_AsByteArray() not available in PyPy, cannot convert large numbers");
+#else
+            int val;
+            PyObject *v = __Pyx_PyNumber_IntOrLong(x);
+ #if PY_MAJOR_VERSION < 3
+            if (likely(v) && !PyLong_Check(v)) {
+                PyObject *tmp = v;
+                v = PyNumber_Long(tmp);
+                Py_DECREF(tmp);
+            }
+ #endif
+            if (likely(v)) {
+                int one = 1; int is_little = (int)*(unsigned char *)&one;
+                unsigned char *bytes = (unsigned char *)&val;
+                int ret = _PyLong_AsByteArray((PyLongObject *)v,
+                                              bytes, sizeof(val),
+                                              is_little, !is_unsigned);
+                Py_DECREF(v);
+                if (likely(!ret))
+                    return val;
+            }
+#endif
+            return (int) -1;
+        }
+    } else {
+        int val;
+        PyObject *tmp = __Pyx_PyNumber_IntOrLong(x);
+        if (!tmp) return (int) -1;
+        val = __Pyx_PyInt_As_int(tmp);
+        Py_DECREF(tmp);
+        return val;
+    }
+raise_overflow:
+    PyErr_SetString(PyExc_OverflowError,
+        "value too large to convert to int");
+    return (int) -1;
+raise_neg_overflow:
+    PyErr_SetString(PyExc_OverflowError,
+        "can't convert negative value to int");
+    return (int) -1;
+}
+
+/* CIntFromPy */
   static CYTHON_INLINE size_t __Pyx_PyInt_As_size_t(PyObject *x) {
 #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
 #pragma GCC diagnostic push
@@ -41112,13 +41407,6 @@ raise_neg_overflow:
     return (uint32_t) -1;
 }
 
-/* BytesContains */
-  static CYTHON_INLINE int __Pyx_BytesContains(PyObject* bytes, char character) {
-    const Py_ssize_t length = PyBytes_GET_SIZE(bytes);
-    char* char_start = PyBytes_AS_STRING(bytes);
-    return memchr(char_start, (unsigned char)character, (size_t)length) != NULL;
-}
-
 /* CIntToPy */
   static CYTHON_INLINE PyObject* __Pyx_PyInt_From_uint64_t(uint64_t value) {
 #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
@@ -41155,6 +41443,13 @@ raise_neg_overflow:
         return _PyLong_FromByteArray(bytes, sizeof(uint64_t),
                                      little, !is_unsigned);
     }
+}
+
+/* BytesContains */
+  static CYTHON_INLINE int __Pyx_BytesContains(PyObject* bytes, char character) {
+    const Py_ssize_t length = PyBytes_GET_SIZE(bytes);
+    char* char_start = PyBytes_AS_STRING(bytes);
+    return memchr(char_start, (unsigned char)character, (size_t)length) != NULL;
 }
 
 /* CIntFromPy */
@@ -41351,202 +41646,6 @@ raise_neg_overflow:
     PyErr_SetString(PyExc_OverflowError,
         "can't convert negative value to uint64_t");
     return (uint64_t) -1;
-}
-
-/* CIntFromPy */
-  static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
-#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-    const int neg_one = (int) -1, const_zero = (int) 0;
-#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
-#pragma GCC diagnostic pop
-#endif
-    const int is_unsigned = neg_one > const_zero;
-#if PY_MAJOR_VERSION < 3
-    if (likely(PyInt_Check(x))) {
-        if (sizeof(int) < sizeof(long)) {
-            __PYX_VERIFY_RETURN_INT(int, long, PyInt_AS_LONG(x))
-        } else {
-            long val = PyInt_AS_LONG(x);
-            if (is_unsigned && unlikely(val < 0)) {
-                goto raise_neg_overflow;
-            }
-            return (int) val;
-        }
-    } else
-#endif
-    if (likely(PyLong_Check(x))) {
-        if (is_unsigned) {
-#if CYTHON_USE_PYLONG_INTERNALS
-            const digit* digits = ((PyLongObject*)x)->ob_digit;
-            switch (Py_SIZE(x)) {
-                case  0: return (int) 0;
-                case  1: __PYX_VERIFY_RETURN_INT(int, digit, digits[0])
-                case 2:
-                    if (8 * sizeof(int) > 1 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) >= 2 * PyLong_SHIFT) {
-                            return (int) (((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
-                        }
-                    }
-                    break;
-                case 3:
-                    if (8 * sizeof(int) > 2 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) >= 3 * PyLong_SHIFT) {
-                            return (int) (((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
-                        }
-                    }
-                    break;
-                case 4:
-                    if (8 * sizeof(int) > 3 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) >= 4 * PyLong_SHIFT) {
-                            return (int) (((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
-                        }
-                    }
-                    break;
-            }
-#endif
-#if CYTHON_COMPILING_IN_CPYTHON
-            if (unlikely(Py_SIZE(x) < 0)) {
-                goto raise_neg_overflow;
-            }
-#else
-            {
-                int result = PyObject_RichCompareBool(x, Py_False, Py_LT);
-                if (unlikely(result < 0))
-                    return (int) -1;
-                if (unlikely(result == 1))
-                    goto raise_neg_overflow;
-            }
-#endif
-            if (sizeof(int) <= sizeof(unsigned long)) {
-                __PYX_VERIFY_RETURN_INT_EXC(int, unsigned long, PyLong_AsUnsignedLong(x))
-#ifdef HAVE_LONG_LONG
-            } else if (sizeof(int) <= sizeof(unsigned PY_LONG_LONG)) {
-                __PYX_VERIFY_RETURN_INT_EXC(int, unsigned PY_LONG_LONG, PyLong_AsUnsignedLongLong(x))
-#endif
-            }
-        } else {
-#if CYTHON_USE_PYLONG_INTERNALS
-            const digit* digits = ((PyLongObject*)x)->ob_digit;
-            switch (Py_SIZE(x)) {
-                case  0: return (int) 0;
-                case -1: __PYX_VERIFY_RETURN_INT(int, sdigit, (sdigit) (-(sdigit)digits[0]))
-                case  1: __PYX_VERIFY_RETURN_INT(int,  digit, +digits[0])
-                case -2:
-                    if (8 * sizeof(int) - 1 > 1 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
-                            return (int) (((int)-1)*(((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case 2:
-                    if (8 * sizeof(int) > 1 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
-                            return (int) ((((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case -3:
-                    if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
-                            return (int) (((int)-1)*(((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case 3:
-                    if (8 * sizeof(int) > 2 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
-                            return (int) ((((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case -4:
-                    if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 4 * PyLong_SHIFT) {
-                            return (int) (((int)-1)*(((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case 4:
-                    if (8 * sizeof(int) > 3 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 4 * PyLong_SHIFT) {
-                            return (int) ((((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-            }
-#endif
-            if (sizeof(int) <= sizeof(long)) {
-                __PYX_VERIFY_RETURN_INT_EXC(int, long, PyLong_AsLong(x))
-#ifdef HAVE_LONG_LONG
-            } else if (sizeof(int) <= sizeof(PY_LONG_LONG)) {
-                __PYX_VERIFY_RETURN_INT_EXC(int, PY_LONG_LONG, PyLong_AsLongLong(x))
-#endif
-            }
-        }
-        {
-#if CYTHON_COMPILING_IN_PYPY && !defined(_PyLong_AsByteArray)
-            PyErr_SetString(PyExc_RuntimeError,
-                            "_PyLong_AsByteArray() not available in PyPy, cannot convert large numbers");
-#else
-            int val;
-            PyObject *v = __Pyx_PyNumber_IntOrLong(x);
- #if PY_MAJOR_VERSION < 3
-            if (likely(v) && !PyLong_Check(v)) {
-                PyObject *tmp = v;
-                v = PyNumber_Long(tmp);
-                Py_DECREF(tmp);
-            }
- #endif
-            if (likely(v)) {
-                int one = 1; int is_little = (int)*(unsigned char *)&one;
-                unsigned char *bytes = (unsigned char *)&val;
-                int ret = _PyLong_AsByteArray((PyLongObject *)v,
-                                              bytes, sizeof(val),
-                                              is_little, !is_unsigned);
-                Py_DECREF(v);
-                if (likely(!ret))
-                    return val;
-            }
-#endif
-            return (int) -1;
-        }
-    } else {
-        int val;
-        PyObject *tmp = __Pyx_PyNumber_IntOrLong(x);
-        if (!tmp) return (int) -1;
-        val = __Pyx_PyInt_As_int(tmp);
-        Py_DECREF(tmp);
-        return val;
-    }
-raise_overflow:
-    PyErr_SetString(PyExc_OverflowError,
-        "value too large to convert to int");
-    return (int) -1;
-raise_neg_overflow:
-    PyErr_SetString(PyExc_OverflowError,
-        "can't convert negative value to int");
-    return (int) -1;
 }
 
 /* CIntToPy */

@@ -56,7 +56,7 @@ cdef extern from "compresso.hpp" namespace "pycompresso":
     size_t xstep, size_t ystep, size_t zstep,
     size_t connectivity
   ) except +
-  void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output) except +
+  void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output, int64_t z) except +
   size_t COMPRESSO_HEADER_SIZE
 
 
@@ -363,7 +363,7 @@ def _remap_locations(
   
   return locations
 
-def decompress(bytes data):
+def decompress(bytes data, int z = -1):
   """
   Decompress a compresso encoded byte stream into a three dimensional 
   numpy array containing image segmentation.
@@ -371,7 +371,11 @@ def decompress(bytes data):
   Returns: 3d ndarray
   """
   info = header(data)
-  shape = (info["sx"], info["sy"], info["sz"])
+  sz = info["sz"]
+  if z >= 0:
+    sz = 1
+
+  shape = (info["sx"], info["sy"], sz)
 
   dtype = label_dtype(info)
   labels = np.zeros(shape, dtype=dtype, order="F")
@@ -403,7 +407,7 @@ def decompress(bytes data):
 
   cdef unsigned char* buf = data
   try:
-    cpp_decompress(buf, len(data), outptr)
+    cpp_decompress(buf, len(data), outptr, z)
   except RuntimeError as err:
     raise DecodeError(err)
 

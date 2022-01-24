@@ -1156,8 +1156,8 @@ std::vector<unsigned char> cpp_compress(
 	return compresso::compress<T>(labels, sx, sy, sz, xstep, ystep, zstep, connectivity);
 }
 
-void* cpp_decompress(unsigned char* buffer, size_t num_bytes, void* output) {
-	return compresso::decompress<void,void>(buffer, num_bytes, output);
+void* cpp_decompress(unsigned char* buffer, size_t num_bytes, void* output, int64_t only_z) {
+	return compresso::decompress<void,void>(buffer, num_bytes, output, only_z);
 }
 
 };
