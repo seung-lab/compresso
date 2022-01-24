@@ -17061,7 +17061,7 @@ static PyObject *__pyx_pf_9compresso_34decompress(CYTHON_UNUSED PyObject *__pyx_
   /* "compresso.pyx":412
  * 
  * 
- *   shape = (info["sx"], info["sy"], sz)             # <<<<<<<<<<<<<<
+ *   shape = (info["sx"], info["sy"], zend - zstart)             # <<<<<<<<<<<<<<
  * 
  *   dtype = label_dtype(info)
  */
@@ -17069,7 +17069,7 @@ static PyObject *__pyx_pf_9compresso_34decompress(CYTHON_UNUSED PyObject *__pyx_
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_v_info, __pyx_n_u_sy); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 412, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyInt_FromSize_t(__pyx_v_sz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 412, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_FromSize_t((__pyx_v_zend - __pyx_v_zstart)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 412, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_10 = PyTuple_New(3); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 412, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_10);
@@ -17086,7 +17086,7 @@ static PyObject *__pyx_pf_9compresso_34decompress(CYTHON_UNUSED PyObject *__pyx_
   __pyx_t_10 = 0;
 
   /* "compresso.pyx":414
- *   shape = (info["sx"], info["sy"], sz)
+ *   shape = (info["sx"], info["sy"], zend - zstart)
  * 
  *   dtype = label_dtype(info)             # <<<<<<<<<<<<<<
  *   labels = np.zeros(shape, dtype=dtype, order="F")

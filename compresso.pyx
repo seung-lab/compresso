@@ -409,7 +409,7 @@ def decompress(bytes data, z=None):
     raise ValueError(f"zend must be between 1 and sz ({sz}): {zend}")
 
 
-  shape = (info["sx"], info["sy"], sz)
+  shape = (info["sx"], info["sy"], zend - zstart)
 
   dtype = label_dtype(info)
   labels = np.zeros(shape, dtype=dtype, order="F")
