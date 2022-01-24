@@ -672,6 +672,12 @@ std::vector<unsigned char> zero_data_stream(
  *  sx, sy, sz: axial dimension sizes
  *  xstep, ystep, zstep: (optional) picks the size of the 
  *      compresso grid. 4x4x1 or 8x8x1 are acceptable sizes.
+ *  connectivity: 4 (2d) or 6 (3d)
+ * 	random_access_z_index: avoids encoding dependencies between 
+ *      z layers and adds an index to the end of the stream to 
+ *      enable decoding of slices independently. May increase compressed 
+ *      file size (usually by very little). Only supported with 
+ *      connectivity=4.
  *
  * Returns: vector<char>
  */
@@ -694,8 +700,14 @@ std::vector<unsigned char> compress(
 		throw std::runtime_error("compresso: Unable to encode using zero step sizes.");	
 	}
 
+	if (connectivity == 6 && random_access_z_index) {
+		throw std::runtime_error("compresso: Random access index not supported with connectivity 6.");		
+	}
+
+
 	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz, connectivity);
 	
+
 	size_t num_components = 0;
 	std::vector<uint64_t> num_components_per_slice(sz);
 	uint32_t *components = cc3d::connected_components<uint32_t>(
@@ -756,7 +768,7 @@ bool* decode_boundaries(
 	const std::vector<WINDOW> &windows, const std::vector<WINDOW> &window_values, 
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t xstep, const size_t ystep, const size_t zstep,
-	const int64_t only_z = -1
+	const size_t zstart, const size_t zend
 ) {
 
 	const size_t sxy = sx * sy;
@@ -769,13 +781,7 @@ bool* decode_boundaries(
 	const bool xstep_pot = (xstep != 0) && ((xstep & (xstep - 1)) == 0);
 	const int xshift = std::log2(xstep); // must use log2 here, not lg/lg2 to avoid fp errors
 
-	bool* boundaries;
-	if (only_z >= 0) {
-		boundaries = new bool[sxy]();
-	}
-	else {
-		boundaries = new bool[voxels]();
-	}
+	bool* boundaries = new bool[sxy * (zend - zstart)]();
 
 	if (window_values.size() == 0) {
 		return boundaries;
@@ -783,12 +789,6 @@ bool* decode_boundaries(
 
 	size_t xblock, yblock, zblock;
 	size_t xoffset, yoffset, zoffset;
-
-	size_t zstart = (only_z >= 0) * only_z;
-	size_t zend = sz;
-	if (only_z >= 0) {
-		zend = std::min(static_cast<size_t>(only_z + 1), sz);
-	}
 
 	for (size_t z = zstart; z < zend; z++) {
 		zblock = nx * ny * (z / zstep);
@@ -848,16 +848,10 @@ void decode_indeterminate_locations(
 	const std::vector<LABEL> &locations, 
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t connectivity, 
-	const int64_t only_z, const std::vector<uint64_t> &z_index
+	const size_t zstart, const size_t zend, 
+	const std::vector<uint64_t> &z_index
 ) {
 	const size_t sxy = sx * sy;
-
-	size_t zstart = 0;
-	size_t zend = sz;
-	if (only_z >= 0) {
-		zstart = only_z;
-		zend = std::min(static_cast<size_t>(only_z + 1), sz);
-	}
 
 	size_t loc = 0;
 	size_t index = z_index[zstart];
@@ -867,7 +861,6 @@ void decode_indeterminate_locations(
 		for (size_t y = 0; y < sy; y++) {
 			for (size_t x = 0; x < sx; x++) {
 				size_t zoff = z - zstart;
-	
 				loc = x + sx * y + sxy * zoff;
 
 				if (!boundaries[loc]) {
@@ -895,46 +888,39 @@ void decode_indeterminate_locations(
 					if (x == 0) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 0)");
 					}
-		
 					labels[loc] = labels[loc - 1];
 				}
 				else if (offset == 1) {
 					if (x >= sx - 1) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 1)");
 					}
-		
 					labels[loc] = labels[loc + 1];
 				}
 				else if (offset == 2) {
 					if (y == 0) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 2)");
 					}
-		
 					labels[loc] = labels[loc - sx];
 				}
 				else if (offset == 3) {
 					if (y >= sy - 1) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 3)");
 					}
-		
 					labels[loc] = labels[loc + sx];
 				}
 				else if (offset == 4) {
 					if (zoff == 0) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 4)");
 					}
-		
 					labels[loc] = labels[loc - sxy];
 				}
 				else if (offset == 5) {
 					if (zoff >= zend) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 5)");
 					}
-		
 					labels[loc] = labels[loc + sxy];
 				}
 				else if (offset == 6) {
-		
 					labels[loc] = locations[index + 1];
 					index++;
 				}
@@ -953,7 +939,8 @@ LABEL* decompress(
 	unsigned char* buffer, 
 	size_t num_bytes, 
 	LABEL* output = NULL,
-	const int64_t only_z = -1
+	int64_t zstart = 0,
+	int64_t zend = -1
 ) {
 
 	if (num_bytes < CompressoHeader::header_size) {
@@ -970,8 +957,18 @@ LABEL* decompress(
 		throw std::runtime_error(err);
 	}
 
+	if (zend < 0) {
+		zend = header.sz;
+	}
+
+	if (zstart >= header.sz || zend > header.sz || zstart < 0 || zend < 0) {
+		std::string err = "compresso: Invalid decode range: ";
+		err += std::to_string(zstart) + std::string("-") + std::to_string(zend);
+		throw std::runtime_error(err);
+	}
+
 	const bool random_access_z_index = (header.format_version == 1);
-	if (!random_access_z_index && only_z >= 0) {
+	if (!random_access_z_index && (zstart >= 0 || zend < header.sz || header.connectivity == 6)) {
 		throw std::runtime_error("compresso: Cannot random access z slices without the index.");
 	}
 
@@ -984,7 +981,7 @@ LABEL* decompress(
 	const size_t ystep = header.ystep;
 	const size_t zstep = header.zstep;
 
-	if (sx * sy * sz == 0) {
+	if (sx * sy * sz == 0 || (zend - zstart) <= 0) {
 		return NULL;
 	}
 
@@ -1047,39 +1044,41 @@ LABEL* decompress(
 		windows, window_values, 
 		sx, sy, sz, 
 		xstep, ystep, zstep,
-		only_z
+		zstart, zend
 	);
 	windows = std::vector<WINDOW>();
 	window_values = std::vector<WINDOW>();
 
-	const size_t real_sz = (only_z >= 0) ? 1 : sz;
-	const size_t output_size = (only_z >= 0) ? sxy : voxels;
-
+	const int64_t real_sz = zend - zstart;
 	std::vector<uint64_t> num_components_per_slice(real_sz);
 	uint32_t* components = cc3d::connected_components<uint32_t>(
 		boundaries, sx, sy, real_sz, num_components_per_slice, 
 		header.connectivity
 	);
 
-	if (only_z > 0) {
-		for (size_t i = 0; i < sxy; i++) {
-			components[i] += components_index[only_z-1];
+	if (zstart > 0) {
+		for (size_t z = zstart; z < zend; z++) {
+			for (size_t i = 0; i < sxy; i++) {
+				components[i + sxy * (z-zstart)] += components_index[z-1];
+			}
 		}
 	}
 
 	if (output == NULL) {
-		output = new LABEL[output_size]();
+		output = new LABEL[sxy * real_sz]();
 	}
+
 
 	decode_nonboundary_labels(components, ids, sx, sy, real_sz, output);
 	delete[] components;
 	ids = std::vector<LABEL>();
 
+
 	decode_indeterminate_locations<LABEL>(
 		boundaries, output, locations, 
 		sx, sy, sz,
 		header.connectivity, 
-		only_z, z_index
+		zstart, zend, z_index
 	);
 
 	delete[] boundaries;
@@ -1091,26 +1090,30 @@ template <typename WINDOW>
 void* decompress_helper(
 	unsigned char* buffer, size_t num_bytes, 
 	void* output, const CompressoHeader &header,
-	int64_t only_z
+	int64_t zstart, int64_t zend
 ) {
 	if (header.data_width == 1) {
 		return decompress<uint8_t,WINDOW>(
-			buffer, num_bytes, reinterpret_cast<uint8_t*>(output), only_z
+			buffer, num_bytes, reinterpret_cast<uint8_t*>(output), 
+			zstart, zend
 		);
 	}
 	else if (header.data_width == 2) {
 		return decompress<uint16_t,WINDOW>(
-			buffer, num_bytes, reinterpret_cast<uint16_t*>(output), only_z
+			buffer, num_bytes, reinterpret_cast<uint16_t*>(output), 
+			zstart, zend
 		);
 	}
 	else if (header.data_width == 4) {
 		return decompress<uint32_t,WINDOW>(
-			buffer, num_bytes, reinterpret_cast<uint32_t*>(output), only_z
+			buffer, num_bytes, reinterpret_cast<uint32_t*>(output), 
+			zstart, zend
 		);
 	}
 	else if (header.data_width == 8) {
 		return decompress<uint64_t,WINDOW>(
-			buffer, num_bytes, reinterpret_cast<uint64_t*>(output), only_z
+			buffer, num_bytes, reinterpret_cast<uint64_t*>(output), 
+			zstart, zend
 		);
 	}
 	else {
@@ -1125,7 +1128,7 @@ void* decompress<void,void>(
 	unsigned char* buffer, 
 	size_t num_bytes, 
 	void* output,
-	int64_t only_z
+	int64_t zstart, int64_t zend
 ) {
 	if (!CompressoHeader::valid_header(buffer)) {
 		throw std::runtime_error("compresso: Invalid header.");
@@ -1147,28 +1150,28 @@ void* decompress<void,void>(
 		return decompress_helper<uint8_t>(
 			buffer, num_bytes, 
 			reinterpret_cast<uint8_t*>(output),
-			header, only_z
+			header, zstart, zend
 		);
 	}
 	else if (window16) {
 		return decompress_helper<uint16_t>(
 			buffer, num_bytes, 
 			reinterpret_cast<uint8_t*>(output),
-			header, only_z
+			header, zstart, zend
 		);
 	}
 	else if (window32) {
 		return decompress_helper<uint32_t>(
 			buffer, num_bytes, 
 			reinterpret_cast<uint8_t*>(output),
-			header, only_z
+			header, zstart, zend
 		);
 	}
 	else {
 		return decompress_helper<uint64_t>(
 			buffer, num_bytes, 
 			reinterpret_cast<uint8_t*>(output),
-			header, only_z
+			header, zstart, zend
 		);	
 	}
 }
@@ -1204,9 +1207,9 @@ std::vector<unsigned char> cpp_compress(
 
 void* cpp_decompress(
 	unsigned char* buffer, size_t num_bytes, 
-	void* output, int64_t only_z
+	void* output, int64_t zstart, int64_t zend
 ) {
-	return compresso::decompress<void,void>(buffer, num_bytes, output, only_z);
+	return compresso::decompress<void,void>(buffer, num_bytes, output, zstart, zend);
 }
 
 };

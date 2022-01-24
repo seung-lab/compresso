@@ -423,7 +423,7 @@ def decompress(bytes data, int z = -1):
 
   cdef unsigned char* buf = data
   try:
-    cpp_decompress(buf, len(data), outptr, z)
+    cpp_decompress(buf, len(data), outptr, zstart, zend)
   except RuntimeError as err:
     raise DecodeError(err)
 
