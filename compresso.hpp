@@ -772,8 +772,6 @@ bool* decode_boundaries(
 ) {
 
 	const size_t sxy = sx * sy;
-	const size_t voxels = sx * sy * sz;
-
 	const size_t nx = (sx + xstep - 1) / xstep; // round up
 	const size_t ny = (sy + ystep - 1) / ystep; // round up
 
@@ -972,11 +970,11 @@ LABEL* decompress(
 		throw std::runtime_error("compresso: Cannot random access z slices without the index.");
 	}
 
+
 	const size_t sx = header.sx;
 	const size_t sy = header.sy;
 	const size_t sz = header.sz;
 	const size_t sxy = sx * sy;
-	const size_t voxels = sx * sy * sz;
 	const size_t xstep = header.xstep;
 	const size_t ystep = header.ystep;
 	const size_t zstep = header.zstep;
@@ -1057,7 +1055,7 @@ LABEL* decompress(
 	);
 
 	if (zstart > 0) {
-		for (size_t z = zstart; z < zend; z++) {
+		for (size_t z = zstart; z < static_cast<size_t>(zend); z++) {
 			for (size_t i = 0; i < sxy; i++) {
 				components[i + sxy * (z-zstart)] += components_index[z-1];
 			}

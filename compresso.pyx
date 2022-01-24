@@ -56,7 +56,10 @@ cdef extern from "compresso.hpp" namespace "pycompresso":
     size_t xstep, size_t ystep, size_t zstep,
     size_t connectivity
   ) except +
-  void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output, int64_t z) except +
+  void* cpp_decompress(
+    unsigned char* buf, size_t num_bytes, void* output, 
+    int64_t zstart, int64_t zend
+  ) except +
   size_t COMPRESSO_HEADER_SIZE
 
 
@@ -379,17 +382,32 @@ def _remap_locations(
   
   return locations
 
-def decompress(bytes data, int z = -1):
+def decompress(bytes data, z=None):
   """
   Decompress a compresso encoded byte stream into a three dimensional 
   numpy array containing image segmentation.
 
+  z: int or (zstart:int, zend:int) to decompress 
+    only a single or selected range of z slices.
+
   Returns: 3d ndarray
   """
   info = header(data)
-  sz = info["sz"]
-  if z >= 0:
-    sz = 1
+  cdef size_t sz = info["sz"]
+
+  cdef size_t zstart = 0
+  cdef size_t zend = sz
+  if isinstance(z, int):
+    zstart = z
+    zend = z + 1
+  elif hasattr(z, "__getitem__"):
+    zstart, zend = z[0], z[1]
+
+  if zstart < 0 or zstart >= sz:
+    raise ValueError(f"zstart must be between 0 and sz - 1 ({sz-1}): {zstart}")
+  if zend < 1 or zend > sz:
+    raise ValueError(f"zend must be between 1 and sz ({sz}): {zend}")
+
 
   shape = (info["sx"], info["sy"], sz)
 
