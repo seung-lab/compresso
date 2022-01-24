@@ -346,7 +346,8 @@ std::vector<T> encode_indeterminate_locations(
 	bool* boundaries, T* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t connectivity, 
-	std::vector<uint64_t> &z_index
+	std::vector<uint64_t> &z_index, 
+	const bool random_access_z_index
 ) {
 	const size_t sxy = sx * sy;
 	std::vector<T> locations;
@@ -392,10 +393,10 @@ std::vector<T> encode_indeterminate_locations(
 				else if (y < sy - 1 && !boundaries[down] && (labels[down] == labels[loc])) {
 					locations.push_back(3);
 				}
-				else if (z > 0 && !boundaries[heaven] && (labels[heaven] == labels[loc])) {
+				else if (!random_access_z_index && z > 0 && !boundaries[heaven] && (labels[heaven] == labels[loc])) {
 					locations.push_back(4);
 				}
-				else if (z < sz - 1 && !boundaries[hell] && (labels[hell] == labels[loc])) {
+				else if (!random_access_z_index && z < sz - 1 && !boundaries[hell] && (labels[hell] == labels[loc])) {
 					locations.push_back(5);
 				}
 				else if (labels[loc] > std::numeric_limits<T>::max() - 7) {
@@ -600,7 +601,7 @@ std::vector<unsigned char> compress_helper(
 	std::vector<WINDOW> windows = encode_boundaries<WINDOW>(boundaries, sx, sy, sz, xstep, ystep, zstep);
 	std::vector<LABEL> locations = encode_indeterminate_locations<LABEL>(
 		boundaries, labels, sx, sy, sz, 
-		connectivity, z_index
+		connectivity, z_index, random_access_z_index
 	);
 	delete[] boundaries;
 
@@ -798,7 +799,7 @@ bool* decode_boundaries(
 
 			if (xstep_pot) {
 				for (size_t x = 0; x < sx; x++) {
-					size_t iv = x + sx * y + sxy * z;
+					size_t iv = x + sx * y + sxy * (z - zstart);
 
 					xblock = x >> xshift; // x / xstep
 					xoffset = x & ((1 << xshift) - 1); // x % xstep
@@ -812,7 +813,7 @@ bool* decode_boundaries(
 			}
 			else {
 				for (size_t x = 0; x < sx; x++) {
-					size_t iv = x + sx * y + sxy * z;
+					size_t iv = x + sx * y + sxy * (z - zstart);
 					xblock = x / xstep;
 					xoffset = x % xstep;
 					
@@ -865,7 +866,9 @@ void decode_indeterminate_locations(
 	for (size_t z = zstart; z < zend; z++) {
 		for (size_t y = 0; y < sy; y++) {
 			for (size_t x = 0; x < sx; x++) {
-				loc = x + sx * y + sxy * z;
+				size_t zoff = z - zstart;
+	
+				loc = x + sx * y + sxy * zoff;
 
 				if (!boundaries[loc]) {
 					continue;
@@ -878,7 +881,7 @@ void decode_indeterminate_locations(
 					labels[loc] = labels[loc - sx];
 					continue;
 				}
-				else if (connectivity == 6 && z > 0 && !boundaries[loc - sxy]) {
+				else if (connectivity == 6 && zoff > 0 && !boundaries[loc - sxy]) {
 					labels[loc] = labels[loc - sxy];
 					continue;
 				}
@@ -892,43 +895,51 @@ void decode_indeterminate_locations(
 					if (x == 0) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 0)");
 					}
+		
 					labels[loc] = labels[loc - 1];
 				}
 				else if (offset == 1) {
 					if (x >= sx - 1) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 1)");
 					}
+		
 					labels[loc] = labels[loc + 1];
 				}
 				else if (offset == 2) {
 					if (y == 0) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 2)");
 					}
+		
 					labels[loc] = labels[loc - sx];
 				}
 				else if (offset == 3) {
 					if (y >= sy - 1) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 3)");
 					}
+		
 					labels[loc] = labels[loc + sx];
 				}
 				else if (offset == 4) {
-					if (z == 0) {
+					if (zoff == 0) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 4)");
 					}
+		
 					labels[loc] = labels[loc - sxy];
 				}
 				else if (offset == 5) {
-					if (z >= sz - 1) {
+					if (zoff >= zend) {
 						throw std::runtime_error("compresso: unable to decode indeterminate locations. (offset 5)");
 					}
+		
 					labels[loc] = labels[loc + sxy];
 				}
 				else if (offset == 6) {
+		
 					labels[loc] = locations[index + 1];
 					index++;
 				}
 				else {
+		
 					labels[loc] = offset - 7;
 				}
 				index++;
