@@ -344,13 +344,16 @@ template <typename T>
 std::vector<T> encode_indeterminate_locations(
 	bool* boundaries, T* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
-	const size_t connectivity
+	const size_t connectivity, 
+	std::vector<uint64_t> &z_index
 ) {
 	const size_t sxy = sx * sy;
 	std::vector<T> locations;
 	locations.reserve(sx * sy * sz / 10);
+	z_index.reserve(sz);
 
 	for (size_t z = 0; z < sz; z++) {
+		z_index.push_back(locations.size());
 		for (size_t y = 0; y < sy; y++) {
 			for (size_t x = 0; x < sx; x++) {
 				size_t loc = x + sx * y + sxy * z;
@@ -403,6 +406,11 @@ std::vector<T> encode_indeterminate_locations(
 				}
 			}
 		}
+	}
+
+	// difference code the index positions
+	for (size_t i = sz - 1; i > 0; i--) {
+		z_index[i] -= z_index[i - 1];
 	}
 
 	return locations;
@@ -544,7 +552,9 @@ void write_compressed_stream(
 	const std::vector<LABEL> &ids, 
 	const std::vector<WINDOW> &window_values, 
 	const std::vector<LABEL> &locations,
-	const std::vector<WINDOW> &windows
+	const std::vector<WINDOW> &windows,
+	const std::vector<uint64_t> &num_components_per_slice,
+	const std::vector<uint64_t> &z_index
 ) {
 	size_t idx = header.tochars(compressed_data, 0);
 	for (size_t i = 0 ; i < ids.size(); i++) {
@@ -559,6 +569,12 @@ void write_compressed_stream(
 	for (size_t i = 0 ; i < windows.size(); i++) {
 		idx += itoc(windows[i], compressed_data, idx);
 	}
+	for (size_t i = 0 ; i < num_components_per_slice.size(); i++) {
+		idx += itoc(num_components_per_slice[i], compressed_data, idx);
+	}
+	for (size_t i = 0 ; i < z_index.size(); i++) {
+		idx += itoc(static_cast<uint64_t>(z_index[i]), compressed_data, idx);
+	}
 }
 
 template <typename LABEL, typename WINDOW>
@@ -566,12 +582,16 @@ std::vector<unsigned char> compress_helper(
 	LABEL* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t xstep, const size_t ystep, const size_t zstep,
-	const size_t connectivity, bool* boundaries, const std::vector<LABEL>& ids
+	const size_t connectivity, bool* boundaries, 
+	const std::vector<LABEL>& ids, 
+	const std::vector<uint64_t> &num_components_per_slice
 ) {
+	std::vector<uint64_t> z_index;
 
 	std::vector<WINDOW> windows = encode_boundaries<WINDOW>(boundaries, sx, sy, sz, xstep, ystep, zstep);
 	std::vector<LABEL> locations = encode_indeterminate_locations<LABEL>(
-		boundaries, labels, sx, sy, sz, connectivity
+		boundaries, labels, sx, sy, sz, 
+		connectivity, z_index
 	);
 	delete[] boundaries;
 
@@ -585,6 +605,8 @@ std::vector<unsigned char> compress_helper(
 		+ (window_values.size() * sizeof(WINDOW))
 		+ (locations.size() * sizeof(LABEL))
 		+ (windows.size() * sizeof(WINDOW))
+		+ (num_components_per_slice.size() * sizeof(uint64_t))
+		+ (z_index.size() * sizeof(uint64_t))
 	);
 	std::vector<unsigned char> compressed_data(num_out_bytes);
 
@@ -600,7 +622,8 @@ std::vector<unsigned char> compress_helper(
 
 	write_compressed_stream<LABEL, WINDOW>(
 		compressed_data, header, ids, 
-		window_values, locations, windows
+		window_values, locations, windows,
+		num_components_per_slice, z_index
 	);
 
 	return compressed_data;
@@ -659,9 +682,12 @@ std::vector<unsigned char> compress(
 	}
 
 	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz, connectivity);
+	
 	size_t num_components = 0;
+	std::vector<uint64_t> num_components_per_slice(sz);
 	uint32_t *components = cc3d::connected_components<uint32_t>(
 		boundaries, sx, sy, sz, 
+		num_components_per_slice,
 		/*connectivity=*/connectivity, num_components
 	);
 	
@@ -677,7 +703,7 @@ std::vector<unsigned char> compress(
 			labels, 
 			sx, sy, sz, 
 			xstep, ystep, zstep, connectivity,
-			boundaries, ids
+			boundaries, ids, num_components_per_slice
 		);
 	}
 	else if (xstep * ystep * zstep <= 16) {
@@ -685,7 +711,7 @@ std::vector<unsigned char> compress(
 			labels, 
 			sx, sy, sz, 
 			xstep, ystep, zstep, connectivity,
-			boundaries, ids
+			boundaries, ids, num_components_per_slice
 		);
 	}
 	else if (xstep * ystep * zstep <= 32) { // 4x4x2 for example
@@ -693,7 +719,7 @@ std::vector<unsigned char> compress(
 			labels, 
 			sx, sy, sz, 
 			xstep, ystep, zstep, connectivity,
-			boundaries, ids
+			boundaries, ids, num_components_per_slice
 		);
 	}
 	else { // for 8x8x1 step size
@@ -701,7 +727,7 @@ std::vector<unsigned char> compress(
 			labels, 
 			sx, sy, sz, 
 			xstep, ystep, zstep, connectivity,
-			boundaries, ids
+			boundaries, ids, num_components_per_slice
 		);
 	}
 }
@@ -712,7 +738,8 @@ template <typename LABEL, typename WINDOW>
 bool* decode_boundaries(
 	const std::vector<WINDOW> &windows, const std::vector<WINDOW> &window_values, 
 	const size_t sx, const size_t sy, const size_t sz,
-	const size_t xstep, const size_t ystep, const size_t zstep
+	const size_t xstep, const size_t ystep, const size_t zstep,
+	const int64_t only_z = -1
 ) {
 
 	const size_t sxy = sx * sy;
@@ -725,7 +752,13 @@ bool* decode_boundaries(
 	const bool xstep_pot = (xstep != 0) && ((xstep & (xstep - 1)) == 0);
 	const int xshift = std::log2(xstep); // must use log2 here, not lg/lg2 to avoid fp errors
 
-	bool* boundaries = new bool[voxels]();
+	bool* boundaries;
+	if (only_z >= 0) {
+		boundaries = new bool[sxy]();
+	}
+	else {
+		boundaries = new bool[voxels]();
+	}
 
 	if (window_values.size() == 0) {
 		return boundaries;
@@ -734,7 +767,13 @@ bool* decode_boundaries(
 	size_t xblock, yblock, zblock;
 	size_t xoffset, yoffset, zoffset;
 
-	for (size_t z = 0; z < sz; z++) {
+	size_t zstart = (only_z >= 0) * only_z;
+	size_t zend = sz;
+	if (only_z >= 0) {
+		zend = std::min(static_cast<size_t>(only_z + 1), sz);
+	}
+
+	for (size_t z = zstart; z < zend; z++) {
 		zblock = nx * ny * (z / zstep);
 		zoffset = xstep * ystep * (z % zstep);
 		for (size_t y = 0; y < sy; y++) {
@@ -791,15 +830,22 @@ void decode_indeterminate_locations(
 	bool *boundaries, LABEL *labels, 
 	const std::vector<LABEL> &locations, 
 	const size_t sx, const size_t sy, const size_t sz,
-	const size_t connectivity
+	const size_t connectivity, 
+	const int64_t only_z, const std::vector<uint64_t> &z_index
 ) {
 	const size_t sxy = sx * sy;
 
+	size_t zstart = (only_z >= 0) * only_z;
+	size_t zend = sz;
+	if (only_z >= 0) {
+		zend = std::min(static_cast<size_t>(only_z + 1), sz);
+	}
+
 	size_t loc = 0;
-	size_t index = 0;
+	size_t index = z_index[zstart];
 
 	// go through all coordinates
-	for (size_t z = 0; z < sz; z++) {
+	for (size_t z = zstart; z < zend; z++) {
 		for (size_t y = 0; y < sy; y++) {
 			for (size_t x = 0; x < sx; x++) {
 				loc = x + sx * y + sxy * z;
@@ -875,7 +921,12 @@ void decode_indeterminate_locations(
 }
 
 template <typename LABEL, typename WINDOW>
-LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL) {
+LABEL* decompress(
+	unsigned char* buffer, 
+	size_t num_bytes, 
+	LABEL* output = NULL,
+	const int64_t only_z = -1
+) {
 
 	if (num_bytes < CompressoHeader::header_size) {
 		std::string err = "compresso: Input too small to be a valid stream. Bytes: ";
@@ -888,6 +939,7 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	const size_t sx = header.sx;
 	const size_t sy = header.sy;
 	const size_t sz = header.sz;
+	const size_t sxy = sx * sy;
 	const size_t voxels = sx * sy * sz;
 	const size_t xstep = header.xstep;
 	const size_t ystep = header.ystep;
@@ -908,6 +960,8 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 			- (header.id_size * sizeof(LABEL))  
 			- (header.value_size * sizeof(WINDOW))
 			- (header.location_size * sizeof(LABEL))
+			- (sz * sizeof(uint64_t)) // components index
+			- (sz * sizeof(uint64_t)) // locations index
 	);
 	size_t num_condensed_windows = window_bytes / sizeof(WINDOW);
 
@@ -916,6 +970,8 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	std::vector<WINDOW> window_values(header.value_size);
 	std::vector<LABEL> locations(header.location_size);
 	std::vector<WINDOW> windows(num_condensed_windows);
+	std::vector<uint64_t> components_index(sz);
+	std::vector<uint64_t> z_index(sz);
 
 	size_t iv = CompressoHeader::header_size;
 	for (size_t ix = 0; ix < ids.size() - 1; ix++, iv += sizeof(LABEL)) {
@@ -930,33 +986,58 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 	for (size_t ix = 0; ix < num_condensed_windows; ix++, iv += sizeof(WINDOW)) {
 		windows[ix] = ctoi<WINDOW>(buffer, iv);
 	}
+	for (size_t ix = 0; ix < sz; ix++, iv += sizeof(uint64_t)) {
+		components_index[ix] = ctoi<uint64_t>(buffer, iv);
+	}
+	for (size_t ix = 0; ix < sz; ix++, iv += sizeof(uint64_t)) {
+		z_index[ix] = ctoi<uint64_t>(buffer, iv);
+	}
+
+	// decode difference coded indeterminate locations index
+	for (size_t i = 1; i < sz; i++) {
+		z_index[i] += z_index[i-1];
+		components_index[i] += components_index[i-1];
+	}
 
 	windows = run_length_decode_windows<WINDOW>(windows, nblocks);
 
 	bool* boundaries = decode_boundaries<WINDOW>(
 		windows, window_values, 
 		sx, sy, sz, 
-		xstep, ystep, zstep
+		xstep, ystep, zstep,
+		only_z
 	);
 	windows = std::vector<WINDOW>();
 	window_values = std::vector<WINDOW>();
 
+	const size_t real_sz = (only_z >= 0) ? 1 : sz;
+	const size_t output_size = (only_z >= 0) ? sxy : voxels;
+
+	std::vector<uint64_t> num_components_per_slice(real_sz);
 	uint32_t* components = cc3d::connected_components<uint32_t>(
-		boundaries, sx, sy, sz, header.connectivity
+		boundaries, sx, sy, real_sz, num_components_per_slice, 
+		header.connectivity
 	);
 
-	if (output == NULL) {
-		output = new LABEL[voxels]();
+	if (only_z > 0) {
+		for (size_t i = 0; i < sxy; i++) {
+			components[i] += components_index[only_z-1];
+		}
 	}
 
-	decode_nonboundary_labels(components, ids, sx, sy, sz, output);
+	if (output == NULL) {
+		output = new LABEL[output_size]();
+	}
+
+	decode_nonboundary_labels(components, ids, sx, sy, real_sz, output);
 	delete[] components;
 	ids = std::vector<LABEL>();
 
 	decode_indeterminate_locations<LABEL>(
 		boundaries, output, locations, 
 		sx, sy, sz,
-		header.connectivity
+		header.connectivity, 
+		only_z, z_index
 	);
 
 	delete[] boundaries;
@@ -967,26 +1048,27 @@ LABEL* decompress(unsigned char* buffer, size_t num_bytes, LABEL* output = NULL)
 template <typename WINDOW>
 void* decompress_helper(
 	unsigned char* buffer, size_t num_bytes, 
-	void* output, const CompressoHeader &header
+	void* output, const CompressoHeader &header,
+	int64_t only_z
 ) {
 	if (header.data_width == 1) {
 		return decompress<uint8_t,WINDOW>(
-			buffer, num_bytes, reinterpret_cast<uint8_t*>(output)
+			buffer, num_bytes, reinterpret_cast<uint8_t*>(output), only_z
 		);
 	}
 	else if (header.data_width == 2) {
 		return decompress<uint16_t,WINDOW>(
-			buffer, num_bytes, reinterpret_cast<uint16_t*>(output)
+			buffer, num_bytes, reinterpret_cast<uint16_t*>(output), only_z
 		);
 	}
 	else if (header.data_width == 4) {
 		return decompress<uint32_t,WINDOW>(
-			buffer, num_bytes, reinterpret_cast<uint32_t*>(output)
+			buffer, num_bytes, reinterpret_cast<uint32_t*>(output), only_z
 		);
 	}
 	else if (header.data_width == 8) {
 		return decompress<uint64_t,WINDOW>(
-			buffer, num_bytes, reinterpret_cast<uint64_t*>(output)
+			buffer, num_bytes, reinterpret_cast<uint64_t*>(output), only_z
 		);
 	}
 	else {
@@ -997,7 +1079,12 @@ void* decompress_helper(
 }
 
 template <>
-void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* output) {
+void* decompress<void,void>(
+	unsigned char* buffer, 
+	size_t num_bytes, 
+	void* output,
+	int64_t only_z
+) {
 	if (!CompressoHeader::valid_header(buffer)) {
 		throw std::runtime_error("compresso: Invalid header.");
 	}
@@ -1018,28 +1105,28 @@ void* decompress<void,void>(unsigned char* buffer, size_t num_bytes, void* outpu
 		return decompress_helper<uint8_t>(
 			buffer, num_bytes, 
 			reinterpret_cast<uint8_t*>(output),
-			header
+			header, only_z
 		);
 	}
 	else if (window16) {
 		return decompress_helper<uint16_t>(
 			buffer, num_bytes, 
 			reinterpret_cast<uint8_t*>(output),
-			header
+			header, only_z
 		);
 	}
 	else if (window32) {
 		return decompress_helper<uint32_t>(
 			buffer, num_bytes, 
 			reinterpret_cast<uint8_t*>(output),
-			header
+			header, only_z
 		);
 	}
 	else {
 		return decompress_helper<uint64_t>(
 			buffer, num_bytes, 
 			reinterpret_cast<uint8_t*>(output),
-			header
+			header, only_z
 		);	
 	}
 }

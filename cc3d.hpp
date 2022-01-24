@@ -355,6 +355,7 @@ template <typename OUT = uint64_t>
 OUT* connected_components(
   bool* in_labels, 
   const int64_t sx, const int64_t sy, const int64_t sz,
+  std::vector<uint64_t> &num_components_per_slice,
   const size_t connectivity = 4, size_t &N = _dummy_N
 ) {
 
@@ -375,6 +376,7 @@ OUT* connected_components(
         max_labels, (out_labels + sxy * z), 
         tmp_N, N + 1
       );
+      num_components_per_slice[z] = tmp_N;
       N += tmp_N;
     }
   }
