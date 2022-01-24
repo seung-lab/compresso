@@ -116,7 +116,11 @@ def compress(data, steps=None, connectivity=4, random_access_z_index=True) -> by
     return _compress(data, steps, connectivity, random_access_z_index)
   except RuntimeError as err:
     if "Unable to RLE encode" in str(err) and not explicit_steps:
-      return compress(data, steps=(8,8,1), connectivity=connectivity)
+      return compress(
+        data, steps=(8,8,1), 
+        connectivity=connectivity, 
+        random_access_z_index=random_access_z_index,
+      )
     else:
       raise EncodeError(err)
 

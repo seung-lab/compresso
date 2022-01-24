@@ -615,8 +615,8 @@ std::vector<unsigned char> compress_helper(
 		+ (window_values.size() * sizeof(WINDOW))
 		+ (locations.size() * sizeof(LABEL))
 		+ (windows.size() * sizeof(WINDOW))
-		+ (num_components_per_slice.size() * sizeof(uint64_t))
-		+ (z_index.size() * sizeof(uint64_t))
+		+ (num_components_per_slice.size() * sizeof(uint64_t) * random_access_z_index)
+		+ (z_index.size() * sizeof(uint64_t) * random_access_z_index)
 	);
 	std::vector<unsigned char> compressed_data(num_out_bytes);
 
@@ -966,7 +966,7 @@ LABEL* decompress(
 	}
 
 	const bool random_access_z_index = (header.format_version == 1);
-	if (!random_access_z_index && (zstart >= 0 || zend < header.sz || header.connectivity == 6)) {
+	if (!random_access_z_index && (zstart > 0 || zend < header.sz || header.connectivity == 6)) {
 		throw std::runtime_error("compresso: Cannot random access z slices without the index.");
 	}
 
