@@ -55,14 +55,18 @@ def main(compress, source, steps, six):
 			decompress_file(src)
 
 def decompress_file(src):
-	with open(src, "rb") as f:
-		binary = f.read()
+	try:
+		with open(src, "rb") as f:
+			binary = f.read()
+	except FileNotFoundError:
+		print(f"compresso: File \"{src}\" does not exist.")
+		return
 
 	try:
 		data = compresso.decompress(binary)
 	except compresso.DecodeError:
 		print(f"compresso: {src} could not be decoded.")
-		sys.exit()
+		return
 
 	del binary
 
@@ -89,7 +93,10 @@ def compress_file(src, steps, six):
 		data = np.load(src)
 	except ValueError:
 		print(f"compresso: {src} is not a numpy file.")
-		sys.exit()
+		return
+	except FileNotFoundError:
+		print(f"compresso: File \"{src}\" does not exist.")
+		return
 
 	connectivity = 4 
 	if six:
