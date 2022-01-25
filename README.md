@@ -88,7 +88,7 @@ pip install compresso
 | values    | window_size * header.value_size           | Values of renumbered windows. Bitfields describing boundaries.                                                  |
 | locations | header.data_width * header.locations_size | Sequence of 7 control codes and labels + 7 that describe how to decode indeterminate locations in the boundary. |
 | windows   | The rest of the stream.                   | Sequence of numbers to be remapped from values. Describes the boundary structure of labels.                     |
-| z_index   | (optional tail) 2 * width * header.s      | Offsets into label values and locations to enable random access to slices. Format Version 1.                              |
+| z_index   | (optional tail) 2 * width * header.sz     | Offsets into label values and locations to enable random access to slices. Format Version 1.                              |
 
 `window_size` is the smallest data type that will contain `xstep * ystep * zstep`. For example, `steps=(4,4,1)` uses uint16 while `steps=(8,8,1)` uses uint64.
 
