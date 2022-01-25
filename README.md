@@ -15,6 +15,17 @@ labels = np.array(...)
 compressed_labels = compresso.compress(labels) # 3d numpy array -> compressed bytes
 reconstituted_labels = compresso.decompress(compressed_labels) # compressed bytes -> 3d numpy array
 
+# Adds an index and modifies the stream to enable 
+# Random access to Z slices. Format Version 1.
+compressed_labels = compresso.compress(labels, random_access_z_index=True)
+reconstituted_labels = compresso.decompress(compressed_labels, z=3) # one z slice
+reconstituted_labels = compresso.decompress(compressed_labels, z=(1,5)) # four slices
+
+# A convenience object that simulates an array
+# to efficiently extract image data
+arr = compresso.CompressoArray(compressed_labels)
+img = arr[:,:,1:5] # same four slices as above
+
 # Returns header info as dict
 # Has array dimensions and data width information.
 header = compresso.header(compressed_labels) 
@@ -66,6 +77,7 @@ pip install compresso
 |---------------|----------------|----------------------------------------------------------------|
 | 1             | -              | Initial Release. Not usable due to bugs. No format versioning. |
 | 2             | 0              | First major release.                                           |
+| 3             | 0,1            | Introduces random access to z slices in format version 1.                                         |
 
 ## Compresso Stream Format
 
@@ -76,6 +88,7 @@ pip install compresso
 | values    | window_size * header.value_size           | Values of renumbered windows. Bitfields describing boundaries.                                                  |
 | locations | header.data_width * header.locations_size | Sequence of 7 control codes and labels + 7 that describe how to decode indeterminate locations in the boundary. |
 | windows   | The rest of the stream.                   | Sequence of numbers to be remapped from values. Describes the boundary structure of labels.                     |
+| z_index   | (optional tail) 2 * 8 * header.sz         | Offsets into label values and locations to enable random access to slices. Format Version 1.                              |
 
 `window_size` is the smallest data type that will contain `xstep * ystep * zstep`. For example, `steps=(4,4,1)` uses uint16 while `steps=(8,8,1)` uses uint64.
 
@@ -95,7 +108,7 @@ This additional information makes detecting valid compresso streams easier, allo
 | Attribute         | Value             | Type    | Description                                     |
 |-------------------|-------------------|---------|-------------------------------------------------|
 | magic             | cpso              | char[4] | File magic number.                              |
-| format_version    | 0                 | u8      | Version of the compresso stream.                |
+| format_version    | 0 or 1            | u8      | Version of the compresso stream.                |
 | data_width        | 1,2,4,or 8        | u8      | Size of the labels in bytes.                    |
 | sx, sy, sz        | >= 0              | u16 x 3 | Size of array dimensions.                       |
 | xstep,ystep,zstep | 0 < product <= 64 | u8 x 3  | Size of structure grid.                         |
@@ -127,8 +140,15 @@ This potentially expands the size of the compressed stream. However, we only use
 However, we suspect that there are some images where 6 would do better. An obvious example is a solid
 color image that has no boundaries. The images where 6 shines will probably have sparser and straighter boundaries so that fewer additional boundary voxels are introduced.
 
+### Random Access to Z-Slices (Format Version 1)
 
+We make two changes to the codec in order to allow random access to Z slices. First, we disable indeterminate location codes 4 and 5 which refer to other slices, making each slice independently decodable. We also add a tail of size `2 * index_width * sz` which contains unsigned 8, 16, 32, or 64 bit offsets into the labels and locations streams for each slice which are arranged as all the labels then all the locations (they are not interleaved). The streams are difference coded to reduce the magnitude of the integers. The byte width is determined by the smallest unsigned integer type that will be able to represent 2 * sx * sy which is a coarse upper bound for the locations stream.
 
+The overall impact of this change is a slight increase in the size of the compresso stream and a possible impact on the compressibility if the vertical references were heavily used, such as on a checkerboard type image.
+
+This feature can be disabled by setting `compress(..., random_access_z_index=False)` which will emit a format version 0 stream. When this feature is enabled, it sets the format version to 1. This implementation can encode and decode both format versions.
+
+This feature is not supported when `connectivity=6` due to the required interdependence of the slices.
 
 ### Results From the Paper
 

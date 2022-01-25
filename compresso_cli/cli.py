@@ -24,8 +24,9 @@ class Tuple3(click.ParamType):
 @click.option("-c/-d", "--compress/--decompress", default=True, is_flag=True, help="Decompress to a numpy .npy file.", show_default=True)
 @click.option('--steps', type=Tuple3(), default=None, help="Compression step size. No effect on decompression.", show_default=True)
 @click.option('--six', is_flag=True, default=False, help="Use 6-way CCL instead of 4-way. No effect on decompression.", show_default=True)
+@click.option('--z-index/--no-z-index', is_flag=True, default=True, help="Write a stream that has random access to z slices.", show_default=True)
 @click.argument("source", nargs=-1)
-def main(compress, source, steps, six):
+def main(compress, source, steps, six, z_index):
 	"""
 	Compress and decompress compresso files to and from numpy .npy files.
 
@@ -50,7 +51,7 @@ def main(compress, source, steps, six):
 	
 	for src in source:
 		if compress:
-			compress_file(src, steps, six)
+			compress_file(src, steps, six, z_index)
 		else:
 			decompress_file(src)
 
@@ -88,7 +89,7 @@ def decompress_file(src):
 		print(f"compresso: Unable to write {dest}. Aborting.")
 		sys.exit()
 
-def compress_file(src, steps, six):
+def compress_file(src, steps, six, z_index):
 	try:
 		data = np.load(src)
 	except ValueError:
@@ -102,7 +103,10 @@ def compress_file(src, steps, six):
 	if six:
 		connectivity = 6
 
-	binary = compresso.compress(data, steps=steps, connectivity=connectivity)
+	binary = compresso.compress(
+		data, steps=steps, connectivity=connectivity,
+		random_access_z_index=z_index
+	)
 	del data
 
 	dest = f"{src}.cpso"

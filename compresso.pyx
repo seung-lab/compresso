@@ -56,13 +56,16 @@ cdef extern from "compresso.hpp" namespace "pycompresso":
     size_t xstep, size_t ystep, size_t zstep,
     size_t connectivity
   ) except +
-  void* cpp_decompress(unsigned char* buf, size_t num_bytes, void* output) except +
+  void* cpp_decompress(
+    unsigned char* buf, size_t num_bytes, void* output, 
+    int64_t zstart, int64_t zend
+  ) except +
   size_t COMPRESSO_HEADER_SIZE
 
 
-def compress(data, steps=None, connectivity=4) -> bytes:
+def compress(data, steps=None, connectivity=4, random_access_z_index=True) -> bytes:
   """
-  compress(ndarray[UINT, ndim=3] data, steps=(4,4,1))
+  compress(ndarray[UINT, ndim=3] data, steps=(4,4,1), random_access_z_index=True)
 
   Compress a 3d numpy array into a compresso byte stream.
 
@@ -73,6 +76,10 @@ def compress(data, steps=None, connectivity=4) -> bytes:
     they repeat more frequently. (4,4,1) and (8,8,1) are typical.
   connectivity: 4 or 6. 4 means we use 2D connected components and
     6 means we use 3D connected components.
+  random_access_z_index: if True, adds an index proportional to the
+    size of the z index that enables decoding z slices independently.
+    This index is at most 2 * 8 * sz additional bytes. This also changes
+    the format version to indicate the index is present.
 
   Return: compressed bytes b'...'
   """
@@ -83,6 +90,9 @@ def compress(data, steps=None, connectivity=4) -> bytes:
 
   if connectivity not in (4,6):
     raise ValueError(f"{connectivity} connectivity must be 4 or 6.")
+
+  if connectivity == 6:
+    random_access_z_index = False
 
   while data.ndim > 3:
     if data.shape[-1] == 1:
@@ -106,16 +116,20 @@ def compress(data, steps=None, connectivity=4) -> bytes:
   data = np.asfortranarray(data)
 
   try:
-    return _compress(data, steps, connectivity)
+    return _compress(data, steps, connectivity, random_access_z_index)
   except RuntimeError as err:
     if "Unable to RLE encode" in str(err) and not explicit_steps:
-      return compress(data, steps=(8,8,1), connectivity=connectivity)
+      return compress(
+        data, steps=(8,8,1), 
+        connectivity=connectivity, 
+        random_access_z_index=random_access_z_index,
+      )
     else:
       raise EncodeError(err)
 
 def _compress(
   cnp.ndarray[UINT, ndim=3] data, steps=(4,4,1),
-  unsigned int connectivity=4
+  unsigned int connectivity=4, native_bool random_access_z_index=True
 ) -> bytes:
   sx = data.shape[0]
   sy = data.shape[1]
@@ -132,16 +146,16 @@ def _compress(
 
   if data.dtype in (np.uint8, bool):
     arr8 = data.view(np.uint8)
-    buf = cpp_compress[uint8_t](&arr8[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
+    buf = cpp_compress[uint8_t](&arr8[0,0,0], sx, sy, sz, nx, ny, nz, connectivity, random_access_z_index)
   elif data.dtype == np.uint16:
     arr16 = data
-    buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
+    buf = cpp_compress[uint16_t](&arr16[0,0,0], sx, sy, sz, nx, ny, nz, connectivity, random_access_z_index)
   elif data.dtype == np.uint32:
     arr32 = data
-    buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
+    buf = cpp_compress[uint32_t](&arr32[0,0,0], sx, sy, sz, nx, ny, nz, connectivity, random_access_z_index)
   elif data.dtype == np.uint64:
     arr64 = data
-    buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz, connectivity)
+    buf = cpp_compress[uint64_t](&arr64[0,0,0], sx, sy, sz, nx, ny, nz, connectivity, random_access_z_index)
   else:
     raise TypeError(f"Type {data.dtype} not supported. Only uints and bool are supported.")
 
@@ -149,7 +163,7 @@ def _compress(
 
 def check_compatibility(bytes buf):
   format_version = buf[4]
-  if format_version != 0:
+  if format_version > 1:
     raise DecodeError(f"Unable to decode format version {format_version}. Only version 0 is supported.")
 
 def label_dtype(dict info):
@@ -255,6 +269,18 @@ def raw_windows(bytes buf):
   offset = COMPRESSO_HEADER_SIZE + id_bytes + value_bytes + location_bytes
 
   return np.frombuffer(buf[offset:], dtype=wdtype)
+
+def raw_z_index(bytes buf):
+  """Return the z index if present."""
+  info = header(buf)
+  format_version = info["format_version"]
+  sz = info["sz"]
+
+  if format_version == 0:
+    return None
+
+  num_bytes = 2 * 8 * sz
+  return np.frombuffer(buf[-num_bytes:], dtype=np.uint64).reshape((2,sz), order="C")
 
 def labels(bytes buf):
   """
@@ -363,15 +389,36 @@ def _remap_locations(
   
   return locations
 
-def decompress(bytes data):
+def decompress(bytes data, z=None):
   """
   Decompress a compresso encoded byte stream into a three dimensional 
   numpy array containing image segmentation.
 
+  z: int or (zstart:int, zend:int) to decompress 
+    only a single or selected range of z slices.
+
   Returns: 3d ndarray
   """
   info = header(data)
-  shape = (info["sx"], info["sy"], info["sz"])
+  sz = info["sz"]
+
+  zstart = 0
+  zend = sz
+  if isinstance(z, int):
+    zstart = z
+    zend = z + 1
+  elif hasattr(z, "__getitem__"):
+    zstart, zend = z[0], z[1]
+
+  if zstart < 0 or zstart > sz:
+    raise ValueError(f"zstart must be between 0 and sz - 1 ({sz-1}): {zstart}")
+  if zend < 0 or zend > sz:
+    raise ValueError(f"zend must be between 1 and sz ({sz}): {zend}")
+  if zend < zstart:
+    raise ValueError(f"zend ({zend}) must be >= zstart ({zstart})")
+
+
+  shape = (info["sx"], info["sy"], zend - zstart)
 
   dtype = label_dtype(info)
   labels = np.zeros(shape, dtype=dtype, order="F")
@@ -403,7 +450,7 @@ def decompress(bytes data):
 
   cdef unsigned char* buf = data
   try:
-    cpp_decompress(buf, len(data), outptr)
+    cpp_decompress(buf, len(data), outptr, zstart, zend)
   except RuntimeError as err:
     raise DecodeError(err)
 
@@ -418,7 +465,9 @@ def valid(bytes buf):
   if head["magic"] != b"cpso":
     return False
 
-  if head["format_version"] != 0:
+  format_version = head["format_version"]
+
+  if format_version not in (0,1):
     return False
 
   cdef int window_bits = head["xstep"] * head["ystep"] * head["zstep"]
@@ -432,13 +481,158 @@ def valid(bytes buf):
   else:
     window_bytes = 8
 
+  zindex_size = 0
+  if format_version == 1:
+    zindex_size = 2 * head["sz"] * zindex_byte_width(head["sx"], head["sy"])
+
   min_size = (
     COMPRESSO_HEADER_SIZE 
     + (head["id_size"] * head["data_width"]) 
     + (head["value_size"] * window_bytes)
     + (head["location_size"] * head["data_width"])
+    + zindex_size
   )
   if len(buf) < min_size:
     return False
 
   return True
+
+def zindex_byte_width(sx, sy):
+  worst_case = 2 * sx * sy
+  if worst_case < 2 ** 8:
+    return 1
+  elif worst_case < 2 ** 16:
+    return 2
+  elif worst_case < 2 ** 32:
+    return 4
+  else:
+    return 8
+
+class CompressoArray:
+  def __init__(self, binary):
+    self.binary = binary
+
+  def __len__(self):
+    return len(self.binary)
+
+  @property
+  def random_access_enabled(self):
+    head = header(self.binary)
+    return head["format_version"] == 1
+
+  @property
+  def size(self):
+    shape = self.shape
+    return shape[0] * shape[1] * shape[2]
+
+  @property
+  def nbytes(self):
+    return nbytes(self.binary)
+
+  @property
+  def dtype(self):
+    return label_dtype(header(self.binary))
+
+  @property
+  def shape(self):
+    head = header(self.binary)
+    return (head["sx"], head["sy"], head["sz"])
+
+  def labels(self):
+    return labels(self.binary)
+
+  def remap(self, buf, mapping, preserve_missing_labels=False):
+    return CompressoArray(remap(buf, mapping, preserve_missing_labels))
+
+  def __getitem__(self, slcs):
+    slices = reify_slices(slcs, *self.shape)
+
+    if self.random_access_enabled:
+      img = decompress(self.binary, z=(slices[2].start, slices[2].stop))
+      zslc = slice(None, None, slices[2].step)
+      if isinstance(slcs[2], int):
+        zslc = 0
+      slices = (slcs[0], slcs[1], zslc)
+      return img[slices]
+    else:
+      img = decompress(self.binary)
+      return img[slcs]
+
+def reify_slices(slices, sx, sy, sz):
+  """
+  Convert free attributes of a slice object 
+  (e.g. None (arr[:]) or Ellipsis (arr[..., 0]))
+  into bound variables in the context of this
+  bounding box.
+
+  That is, for a ':' slice, slice.start will be set
+  to the value of the respective minpt index of 
+  this bounding box while slice.stop will be set 
+  to the value of the respective maxpt index.
+
+  Example:
+    reify_slices( (np._s[:],) )
+    
+    >>> [ slice(-1,1,1), slice(-2,2,1), slice(-3,3,1) ]
+
+  Returns: [ slice, ... ]
+  """
+  ndim = 3
+  minpt = (0,0,0)
+  maxpt = (sx,sy,sz)
+
+  integer_types = (int, np.integer)
+  floating_types = (float, np.floating)
+
+  if isinstance(slices, integer_types) or isinstance(slices, floating_types):
+    slices = [ slice(int(slices), int(slices)+1, 1) ]
+  elif type(slices) == slice:
+    slices = [ slices ]
+  elif slices == Ellipsis:
+    slices = []
+
+  slices = list(slices)
+
+  for index, slc in enumerate(slices):
+    if slc == Ellipsis:
+      fill = ndim - len(slices) + 1
+      slices = slices[:index] +  (fill * [ slice(None, None, None) ]) + slices[index+1:]
+      break
+
+  while len(slices) < ndim:
+    slices.append( slice(None, None, None) )
+
+  # First three slices are x,y,z, last is channel. 
+  # Handle only x,y,z here, channel seperately
+  for index, slc in enumerate(slices):
+    if isinstance(slc, integer_types) or isinstance(slc, floating_types):
+      slices[index] = slice(int(slc), int(slc)+1, 1)
+    elif slc == Ellipsis:
+      raise ValueError("More than one Ellipsis operator used at once.")
+    else:
+      start = 0 if slc.start is None else slc.start
+      end = maxpt[index] if slc.stop is None else slc.stop 
+      step = 1 if slc.step is None else slc.step
+
+      if step < 0:
+        raise ValueError(f'Negative step sizes are not supported. Got: {step}')
+
+      if start < 0: # this is support for negative indicies
+        start = maxpt[index] + start         
+      check_bounds(start, minpt[index], maxpt[index])
+      if end < 0: # this is support for negative indicies
+        end = maxpt[index] + end
+      check_bounds(end, minpt[index], maxpt[index])
+
+      slices[index] = slice(start, end, step)
+
+  return slices
+
+def clamp(val, low, high):
+  return min(max(val, low), high)
+
+def check_bounds(val, low, high):
+  if val > high or val < low:
+    raise ValueError(f'Value {val} cannot be outside of inclusive range {low} to {high}')
+  return val
+
