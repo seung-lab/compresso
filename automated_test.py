@@ -205,4 +205,18 @@ def test_arange_field_decode_range(dtype, steps):
   except ValueError:
     pass
 
+@pytest.mark.parametrize("random_access_z_index", (True,False))
+def test_array_works_all_formats(random_access_z_index):
+  labels = np.arange(0,64).reshape((4,4,4), order="F").astype(np.uint32)
+  compressed = compresso.compress(
+    labels, steps=(4,4,1), 
+    connectivity=4, random_access_z_index=random_access_z_index
+  )
+
+  arr = compresso.CompressoArray(compressed)
+  assert np.all(arr[:,:,3] == labels[:,:,3])
+  assert arr.random_access_enabled == random_access_z_index
+
+
+
 

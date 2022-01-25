@@ -516,6 +516,11 @@ class CompressoArray:
     return len(self.binary)
 
   @property
+  def random_access_enabled(self):
+    head = header(self.binary)
+    return head["format_version"] == 1
+
+  @property
   def size(self):
     shape = self.shape
     return shape[0] * shape[1] * shape[2]
@@ -541,8 +546,17 @@ class CompressoArray:
 
   def __getitem__(self, slcs):
     slices = reify_slices(slcs, *self.shape)
-    img = decompress(self.binary, z=(slices[2].start, slices[2].stop))
-    return img[slices[0], slices[1], ::slices[2].step]
+
+    if self.random_access_enabled:
+      img = decompress(self.binary, z=(slices[2].start, slices[2].stop))
+      zslc = slice(None, None, slices[2].step)
+      if isinstance(slcs[2], int):
+        zslc = 0
+      slices = (slcs[0], slcs[1], zslc)
+      return img[slices]
+    else:
+      img = decompress(self.binary)
+      return img[slcs]
 
 def reify_slices(slices, sx, sy, sz):
   """
