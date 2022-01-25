@@ -483,7 +483,7 @@ def valid(bytes buf):
 
   zindex_size = 0
   if format_version == 1:
-    zindex_size = 8 * 2 * head["sz"]
+    zindex_size = 2 * head["sz"] * zindex_byte_width(head["sx"], head["sy"])
 
   min_size = (
     COMPRESSO_HEADER_SIZE 
@@ -497,9 +497,23 @@ def valid(bytes buf):
 
   return True
 
+def zindex_byte_width(sx, sy):
+  worst_case = 2 * sx * sy
+  if worst_case < 2 ** 8:
+    return 1
+  elif worst_case < 2 ** 16:
+    return 2
+  elif worst_case < 2 ** 32:
+    return 4
+  else:
+    return 8
+
 class CompressoArray:
   def __init__(self, binary):
     self.binary = binary
+
+  def __len__(self):
+    return len(self.binary)
 
   @property
   def size(self):
@@ -508,7 +522,7 @@ class CompressoArray:
 
   @property
   def nbytes(self):
-    return len(self.binary)
+    return nbytes(self.binary)
 
   @property
   def dtype(self):
@@ -521,6 +535,9 @@ class CompressoArray:
 
   def labels(self):
     return labels(self.binary)
+
+  def remap(self, buf, mapping, preserve_missing_labels=False):
+    return CompressoArray(remap(buf, mapping, preserve_missing_labels))
 
   def __getitem__(self, slcs):
     slices = reify_slices(slcs, *self.shape)

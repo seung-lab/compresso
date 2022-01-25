@@ -200,6 +200,24 @@ public:
 		}
 	}
 
+	uint8_t index_byte_width() const {
+		const size_t sxy = sx * sy;
+		const size_t worst_case = 2 * sxy;
+
+		if (worst_case < std::numeric_limits<uint8_t>::max()) {
+			return 1;
+		}
+		else if (worst_case < std::numeric_limits<uint16_t>::max()) {
+			return 2;
+		}
+		else if (worst_case < std::numeric_limits<uint32_t>::max()) {
+			return 4;
+		}
+		else {
+			return 8;
+		}
+	}
+
 	size_t tochars(std::vector<unsigned char> &buf, size_t idx = 0) const {
 		if ((idx + CompressoHeader::header_size) > buf.size()) {
 			throw std::runtime_error("compresso: Unable to write past end of buffer.");
@@ -547,6 +565,22 @@ std::vector<WINDOW> run_length_decode_windows(
 	return windows;
 }
 
+template <typename T>
+void write_compressed_stream_index(
+	std::vector<unsigned char> &compressed_data,
+	size_t &idx,
+	const std::vector<uint64_t> &num_components_per_slice,
+	const std::vector<uint64_t> &z_index
+) {
+	// random access z index at tail of file
+	for (size_t i = 0 ; i < num_components_per_slice.size(); i++) {
+		idx += itoc(static_cast<T>(num_components_per_slice[i]), compressed_data, idx);
+	}
+	for (size_t i = 0 ; i < z_index.size(); i++) {
+		idx += itoc(static_cast<T>(z_index[i]), compressed_data, idx);
+	}
+}
+
 template <typename LABEL, typename WINDOW>
 void write_compressed_stream(
 	std::vector<unsigned char> &compressed_data,
@@ -577,12 +611,18 @@ void write_compressed_stream(
 		return;
 	}
 
-	// random access z index at tail of file
-	for (size_t i = 0 ; i < num_components_per_slice.size(); i++) {
-		idx += itoc(num_components_per_slice[i], compressed_data, idx);
+	uint8_t index_width = header.index_byte_width();
+	if (index_width == 1) {
+		write_compressed_stream_index<uint8_t>(compressed_data, idx, num_components_per_slice, z_index);
 	}
-	for (size_t i = 0 ; i < z_index.size(); i++) {
-		idx += itoc(z_index[i], compressed_data, idx);
+	else if (index_width == 2) {
+		write_compressed_stream_index<uint16_t>(compressed_data, idx, num_components_per_slice, z_index);
+	}
+	else if (index_width == 4) {
+		write_compressed_stream_index<uint32_t>(compressed_data, idx, num_components_per_slice, z_index);	
+	}
+	else {
+		write_compressed_stream_index<uint64_t>(compressed_data, idx, num_components_per_slice, z_index);
 	}
 }
 
@@ -609,17 +649,6 @@ std::vector<unsigned char> compress_helper(
 	renumber_boundary_data(window_values, windows);
 	windows = run_length_encode_windows<WINDOW>(windows);
 
-	size_t num_out_bytes = (
-		CompressoHeader::header_size 
-		+ (ids.size() * sizeof(LABEL))
-		+ (window_values.size() * sizeof(WINDOW))
-		+ (locations.size() * sizeof(LABEL))
-		+ (windows.size() * sizeof(WINDOW))
-		+ (num_components_per_slice.size() * sizeof(uint64_t) * random_access_z_index)
-		+ (z_index.size() * sizeof(uint64_t) * random_access_z_index)
-	);
-	std::vector<unsigned char> compressed_data(num_out_bytes);
-
 	CompressoHeader header(
 		/*format_version=*/static_cast<uint8_t>(random_access_z_index),
 		/*data_width=*/sizeof(LABEL), 
@@ -630,6 +659,19 @@ std::vector<unsigned char> compress_helper(
 		/*location_size=*/locations.size(),
 		/*connectivity=*/connectivity
 	);
+
+	size_t index_width = static_cast<size_t>(header.index_byte_width());
+
+	size_t num_out_bytes = (
+		CompressoHeader::header_size 
+		+ (ids.size() * sizeof(LABEL))
+		+ (window_values.size() * sizeof(WINDOW))
+		+ (locations.size() * sizeof(LABEL))
+		+ (windows.size() * sizeof(WINDOW))
+		+ (num_components_per_slice.size() * index_width * random_access_z_index)
+		+ (z_index.size() * index_width * random_access_z_index)
+	);
+	std::vector<unsigned char> compressed_data(num_out_bytes);
 
 	write_compressed_stream<LABEL, WINDOW>(
 		compressed_data, header, ids, 
@@ -932,6 +974,31 @@ void decode_indeterminate_locations(
 	}
 }
 
+
+template <typename T>
+void decode_z_index(
+	unsigned char* buffer, size_t sz, size_t iv,
+	std::vector<uint64_t> &components_index,
+	std::vector<uint64_t> &z_index
+) {
+	for (size_t ix = 0; ix < sz; ix++, iv += sizeof(T)) {
+		components_index[ix] = static_cast<uint64_t>(
+			ctoi<T>(buffer, iv)
+		);
+	}
+	for (size_t ix = 0; ix < sz; ix++, iv += sizeof(T)) {
+		z_index[ix] = static_cast<uint64_t>(
+			ctoi<T>(buffer, iv)
+		);
+	}
+
+	// decode difference coded indeterminate locations index
+	for (size_t i = 1; i < sz; i++) {
+		z_index[i] += z_index[i-1];
+		components_index[i] += components_index[i-1];
+	}
+}
+
 template <typename LABEL, typename WINDOW>
 LABEL* decompress(
 	unsigned char* buffer, 
@@ -989,6 +1056,7 @@ LABEL* decompress(
 	const size_t ny = (sy + ystep - 1) / ystep; // round up
 	const size_t nz = (sz + zstep - 1) / zstep; // round up
 	const size_t nblocks = nz * ny * nx;
+	const size_t index_width = static_cast<size_t>(header.index_byte_width());
 
 	size_t window_bytes = (
 		num_bytes 
@@ -996,8 +1064,8 @@ LABEL* decompress(
 			- (header.id_size * sizeof(LABEL))  
 			- (header.value_size * sizeof(WINDOW))
 			- (header.location_size * sizeof(LABEL))
-			- (sz * sizeof(uint64_t) * random_access_z_index) // components index
-			- (sz * sizeof(uint64_t) * random_access_z_index) // locations index
+			- (sz * index_width * random_access_z_index) // components index
+			- (sz * index_width * random_access_z_index) // locations index
 	);
 	size_t num_condensed_windows = window_bytes / sizeof(WINDOW);
 
@@ -1024,17 +1092,17 @@ LABEL* decompress(
 	}
 
 	if (random_access_z_index) {
-		for (size_t ix = 0; ix < sz; ix++, iv += sizeof(uint64_t)) {
-			components_index[ix] = ctoi<uint64_t>(buffer, iv);
+		if (index_width == 1) {
+			decode_z_index<uint8_t>(buffer, sz, iv, components_index, z_index);
 		}
-		for (size_t ix = 0; ix < sz; ix++, iv += sizeof(uint64_t)) {
-			z_index[ix] = ctoi<uint64_t>(buffer, iv);
+		else if (index_width == 2) {
+			decode_z_index<uint16_t>(buffer, sz, iv, components_index, z_index);
 		}
-
-		// decode difference coded indeterminate locations index
-		for (size_t i = 1; i < sz; i++) {
-			z_index[i] += z_index[i-1];
-			components_index[i] += components_index[i-1];
+		else if (index_width == 4) {
+			decode_z_index<uint32_t>(buffer, sz, iv, components_index, z_index);
+		}
+		else {
+			decode_z_index<uint64_t>(buffer, sz, iv, components_index, z_index);
 		}
 	}
 
