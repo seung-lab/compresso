@@ -547,10 +547,16 @@ class CompressoArray:
   def __getitem__(self, slcs):
     slices = reify_slices(slcs, *self.shape)
 
+    if isinstance(slcs, (slice, int)):
+      slcs = (slcs,)
+
+    while len(slcs) < 3:
+       slcs += (slice(None, None, None),)
+
     if self.random_access_enabled:
       img = decompress(self.binary, z=(slices[2].start, slices[2].stop))
       zslc = slice(None, None, slices[2].step)
-      if isinstance(slcs[2], int):
+      if hasattr(slcs, "__getitem__") and isinstance(slcs[2], int):
         zslc = 0
       slices = (slcs[0], slcs[1], zslc)
       return img[slices]
@@ -586,15 +592,15 @@ def reify_slices(slices, sx, sy, sz):
 
   if isinstance(slices, integer_types) or isinstance(slices, floating_types):
     slices = [ slice(int(slices), int(slices)+1, 1) ]
-  elif type(slices) == slice:
+  elif isinstance(slices, slice):
     slices = [ slices ]
-  elif slices == Ellipsis:
+  elif slices is Ellipsis:
     slices = []
 
   slices = list(slices)
 
   for index, slc in enumerate(slices):
-    if slc == Ellipsis:
+    if slc is Ellipsis:
       fill = ndim - len(slices) + 1
       slices = slices[:index] +  (fill * [ slice(None, None, None) ]) + slices[index+1:]
       break
