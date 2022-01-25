@@ -1,6 +1,39 @@
 CHANGES
 =======
 
+3.0.0
+-----
+
+* build: ensure windows builds in release mode
+* fix: make CompressoArray take more natural slices
+* feat: random z access (#8)
+* fix(cli): filenotfounderror
+
+2.3.2
+-----
+
+* chore: update MANIFEST.in
+* test: protect against rle zero overflow
+* fix: logic error in RLE window encoder
+* fix: calculation for valid stream used bits instead of bytes
+* refactor: use templates to shorten the logic for decompress
+* chore: tighten up whitespace
+
+2.3.1
+-----
+
+* chore: exclude test data files from sdist
+
+2.3.0
+-----
+
+* docs: fix whitespace
+* perf(remap): substantially faster
+* docs: show how to use remap and valid
+* docs: add docstring to remap
+* feat(remap): adds remap without compression
+* refactor: use cython type notation
+
 2.2.0
 -----
 
