@@ -142,7 +142,7 @@ color image that has no boundaries. The images where 6 shines will probably have
 
 ### Random Access to Z-Slices (Format Version 1)
 
-We make two changes to the codec in order to allow random access to Z slices. First, we disable indeterminate location codes 4 and 5 which refer to other slices, making each slice independently decodable. We also add a tail of size `2 * 8 * sz` which contains uint64 offsets into the labels and locations streams for each slice which are arranged as all the labels then all the locations (they are not interleaved). The streams are difference coded to reduce the magnitude of the integers.
+We make two changes to the codec in order to allow random access to Z slices. First, we disable indeterminate location codes 4 and 5 which refer to other slices, making each slice independently decodable. We also add a tail of size `2 * index_width * sz` which contains unsigned 8, 16, 32, or 64 bit offsets into the labels and locations streams for each slice which are arranged as all the labels then all the locations (they are not interleaved). The streams are difference coded to reduce the magnitude of the integers. The byte width is determined by the smallest unsigned integer type that will be able to represent 2 * sx * sy which is a coarse upper bound for the locations stream.
 
 The overall impact of this change is a slight increase in the size of the compresso stream and a possible impact on the compressibility if the vertical references were heavily used, such as on a checkerboard type image.
 
