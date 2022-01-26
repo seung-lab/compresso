@@ -21,12 +21,13 @@ class Tuple3(click.ParamType):
   
 
 @click.command()
-@click.option("-c/-d", "--compress/--decompress", default=True, is_flag=True, help="Decompress to a numpy .npy file.", show_default=True)
+@click.option("-c/-d", "--compress/--decompress", default=True, is_flag=True, help="Compress from or decompress to a numpy .npy file.", show_default=True)
+@click.option('-i', "--info", default=False, is_flag=True, help="Print the header for the file.", show_default=True)
 @click.option('--steps', type=Tuple3(), default=None, help="Compression step size. No effect on decompression.", show_default=True)
 @click.option('--six', is_flag=True, default=False, help="Use 6-way CCL instead of 4-way. No effect on decompression.", show_default=True)
 @click.option('--z-index/--no-z-index', is_flag=True, default=True, help="Write a stream that has random access to z slices.", show_default=True)
 @click.argument("source", nargs=-1)
-def main(compress, source, steps, six, z_index):
+def main(compress, info, source, steps, six, z_index):
 	"""
 	Compress and decompress compresso files to and from numpy .npy files.
 
@@ -50,10 +51,28 @@ def main(compress, source, steps, six, z_index):
 			source = source[:i] + sys.stdin.readlines() + source[i+1:]
 	
 	for src in source:
+		if info:
+			print_header(src)
+			continue
+
 		if compress:
 			compress_file(src, steps, six, z_index)
 		else:
 			decompress_file(src)
+
+def print_header(src):
+	try:
+		with open(src, "rb") as f:
+			binary = f.read()
+	except FileNotFoundError:
+		print(f"compresso: File \"{src}\" does not exist.")
+		return
+
+	head = compresso.header(binary)
+	print(f"Filename: {src}")
+	for key,val in head.items():
+		print(f"{key}: {val}")
+	print()
 
 def decompress_file(src):
 	try:
