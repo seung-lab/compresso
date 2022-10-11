@@ -72,6 +72,9 @@ def print_header(src):
 	print(f"Filename: {src}")
 	for key,val in head.items():
 		print(f"{key}: {val}")
+
+	labels = compresso.labels(binary)
+	print(f"Unique Labels: {len(labels)}")
 	print()
 
 def decompress_file(src):

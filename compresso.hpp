@@ -26,6 +26,7 @@
 #ifndef __COMPRESSO_HXX__
 #define __COMPRESSO_HXX__
 
+#include <iostream>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -360,7 +361,7 @@ std::vector<T> encode_boundaries(
 }
 
 template <typename T>
-std::vector<T> encode_indeterminate_locations(
+std::vector<T> encode_indeterminate_locations_explicit(
 	bool* boundaries, T* labels, 
 	const size_t sx, const size_t sy, const size_t sz,
 	const size_t connectivity, 
@@ -435,6 +436,145 @@ std::vector<T> encode_indeterminate_locations(
 
 	return locations;
 }
+
+template <typename T>
+std::vector<T> encode_indeterminate_locations_implicit(
+	bool* boundaries, T* labels, 
+	const size_t sx, const size_t sy, const size_t sz,
+	const size_t connectivity
+) {
+	const size_t sxy = sx * sy;
+
+	std::vector<std::vector<T>> locations(7);
+	for (uint64_t i = 0; i < locations.size(); i++) {
+		locations[i].reserve(sx * sy * sz / 10 / 7);
+	}	
+
+	for (size_t z = 0; z < sz; z++) {
+		for (size_t y = 0; y < sy; y++) {
+			for (size_t x = 0; x < sx; x++) {
+				size_t loc = x + sx * y + sxy * z;
+				
+				if (!boundaries[loc]) { 
+					continue; 
+				}
+				else if (x > 0 && !boundaries[loc - 1]) {
+					continue; 
+				}
+				else if (y > 0 && !boundaries[loc - sx]) {
+					continue;
+				}
+				else if (connectivity == 6 && z > 0 && !boundaries[loc - sxy]) {
+					continue;
+				}
+
+				size_t left = loc - 1;
+				size_t right = loc + 1;
+				size_t up = loc - sx;
+				size_t down = loc + sx;
+				size_t heaven = loc - sxy;
+				size_t hell = loc + sxy;
+
+				// see if any of the immediate neighbors are candidates
+				if (x > 0 && !boundaries[left] && (labels[left] == labels[loc])) {
+					locations[0].push_back(loc);
+				}
+				else if (x < sx - 1 && !boundaries[right] && (labels[right] == labels[loc])) {
+					locations[1].push_back(loc);
+				}
+				else if (y > 0 && !boundaries[up] && (labels[up] == labels[loc])) {
+					locations[2].push_back(loc);
+				}
+				else if (y < sy - 1 && !boundaries[down] && (labels[down] == labels[loc])) {
+					locations[3].push_back(loc);
+				}
+				else if (z > 0 && !boundaries[heaven] && (labels[heaven] == labels[loc])) {
+					locations[4].push_back(loc);
+				}
+				else if (z < sz - 1 && !boundaries[hell] && (labels[hell] == labels[loc])) {
+					locations[5].push_back(loc);
+				}
+				else {
+					locations[6].push_back(loc);
+				}
+			}
+		}
+	}
+
+	std::vector<uint64_t> il_counts(locations.size() - 1);
+	for (uint64_t i = 0; i < locations.size() - 1; i++) {
+		il_counts[i] = locations[i].size();
+	}
+	for (uint64_t i = 0; i < locations.size(); i++) {
+		std::cout << i << ":" << locations[i].size() << std::endl;
+	}
+	std::vector<uint64_t>::iterator it = std::max_element(il_counts.begin(), il_counts.end()); 
+	uint64_t max_elem = std::distance(il_counts.begin(), it);
+
+	std::cout << "max elem " << max_elem << std::endl; 
+
+	std::vector<T> encoded_locations(locations.size() + 1);
+	encoded_locations.reserve(sx * sy * sz / 10);
+
+	uint64_t start_index = 0;
+	for (uint64_t i = 0; i < locations.size() - 1; i++) {
+		if (i == max_elem) {
+			encoded_locations[i] = std::numeric_limits<T>::max();
+			continue;
+		}
+		encoded_locations[i] = start_index;
+		start_index += locations[i].size();
+		encoded_locations.insert(
+			encoded_locations.end(), locations[i].begin(), locations[i].end()
+		);
+	}
+	encoded_locations[locations.size() - 1] = start_index;
+
+	std::unordered_map<T, std::vector<uint64_t>> stored_label_locations;
+	stored_label_locations.reserve(locations[6].size());
+
+	for (uint64_t i = 0; i < locations[6].size(); i++) {
+		const uint64_t loc = locations[6][i];
+		const T label = labels[loc];
+		stored_label_locations[label].push_back(loc);
+	}
+
+	std::cout << encoded_locations.size() << std::endl;
+
+	for (auto [label, idx] : stored_label_locations) {
+		std::cout << label << ":" << idx.size() << std::endl;
+		if (label == 0) {
+			continue;
+		}
+
+		std::sort(idx.begin(), idx.end());
+
+		encoded_locations.push_back(static_cast<uint64_t>(label));
+		encoded_locations.insert(encoded_locations.end(), idx.begin(), idx.end());
+	}
+	// encoded_locations[0] = encoded_locations.size();
+	std::cout << encoded_locations.size() << std::endl;
+	for (size_t i = encoded_locations.size(); i > 0; i--) {
+		encoded_locations[i] -= encoded_locations[i - 1];
+	}
+
+	return encoded_locations;
+}
+
+
+template <typename T>
+std::vector<T> encode_indeterminate_locations(
+	bool* boundaries, T* labels, 
+	const size_t sx, const size_t sy, const size_t sz,
+	const size_t connectivity, 
+	std::vector<uint64_t> &z_index, 
+	const bool random_access_z_index
+) {
+	return encode_indeterminate_locations_implicit<T>(
+		boundaries, labels, sx, sy, sz, connectivity
+	);
+}
+
 
 template <typename T>
 std::vector<T> unique(const std::vector<T> &data) {
