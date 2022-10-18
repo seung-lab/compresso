@@ -62,6 +62,16 @@ cdef extern from "compresso.hpp" namespace "pycompresso":
   ) except +
   size_t COMPRESSO_HEADER_SIZE
 
+cdef extern from "compresso.hpp" namespace "compresso":
+  uint8_t* decode_boundaries[WINDOW](
+    vector[WINDOW] windows, vector[WINDOW] window_values, 
+    size_t sx, size_t sy, size_t sz,
+    size_t xstep, size_t ystep, size_t zstep,
+    size_t zstart, size_t zend
+  )
+  vector[WINDOW] run_length_decode_windows[WINDOW](
+    vector[WINDOW] rle_windows, size_t nblocks
+  )
 
 def compress(data, steps=None, connectivity=4, random_access_z_index=True) -> bytes:
   """
@@ -255,6 +265,20 @@ def raw_locations(bytes buf):
   location_bytes = info["location_size"] * info["data_width"]
   return np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
 
+def decode_windows(bytes buf):
+  head = header(buf)
+  sx, sy, sz = head["sx"], head["sy"], head["sz"]
+
+  nx = int(np.ceil(sx / head["xstep"]))
+  ny = int(np.ceil(sy / head["ystep"]))
+  nz = int(np.ceil(sz / head["zstep"]))
+
+  x = raw_windows(buf)
+  cdef vector[uint16_t] rle_windows = raw_windows(buf)
+  nblocks = nx * ny * nz
+  cdef vector[uint16_t] window_arr = run_length_decode_windows[uint16_t](rle_windows, nblocks)
+  return window_arr
+
 def raw_windows(bytes buf):
   """Return the window boundary data buffer from the compressed stream."""
   info = header(buf)
@@ -268,19 +292,61 @@ def raw_windows(bytes buf):
 
   offset = COMPRESSO_HEADER_SIZE + id_bytes + value_bytes + location_bytes
 
-  return np.frombuffer(buf[offset:], dtype=wdtype)
+  zidx = raw_z_index(buf)
+  zidx = 0 if zidx is None else zidx.nbytes
+
+  return np.frombuffer(buf[offset:-zidx], dtype=wdtype)
 
 def raw_z_index(bytes buf):
   """Return the z index if present."""
   info = header(buf)
   format_version = info["format_version"]
-  sz = info["sz"]
+  sx, sy, sz = info["sx"], info["sy"], info["sz"]
 
   if format_version == 0:
     return None
 
-  num_bytes = 2 * 8 * sz
-  return np.frombuffer(buf[-num_bytes:], dtype=np.uint64).reshape((2,sz), order="C")
+  worst_case = 2 * sx * sy
+  dtype = np.uint64
+  if worst_case < np.iinfo(np.uint8).max:
+    dtype = np.uint8
+  elif worst_case < np.iinfo(np.uint16).max:
+    dtype = np.uint16
+  elif worst_case < np.iinfo(np.uint32).max: 
+    dtype = np.uint32
+
+  num_bytes = 2 * np.dtype(dtype).itemsize * sz
+  return np.frombuffer(buf[-num_bytes:], dtype=dtype).reshape((2,sz), order="C")
+
+def boundary_map(bytes buf, zstart=0, zend=-1):
+  head = header(buf)
+  wdtype = window_dtype(head)
+
+  cdef vector[uint8_t] boundaries
+  cdef vector[uint16_t] window_arr
+  cdef vector[uint16_t] window_values
+  cdef size_t sx, sy, sz
+
+  sx, sy, sz = head["sx"], head["sy"], head["sz"]
+
+  zstart = max(min(zstart, sz - 1), 0)
+  if zend == -1:
+    zend = sz
+  zend = max(min(zend, sz), 0)
+
+  if wdtype == np.uint16:
+    window_arr = decode_windows(buf)
+    window_values = raw_values(buf)
+    boundaries = decode_boundaries[uint16_t](
+      window_arr, window_values, 
+      sx, sy, sz,
+      head["xstep"], head["ystep"], head["zstep"],
+      zstart, zend
+    )[:sx * sy * (zend - zstart)]
+  else:
+    raise ValueError()
+
+  return np.array(boundaries, dtype=bool).reshape((sx,sy,(zend - zstart)), order="F")
 
 def labels(bytes buf):
   """
