@@ -805,7 +805,7 @@ std::vector<unsigned char> compress(
 
 /* DECOMPRESS STARTS HERE */
 
-template <typename LABEL, typename WINDOW>
+template <typename WINDOW>
 bool* decode_boundaries(
 	const std::vector<WINDOW> &windows, const std::vector<WINDOW> &window_values, 
 	const size_t sx, const size_t sy, const size_t sz,
