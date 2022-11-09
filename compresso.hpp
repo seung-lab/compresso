@@ -506,17 +506,44 @@ std::vector<T> encode_indeterminate_locations_implicit(
 		il_counts[i] = locations[i].size();
 	}
 
-	std::vector<uint64_t>::iterator it = std::max_element(il_counts.begin(), il_counts.end()); 
-	uint64_t max_elem = std::distance(il_counts.begin(), it);
-
-	bool implicit_label = (max_elem == 6);
-
 	// header: |size|0|1|2|3|4|5|6|implicit value|
 	const uint64_t header_size = 1 + 7 + 1; // 9
 	std::vector<T> encoded_locations(header_size);
 	encoded_locations.reserve(
 		(sx * sy * sz / 10) + (sizeof(T) * header_size)
 	);
+
+	std::vector<uint64_t>::iterator it = std::max_element(il_counts.begin(), il_counts.end()); 
+	uint64_t max_elem = std::distance(il_counts.begin(), it);
+
+	std::unordered_map<T, uint64_t> label_ct;
+	T most_frequent_label = 0;
+	if (max_elem == 6) {
+		label_ct.reserve(locations[6].size() / 8);
+
+		for (uint64_t i = 0; i < locations[6].size(); i++) {
+			const uint64_t loc = locations[6][i];
+			const T label = labels[loc];
+			label_ct[label]++;
+		}
+
+		most_frequent_label = std::max_element(
+			label_ct.begin(), label_ct.end(), 
+			[] (const auto &x, const auto &y) {
+				return x.second < y.second;
+			}
+		)->first;
+		encoded_locations[header_size - 1] = most_frequent_label;
+
+		it = std::max_element(il_counts.begin(), il_counts.end() - 1); 
+		uint64_t next_biggest = std::distance(il_counts.begin(), it);
+		
+		if (il_counts[next_biggest] > label_ct[most_frequent_label]) {
+			max_elem = next_biggest;
+		}
+	}
+
+	bool implicit_label = (max_elem == 6);
 
 	uint64_t start_index = header_size;
 	for (uint64_t i = 0; i < locations.size() - 1; i++) {
@@ -534,31 +561,13 @@ std::vector<T> encode_indeterminate_locations_implicit(
 
 	std::unordered_map<T, std::vector<uint64_t>> stored_label_locations;
 	stored_label_locations.reserve(locations[6].size());
-	std::unordered_map<T, uint64_t> label_ct;
-	if (implicit_label) {
-		label_ct.reserve(locations[6].size() / 8);
-	}
 
 	for (uint64_t i = 0; i < locations[6].size(); i++) {
 		const uint64_t loc = locations[6][i];
 		const T label = labels[loc];
 		stored_label_locations[label].push_back(loc);
-		if (implicit_label) {
-			label_ct[label]++;
-		}
 	}
 
-    T most_frequent_label = 0;
-    if (implicit_label) {
-    	most_frequent_label = std::max_element(
-    		label_ct.begin(), label_ct.end(), 
-    		[] (const auto &x, const auto &y) {
-    			return x.second < y.second;
-    		}
-    	)->first;
-    	encoded_locations[header_size - 1] = most_frequent_label;
-    }
-	
 	for (auto [label, idx] : stored_label_locations) {
 		if (implicit_label && label == most_frequent_label) {
 			continue;
