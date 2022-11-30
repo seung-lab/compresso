@@ -270,6 +270,17 @@ def raw_windows(bytes buf):
 
   return np.frombuffer(buf[offset:], dtype=wdtype)
 
+def raw_labels(buf):
+  """Returns the labels array present in the compressed stream."""
+  info = header(buf)
+
+  offset = COMPRESSO_HEADER_SIZE
+  id_bytes = info["id_size"] * info["data_width"]
+  ldtype = label_dtype(info)
+  wdtype = window_dtype(info)
+
+  return np.frombuffer(buf[offset:offset+id_bytes], dtype=ldtype)
+
 def raw_z_index(bytes buf):
   """Return the z index if present."""
   info = header(buf)
@@ -455,6 +466,24 @@ def decompress(bytes data, z=None):
     raise DecodeError(err)
 
   return labels
+
+def save(labels, filelike):
+  """Save labels into the file-like object or file path."""
+  binary = compress(labels)
+  if hasattr(filelike, 'write'):
+    filelike.write(binary)
+  else:
+    with open(filelike, 'wb') as f:
+      f.write(binary)
+
+def load(filelike):
+  """Load a compresso image from a file-like object or file path."""
+  if hasattr(filelike, 'read'):
+    binary = filelike.read()
+  else:
+    with open(filelike, 'rb') as f:
+      binary = f.read()
+  return decompress(binary)
 
 def valid(bytes buf):
   """Does the buffer appear to be a valid compresso stream?"""
