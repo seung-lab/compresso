@@ -749,7 +749,6 @@ std::vector<unsigned char> compress(
 
 	bool *boundaries = extract_boundaries<T>(labels, sx, sy, sz, connectivity);
 	
-
 	size_t num_components = 0;
 	std::vector<uint64_t> num_components_per_slice(sz);
 	uint32_t *components = cc3d::connected_components<uint32_t>(

@@ -1,9 +1,20 @@
 CHANGES
 =======
 
+3.1.0
+-----
+
+* docs: fix comment
+* feat: add save, load, raw\_labels to cython wrapper
+* feat(cli): -i/--info flag prints header info from file
+* build: skip musllinux (no numpy binaries, slow compilation)
+
 3.0.0
 -----
 
+* build: update build process
+* docs: accidently deleted 'z'
+* docs: fix outdated format description
 * build: ensure windows builds in release mode
 * fix: make CompressoArray take more natural slices
 * feat: random z access (#8)

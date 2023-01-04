@@ -166,7 +166,7 @@ def _compress(
 def check_compatibility(bytes buf):
   format_version = buf[4]
   if format_version > 1:
-    raise DecodeError(f"Unable to decode format version {format_version}. Only version 0 is supported.")
+    raise DecodeError(f"Unable to decode format version {format_version}. Only versions 0 and 1 are supported.")
 
 def label_dtype(dict info):
   """Given a header dict, return the dtype for the labels."""
