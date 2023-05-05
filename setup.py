@@ -16,6 +16,7 @@ else:
 setuptools.setup(
   setup_requires=['pbr', 'numpy'],
   install_requires=['numpy'],
+  version='3.2.0',
   ext_modules=[
     setuptools.Extension(
       'compresso',
