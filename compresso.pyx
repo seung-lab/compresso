@@ -65,6 +65,7 @@ cdef extern from "compresso.hpp" namespace "pycompresso":
   size_t COMPRESSO_HEADER_SIZE
 
 
+@cython.binding(True)
 def compress(data, steps=None, connectivity=4, random_access_z_index=True) -> bytes:
   """
   compress(ndarray[UINT, ndim=3] data, steps=(4,4,1), random_access_z_index=True)
@@ -188,6 +189,7 @@ def window_dtype(dict info):
   else:
     return np.uint64
 
+@cython.binding(True)
 def header(bytes buf):
   """
   Decodes the header into a python dict.
@@ -211,15 +213,18 @@ def header(bytes buf):
     "connectivity": buf[35],
   }
 
+@cython.binding(True)
 def nbytes(bytes buf):
   """Compute the number of bytes the decompressed array will consume."""
   info = header(buf)
   return info["sx"] * info["sy"] * info["sz"] * info["data_width"]
 
+@cython.binding(True)
 def raw_header(bytes buf):
   """Return the bytes corresponding to the header."""
   return np.frombuffer(buf[:COMPRESSO_HEADER_SIZE], dtype=np.uint8)
 
+@cython.binding(True)
 def raw_ids(bytes buf):
   """Return the ids buffer from the compressed stream."""
   info = header(buf)
@@ -229,6 +234,7 @@ def raw_ids(bytes buf):
   ldtype = label_dtype(info)
   return np.frombuffer(buf[offset:offset+id_bytes], dtype=ldtype)
 
+@cython.binding(True)
 def raw_values(bytes buf):
   """Return the window values buffer from the compressed stream."""
   info = header(buf)
@@ -242,6 +248,7 @@ def raw_values(bytes buf):
   
   return np.frombuffer(buf[offset:offset+value_bytes], dtype=wdtype)
 
+@cython.binding(True)
 def raw_locations(bytes buf):
   """Return the indeterminate locations buffer from the compressed stream."""
   info = header(buf)
@@ -257,6 +264,7 @@ def raw_locations(bytes buf):
   location_bytes = info["location_size"] * info["data_width"]
   return np.frombuffer(buf[offset:offset+location_bytes], dtype=ldtype)
 
+@cython.binding(True)
 def raw_windows(bytes buf):
   """Return the window boundary data buffer from the compressed stream."""
   info = header(buf)
@@ -272,6 +280,7 @@ def raw_windows(bytes buf):
 
   return np.frombuffer(buf[offset:], dtype=wdtype)
 
+@cython.binding(True)
 def raw_labels(buf):
   """Returns the labels array present in the compressed stream."""
   info = header(buf)
@@ -283,6 +292,7 @@ def raw_labels(buf):
 
   return np.frombuffer(buf[offset:offset+id_bytes], dtype=ldtype)
 
+@cython.binding(True)
 def raw_z_index(bytes buf):
   """Return the z index if present."""
   info = header(buf)
@@ -295,6 +305,7 @@ def raw_z_index(bytes buf):
   num_bytes = 2 * 8 * sz
   return np.frombuffer(buf[-num_bytes:], dtype=np.uint64).reshape((2,sz), order="C")
 
+@cython.binding(True)
 def labels(bytes buf):
   """
   Returns a sorted list of the unique labels
@@ -345,6 +356,7 @@ def _extract_labels_from_locations(
 
   return j # size of decoded_locations
 
+@cython.binding(True)
 def remap(bytes buf, dict mapping, native_bool preserve_missing_labels=False):
   """
   bytes remap(bytes buf, dict mapping, preserve_missing_labels=False)
@@ -402,6 +414,7 @@ def _remap_locations(
   
   return locations
 
+@cython.binding(True)
 def decompress(bytes data, z=None):
   """
   Decompress a compresso encoded byte stream into a three dimensional 
@@ -469,6 +482,7 @@ def decompress(bytes data, z=None):
 
   return labels
 
+@cython.binding(True)
 def load(filelike):
   """Load an image from a file-like object or file path."""
   if hasattr(filelike, 'read'):
@@ -484,6 +498,7 @@ def load(filelike):
       binary = f.read()
   return decompress(binary)
 
+@cython.binding(True)
 def save(labels, filelike):
   """Save labels into the file-like object or file path."""
   binary = compress(labels)
@@ -499,6 +514,7 @@ def save(labels, filelike):
     with open(filelike, 'wb') as f:
       f.write(binary)
 
+@cython.binding(True)
 def valid(bytes buf):
   """Does the buffer appear to be a valid compresso stream?"""
   if len(buf) < <Py_ssize_t>COMPRESSO_HEADER_SIZE:
@@ -540,6 +556,7 @@ def valid(bytes buf):
 
   return True
 
+@cython.binding(True)
 def zindex_byte_width(sx, sy):
   worst_case = 2 * sx * sy
   if worst_case < 2 ** 8:
