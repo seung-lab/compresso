@@ -20,13 +20,13 @@ else:
   ]
 
 setuptools.setup(
-  setup_requires=['pbr', 'numpy'],
+  setup_requires=['pbr', 'cython', 'numpy'],
   install_requires=['numpy'],
   ext_modules=[
     setuptools.Extension(
       'compresso',
       include_dirs=[ str(NumpyImport()) ],
-      sources=['compresso.cpp'],
+      sources=['compresso.pyx'],
       extra_compile_args=extra_compile_args,
       language='c++'
     )

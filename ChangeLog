@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+* build: add pyproject.toml
+
+3.2.2
+-----
+
+* fix: add binding for top level functions
+* build: update build for py312
+
 3.2.1
 -----
 
