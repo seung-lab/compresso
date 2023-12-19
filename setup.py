@@ -1,7 +1,13 @@
 import setuptools
 import sys
 
-import numpy as np
+class NumpyImport:
+  def __repr__(self):
+    import numpy as np
+
+    return np.get_include()
+
+  __fspath__ = __repr__
 
 extra_compile_args = []
 if sys.platform == 'win32':
@@ -19,7 +25,7 @@ setuptools.setup(
   ext_modules=[
     setuptools.Extension(
       'compresso',
-      include_dirs=[ np.get_include() ],
+      include_dirs=[ str(NumpyImport()) ],
       sources=['compresso.cpp'],
       extra_compile_args=extra_compile_args,
       language='c++'

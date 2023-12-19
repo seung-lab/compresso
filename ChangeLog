@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+3.2.1
+-----
+
+* chore: remove versioning property
+* build: set version
+* chore: update supported python versions
+* build: update build system for py311
+
 3.2.0
 -----
 
