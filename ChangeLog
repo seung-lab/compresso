@@ -1,11 +1,17 @@
 CHANGES
 =======
 
-* build: add pyproject.toml
+3.3.0
+-----
+
+* feat: add \_\_contains\_\_ to CompressoArray
 
 3.2.2
 -----
 
+* build: rmeove cpp file from version control
+* build: switch to dynamically compiling pyx
+* build: add pyproject.toml
 * fix: add binding for top level functions
 * build: update build for py312
 
