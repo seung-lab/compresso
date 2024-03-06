@@ -604,6 +604,9 @@ class CompressoArray:
   def remap(self, buf, mapping, preserve_missing_labels=False):
     return CompressoArray(remap(buf, mapping, preserve_missing_labels))
 
+  def __contains__(self, label):
+    return label in self.labels()
+
   def __getitem__(self, slcs):
     slices = reify_slices(slcs, *self.shape)
 
