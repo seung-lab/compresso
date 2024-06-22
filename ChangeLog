@@ -4,6 +4,7 @@ CHANGES
 3.3.0
 -----
 
+* ci: bump cibuildwheel to 2.16.5
 * feat: add \_\_contains\_\_ to CompressoArray
 
 3.2.2
