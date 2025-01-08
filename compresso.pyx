@@ -1,3 +1,4 @@
+# cython:language_level=3
 """
 Python bindings for the Compresso labeled image compression algorithm.
 
