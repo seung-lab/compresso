@@ -620,7 +620,7 @@ class CompressoArray:
     if self.random_access_enabled:
       img = decompress(self.binary, z=(slices[2].start, slices[2].stop))
       zslc = slice(None, None, slices[2].step)
-      if hasattr(slcs, "__getitem__") and isinstance(slcs[2], int):
+      if isinstance(slcs[2], int):
         zslc = 0
       slices = (slcs[0], slcs[1], zslc)
       return img[slices]
